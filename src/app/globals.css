@@ -104,3 +104,16 @@ html {
   from { opacity: 0; transform: scale(0.4); }
   to { opacity: 1; transform: scale(1); }
 }
+
+/* Circuit art: a faint texture on phones (it would sit behind the text);
+   from 640px up it fades under the text column and is full strength in the corner. */
+.pcb-mask {
+  mask-image: linear-gradient(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.22));
+  -webkit-mask-image: linear-gradient(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.22));
+}
+@media (min-width: 640px) {
+  .pcb-mask {
+    mask-image: linear-gradient(to right, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.28) 48%, #000 82%);
+    -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.28) 48%, #000 82%);
+  }
+}

@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // agent workspaces (screenshots, scratch scripts)
+    ".superpowers/**",
   ]),
 ]);
 

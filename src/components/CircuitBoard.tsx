@@ -9,17 +9,17 @@ import type { CSSProperties } from "react";
 
 const TRACES = [
   "M0 64 H150 V118 H330",
-  "M0 212 H96 V164 H262 V232 H438",
+  "M0 300 H120 V250 H300 V262 H664",
   "M540 0 V72 H652 V150 H800",
-  "M800 262 H708 V330",
+  "M800 262 H744",
+  "M704 330 V289",
   "M330 118 H470 V64 H540",
-  "M600 232 H700 V200 H800",
 ];
-// The bug's route ends at U1's left pin.
-const BUG_PATH = "M0 212 H96 V164 H262 V232 H438";
-const PADS: [number, number][] = [[150, 64], [330, 118], [96, 212], [262, 164], [470, 64], [652, 72], [708, 262], [700, 200]];
-const SILK: [number, number, string][] = [[156, 56, "R7"], [336, 110, "C12"], [476, 56, "R3"], [658, 64, "C4"], [714, 254, "J1"]];
-const TEST_POINTS: [number, number, string][] = [[210, 290, "TP1"], [560, 300, "TP2"], [760, 120, "TP3"]];
+// The bug's route ends at U1's left edge (bottom-right corner, clear of the text).
+const BUG_PATH = "M0 300 H120 V250 H300 V262 H664";
+const PADS: [number, number][] = [[150, 64], [330, 118], [120, 300], [300, 250], [470, 64], [652, 72], [652, 150]];
+const SILK: [number, number, string][] = [[156, 56, "R7"], [336, 110, "C12"], [476, 56, "R3"], [658, 64, "C4"], [752, 254, "J1"]];
+const TEST_POINTS: [number, number, string][] = [[60, 160, "TP1"], [560, 305, "TP2"], [770, 120, "TP3"]];
 
 function Bug() {
   // 8×6 pixel bug, centred on its path position
@@ -41,9 +41,9 @@ export function CircuitBoard({ active }: { active: boolean }) {
   return (
     <svg
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 h-full w-full"
+      className="pcb-mask pointer-events-none absolute inset-0 h-full w-full"
       viewBox="0 0 800 330"
-      preserveAspectRatio="xMidYMid slice"
+      preserveAspectRatio="xMaxYMax slice"
     >
       {/* copper traces under the mask */}
       <g stroke="var(--pcb-trace)" strokeWidth="2" fill="none" strokeLinejoin="round">
@@ -78,9 +78,9 @@ export function CircuitBoard({ active }: { active: boolean }) {
       ))}
 
       {/* chip U1 — where the bug ends up */}
-      <g transform="translate(446 214)">
-        <rect width="64" height="38" rx="3" fill="var(--pcb-panel)" stroke="var(--pcb-trace)" strokeWidth="2" />
-        {[8, 20, 32, 44, 56].map((x) => (
+      <g transform="translate(664 243)">
+        <rect width="80" height="38" rx="3" fill="var(--pcb-panel)" stroke="var(--pcb-trace)" strokeWidth="2" />
+        {[10, 22, 34, 46, 58].map((x) => (
           <g key={x} fill="var(--pcb-gold)" opacity="0.7">
             <rect x={x - 2} y={-6} width="4" height="6" />
             <rect x={x - 2} y={38} width="4" height="6" />
@@ -97,7 +97,7 @@ export function CircuitBoard({ active }: { active: boolean }) {
       )}
 
       {/* …and gets fixed */}
-      <g transform="translate(478 233)">
+      <g transform="translate(704 262)">
         <g
           style={
             active

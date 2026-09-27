@@ -1,6 +1,7 @@
 import { SectionHeading } from "./SectionHeading";
 import { Reveal } from "./Reveal";
 import { NasaConsole } from "./NasaConsole";
+import { BobConsole } from "./BobConsole";
 
 const LIDAR_TAGS = ["PyTorch", "EfficientNet", "Python", "Agile/Scrum"];
 const TA_TAGS = ["Java", "Python", "Data Structures", "Mentorship"];
@@ -13,6 +14,10 @@ export function Experience() {
       <div className="space-y-8">
         <Reveal>
           <NasaConsole />
+        </Reveal>
+
+        <Reveal delayMs={50}>
+          <BobConsole />
         </Reveal>
 
         <Reveal delayMs={100}>
