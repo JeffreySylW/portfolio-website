@@ -22,8 +22,7 @@ test("archived images say so", () => {
 test("no street address and no competitor names anywhere in the copy", () => {
   assert.doesNotMatch(allText, ADDRESS);
   // Competitor names live in an untracked local file so they never ship in the repo.
-  const blocked = existsSync("test/.blocked-terms") ? readFileSync("test/.blocked-terms", "utf8").split(/?
-/).map((l) => l.trim()).filter(Boolean) : [];
+  const blocked = existsSync("test/.blocked-terms") ? readFileSync("test/.blocked-terms", "utf8").split(/\r?\n/).map((l) => l.trim()).filter(Boolean) : [];
   for (const t of blocked) assert.ok(!allText.toLowerCase().includes(t.toLowerCase()), "copy mentions a blocked term");
 });
 

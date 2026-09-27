@@ -28,7 +28,7 @@ function Shot({ w }: { w: (typeof WORK)[number] }) {
   return (
     <figure className="overflow-hidden rounded-sm border border-pcb-trace">
       <div className="relative bg-pcb-panel" style={{ aspectRatio: "4 / 3" }}>
-        <Image src={w.src} alt={w.alt} fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover object-top" />
+        <Image src={w.src} alt={w.alt} fill sizes="(min-width: 768px) 384px, (min-width: 640px) 50vw, 100vw" className="object-cover object-top" />
       </div>
       <figcaption className="px-2.5 py-2 font-mono text-[10px] tracking-wider text-pcb-text/65">{w.caption}</figcaption>
     </figure>
@@ -226,6 +226,7 @@ export function BobCaseFile({
             <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
               <a
                 href={BOB_SITE_URL}
+                aria-describedby={BOB_SITE_SSL_OK ? undefined : "bob-ssl-note-casefile"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-sm border border-pcb-green px-4 py-2 font-mono text-xs tracking-wider text-pcb-green hover:bg-pcb-green/10 focus-visible:bg-pcb-green/10 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pcb-green"
@@ -233,7 +234,7 @@ export function BobCaseFile({
                 see it live &#8599;
               </a>
               {!BOB_SITE_SSL_OK && (
-                <span className="font-mono text-[10px] tracking-wider text-pcb-text/70">
+                <span id="bob-ssl-note-casefile" className="font-mono text-[10px] tracking-wider text-pcb-text/70">
                   SSL certificate pending — the browser may warn you
                 </span>
               )}

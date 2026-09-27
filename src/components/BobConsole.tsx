@@ -37,7 +37,7 @@ export function BobConsole() {
               s.text ? (
                 <div
                   key={s.label}
-                  className="flex items-baseline justify-between border-b border-pcb-trace py-3 sm:border-b-0 sm:py-0"
+                  className="flex items-baseline justify-between border-b border-pcb-trace py-3 last:border-b-0 sm:border-b-0 sm:py-0"
                 >
                   <span className="font-mono text-xs tracking-wider text-pcb-text/70">{s.label}</span>
                   <span className="font-mono text-lg sm:text-xl text-pcb-green">{s.text}</span>
@@ -72,6 +72,7 @@ export function BobConsole() {
             </button>
             <a
               href={BOB_SITE_URL}
+              aria-describedby={BOB_SITE_SSL_OK ? undefined : "bob-ssl-note"}
               target="_blank"
               rel="noopener noreferrer"
               className="font-mono text-xs tracking-wider text-pcb-text/80 underline-offset-4 outline-none hover:underline focus-visible:underline"
@@ -79,7 +80,7 @@ export function BobConsole() {
               &#8599; visit the live site
             </a>
             {!BOB_SITE_SSL_OK && (
-              <span className="font-mono text-[10px] tracking-wider text-pcb-text/70">
+              <span id="bob-ssl-note" className="font-mono text-[10px] tracking-wider text-pcb-text/70">
                 SSL certificate pending — the browser may warn you
               </span>
             )}

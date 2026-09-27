@@ -52,7 +52,7 @@ export function AnimatedStat({
   }, [trigger, value, durationMs]);
 
   return (
-    <div className={`flex items-baseline justify-between border-b py-3 first:pt-0 last:border-b-0 ${tone === "green" ? "border-pcb-trace" : "border-console-grid"}`}>
+    <div className={`flex items-baseline justify-between border-b py-3 first:pt-0 last:border-b-0 ${tone === "green" ? "border-pcb-trace sm:border-b-0 sm:py-0" : "border-console-grid"}`}>
       <span className={`font-mono text-xs tracking-wider ${tone === "green" ? "text-pcb-text/70" : "text-console-text/70"}`}>
         {label}
       </span>
