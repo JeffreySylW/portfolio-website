@@ -9,7 +9,7 @@ next-env.d.ts
 .env*
 .vercel/
 # raw personal photos not served by the site
-Images/
-.image-backups/
+/Images/
+/.image-backups/
 # agent workspaces
 .superpowers/
