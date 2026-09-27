@@ -1,0 +1,15 @@
+# deps / build
+node_modules/
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+# local / secrets
+.env*
+.vercel/
+# raw personal photos not served by the site
+Images/
+.image-backups/
+# agent workspaces
+.superpowers/

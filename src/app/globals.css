@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f6f5f1;
+  --ink: #1b1d1f;
+  --ink-soft: #5b6066;
+  --line: #d8d6cf;
+  --signal: #2b5d4f;
+  --grid-line: color-mix(in srgb, var(--ink) 6%, transparent);
+
+  --console-bg: #05070a;
+  --console-panel: #0d1117;
+  --console-grid: #131a22;
+  --console-text: #c9d1d9;
+  --console-amber: #ffb454;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-signal: var(--signal);
+
+  --color-console-bg: var(--console-bg);
+  --color-console-panel: var(--console-panel);
+  --color-console-grid: var(--console-grid);
+  --color-console-text: var(--console-text);
+  --color-console-amber: var(--console-amber);
+
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+::selection {
+  background: var(--signal);
+  color: var(--paper);
+}
+
+.bg-grid-paper {
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(to bottom, black, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent);
+}
+
+@keyframes pixel-twinkle {
+  0%,
+  100% {
+    opacity: var(--star-min, 0.15);
+  }
+  50% {
+    opacity: var(--star-max, 1);
+  }
+}
