@@ -13,6 +13,12 @@
   --console-grid: #131a22;
   --console-text: #c9d1d9;
   --console-amber: #ffb454;
+
+  --pcb-bg: #050d08;
+  --pcb-panel: #0a1810;
+  --pcb-trace: #173524;
+  --pcb-green: #6ee08a;
+  --pcb-text: #cfe6d5;
 }
 
 @theme inline {
@@ -27,6 +33,12 @@
   --color-console-grid: var(--console-grid);
   --color-console-text: var(--console-text);
   --color-console-amber: var(--console-amber);
+
+  --color-pcb-bg: var(--pcb-bg);
+  --color-pcb-panel: var(--pcb-panel);
+  --color-pcb-trace: var(--pcb-trace);
+  --color-pcb-green: var(--pcb-green);
+  --color-pcb-text: var(--pcb-text);
 
   --font-display: var(--font-display);
   --font-mono: var(--font-mono);
@@ -73,4 +85,18 @@ html {
   50% {
     opacity: var(--star-max, 1);
   }
+}
+
+@keyframes pcb-pulse {
+  from { stroke-dashoffset: 1; opacity: 1; }
+  to { stroke-dashoffset: 0; opacity: 0.35; }
+}
+@keyframes pcb-crawl {
+  from { offset-distance: 0%; opacity: 1; }
+  90% { opacity: 1; }
+  to { offset-distance: 100%; opacity: 0; }
+}
+@keyframes pcb-fix {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
 }

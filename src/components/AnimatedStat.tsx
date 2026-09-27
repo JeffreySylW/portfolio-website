@@ -9,6 +9,7 @@ export function AnimatedStat({
   prefix = "",
   trigger,
   durationMs = 900,
+  tone = "amber",
 }: {
   label: string;
   value: number;
@@ -16,6 +17,7 @@ export function AnimatedStat({
   prefix?: string;
   trigger: boolean;
   durationMs?: number;
+  tone?: "amber" | "green";
 }) {
   const [display, setDisplay] = useState(0);
   const started = useRef(false);
@@ -50,11 +52,11 @@ export function AnimatedStat({
   }, [trigger, value, durationMs]);
 
   return (
-    <div className="flex items-baseline justify-between border-b border-console-grid py-3 first:pt-0 last:border-b-0">
-      <span className="font-mono text-xs tracking-wider text-console-text/70">
+    <div className={`flex items-baseline justify-between border-b py-3 first:pt-0 last:border-b-0 ${tone === "green" ? "border-pcb-trace" : "border-console-grid"}`}>
+      <span className={`font-mono text-xs tracking-wider ${tone === "green" ? "text-pcb-text/70" : "text-console-text/70"}`}>
         {label}
       </span>
-      <span className="font-mono text-lg sm:text-xl text-console-amber tabular-nums">
+      <span className={`font-mono text-lg sm:text-xl tabular-nums ${tone === "green" ? "text-pcb-green" : "text-console-amber"}`}>
         {prefix}
         {display}
         {suffix}
