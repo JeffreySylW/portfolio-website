@@ -19,6 +19,8 @@
   --pcb-trace: #173524;
   --pcb-green: #6ee08a;
   --pcb-text: #cfe6d5;
+  --pcb-gold: #c9a24a;
+  --pcb-silk: #d9e4dc;
 }
 
 @theme inline {
@@ -39,6 +41,8 @@
   --color-pcb-trace: var(--pcb-trace);
   --color-pcb-green: var(--pcb-green);
   --color-pcb-text: var(--pcb-text);
+  --color-pcb-gold: var(--pcb-gold);
+  --color-pcb-silk: var(--pcb-silk);
 
   --font-display: var(--font-display);
   --font-mono: var(--font-mono);
