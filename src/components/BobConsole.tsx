@@ -79,7 +79,7 @@ export function BobConsole() {
               &#8599; visit the live site
             </a>
             {!BOB_SITE_SSL_OK && (
-              <span className="font-mono text-[10px] tracking-wider text-pcb-text/50">
+              <span className="font-mono text-[10px] tracking-wider text-pcb-text/70">
                 SSL certificate pending — the browser may warn you
               </span>
             )}

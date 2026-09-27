@@ -47,6 +47,7 @@ export function BobCaseFile({
   const [rendered, setRendered] = useState(open);
   const [entered, setEntered] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(null);
 
   if (open && !rendered) setRendered(true);
@@ -64,12 +65,22 @@ export function BobCaseFile({
 
   useEffect(() => {
     if (open || !rendered) return;
-    const t = setTimeout(() => {
-      setRendered(false);
-      (opener.current as HTMLElement | null)?.focus?.();
-    }, 300);
+    const t = setTimeout(() => setRendered(false), 300);
     return () => clearTimeout(t);
   }, [open, rendered]);
+
+  // Keep keyboard and screen-reader focus inside the dialog: everything else on
+  // the page is inert while it is open. Focus goes back to the opener after.
+  useEffect(() => {
+    if (!rendered) return;
+    const dialog = dialogRef.current;
+    const others = [...document.body.children].filter((el) => el !== dialog);
+    others.forEach((el) => el.setAttribute("inert", ""));
+    return () => {
+      others.forEach((el) => el.removeAttribute("inert"));
+      (opener.current as HTMLElement | null)?.focus?.();
+    };
+  }, [rendered]);
 
   useEffect(() => {
     if (!rendered) return;
@@ -102,7 +113,7 @@ export function BobCaseFile({
   const singles = WORK.filter((w) => !w.pair);
 
   return createPortal(
-    <div role="dialog" aria-modal="true" aria-label="Bob The Tech Guy case file" className="fixed inset-0 z-[100]">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Bob The Tech Guy case file" className="fixed inset-0 z-[100]">
       <div
         aria-hidden="true"
         className={`absolute inset-0 bg-pcb-bg/70 backdrop-blur-md transition-opacity duration-300 ease-out ${entered ? "opacity-100" : "opacity-0"}`}
@@ -187,7 +198,7 @@ export function BobCaseFile({
                 </div>
               ))}
             </div>
-            <p className="mt-3 font-mono text-[10px] tracking-wider text-pcb-text/45">{AI_NOTE}</p>
+            <p className="mt-3 font-mono text-[10px] tracking-wider text-pcb-text/70">{AI_NOTE}</p>
           </section>
 
           <section className="mb-10">
@@ -217,12 +228,12 @@ export function BobCaseFile({
                 href={BOB_SITE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-sm border border-pcb-green px-4 py-2 font-mono text-xs tracking-wider text-pcb-green hover:bg-pcb-green/10 focus-visible:bg-pcb-green/10 outline-none"
+                className="rounded-sm border border-pcb-green px-4 py-2 font-mono text-xs tracking-wider text-pcb-green hover:bg-pcb-green/10 focus-visible:bg-pcb-green/10 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pcb-green"
               >
                 see it live &#8599;
               </a>
               {!BOB_SITE_SSL_OK && (
-                <span className="font-mono text-[10px] tracking-wider text-pcb-text/50">
+                <span className="font-mono text-[10px] tracking-wider text-pcb-text/70">
                   SSL certificate pending — the browser may warn you
                 </span>
               )}
