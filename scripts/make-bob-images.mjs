@@ -30,7 +30,9 @@ const crops = [
   ["wb-net.png", { left: 0, top: 0, width: 1414, height: 1300 }, "networking-before.webp", 1200],
   ["cap-net-after.png", { left: 0, top: 0, width: 1440, height: 1300 }, "networking-after.webp", 1200],
   ["cap-town-desktop.png", { left: 0, top: 0, width: 1440, height: 1300 }, "town-desktop.webp", 1200],
-  ["cap-town-phone.png", { left: 0, top: 0, width: 500, height: 1500 }, "town-phone.webp", 500],
+  // real 390×844 @3x mobile-emulated captures, shown inside a phone frame
+  ["cap-phone-top.png", { left: 0, top: 0, width: 1170, height: 2532 }, "phone-top.webp", 585],
+  ["cap-phone-cards.png", { left: 0, top: 0, width: 1170, height: 2532 }, "phone-cards.webp", 585],
   ["cap-parental.png", { left: 0, top: 0, width: 1440, height: 1400 }, "services-parental.webp", 1200],
 ];
 

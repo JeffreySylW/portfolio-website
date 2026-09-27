@@ -24,6 +24,24 @@ function Label({ n, children }: { n: string; children: ReactNode }) {
   );
 }
 
+// Real 390×844 phone captures, drawn inside a simple phone body so the shape reads as a phone.
+function Phone({ w }: { w: (typeof WORK)[number] }) {
+  return (
+    <figure className="flex flex-col items-center">
+      <div className="w-full max-w-[210px] rounded-[2rem] border border-pcb-trace bg-[#0b0f0c] p-2 shadow-[0_0_0_1px_rgba(0,0,0,0.6)]">
+        <div className="relative overflow-hidden rounded-[1.5rem] bg-black" style={{ aspectRatio: "390 / 844" }}>
+          {/* status-bar strip so the camera pill does not cover the page */}
+          <div className="absolute inset-x-0 bottom-0 top-6">
+            <Image src={w.src} alt={w.alt} fill sizes="210px" className="object-cover object-top" />
+          </div>
+          <div aria-hidden="true" className="absolute left-1/2 top-1.5 h-4 w-16 -translate-x-1/2 rounded-full bg-[#0b0f0c]" />
+        </div>
+      </div>
+      <figcaption className="mt-2 px-2.5 text-center font-mono text-[10px] tracking-wider text-pcb-text/65">{w.caption}</figcaption>
+    </figure>
+  );
+}
+
 function Shot({ w }: { w: (typeof WORK)[number] }) {
   return (
     <figure className="overflow-hidden rounded-sm border border-pcb-trace">
@@ -110,7 +128,8 @@ export function BobCaseFile({
         })();
 
   const pairs = ["Home", "Networking"];
-  const singles = WORK.filter((w) => !w.pair);
+  const phones = WORK.filter((w) => w.phone);
+  const singles = WORK.filter((w) => !w.pair && !w.phone);
 
   return createPortal(
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Bob The Tech Guy case file" className="fixed inset-0 z-[100]">
@@ -208,14 +227,17 @@ export function BobCaseFile({
                 {WORK.filter((w) => w.pair === p).map((w) => <Shot key={w.src} w={w} />)}
               </div>
             ))}
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="mb-6 grid gap-3 sm:grid-cols-2">
               {singles.map((w) => <Shot key={w.src} w={w} />)}
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:mx-auto sm:max-w-md">
+              {phones.map((w) => <Phone key={w.src} w={w} />)}
             </div>
           </section>
 
           <section className="mb-10">
             <Label n="06">RESULTS</Label>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-3">
               {RESULTS.map((r) => (
                 <div key={r.label} className="rounded-sm border border-pcb-trace px-4 py-4">
                   <p className="font-mono text-3xl text-pcb-green">{r.value}</p>

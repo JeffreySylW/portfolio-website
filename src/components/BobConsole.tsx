@@ -16,9 +16,19 @@ export function BobConsole() {
     <>
       <div
         ref={ref}
-        className="relative overflow-hidden rounded-sm border border-pcb-trace bg-pcb-bg px-6 py-7 sm:px-8 sm:py-8"
+        className="relative isolate cursor-pointer overflow-hidden rounded-sm border border-pcb-trace bg-pcb-bg px-6 py-7 transition-colors hover:border-pcb-green/60 has-[button:focus-visible]:border-pcb-green sm:px-8 sm:py-8"
       >
         <CircuitBoard active={inView} />
+        {/* The whole card opens the case file; the live-site link sits above it. */}
+        <button
+          type="button"
+          aria-label="Open the Bob The Tech Guy case file"
+          onClick={() => {
+            setOriginRect(ref.current?.getBoundingClientRect() ?? null);
+            setOpen(true);
+          }}
+          className="absolute inset-0 z-[1] cursor-pointer outline-none"
+        />
         <div className="relative">
           <div className="mb-6 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <div>
@@ -32,7 +42,7 @@ export function BobConsole() {
             {CARD.summary}
           </p>
 
-          <div className="mb-7 grid gap-x-8 sm:grid-cols-3">
+          <div className="mb-7 grid gap-x-8 sm:grid-cols-2">
             {CARD.stats.map((s) =>
               s.text ? (
                 <div
@@ -57,25 +67,12 @@ export function BobConsole() {
           </div>
 
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-            <button
-              type="button"
-              onClick={() => {
-                setOriginRect(ref.current?.getBoundingClientRect() ?? null);
-                setOpen(true);
-              }}
-              className="group flex items-center gap-1.5 font-mono text-xs tracking-wider text-pcb-green outline-none focus-visible:underline"
-            >
-              <span aria-hidden="true">&gt;</span> open case file
-              <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">
-                &rarr;
-              </span>
-            </button>
             <a
               href={BOB_SITE_URL}
               aria-describedby={BOB_SITE_SSL_OK ? undefined : "bob-ssl-note"}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-mono text-xs tracking-wider text-pcb-text/80 underline-offset-4 outline-none hover:underline focus-visible:underline"
+              className="relative z-[2] font-mono text-xs tracking-wider text-pcb-text/80 underline-offset-4 outline-none hover:underline focus-visible:underline"
             >
               &#8599; visit the live site
             </a>

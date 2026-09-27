@@ -10,10 +10,9 @@ export const CARD = {
   dates: "SEP 2026 – PRESENT",
   title: "Freelance Web Developer",
   summary:
-    "Redesigned the WordPress site for a real small-business client relocating his computer-repair business to Chesterfield, VA — built to earn phone calls and compete with other local repair shops, while keeping every word of his existing copy intact.",
+    "Redesigned the WordPress site for a real small-business client relocating his computer-repair business to Chesterfield, VA — built to earn phone calls and compete with other local repair shops.",
   stats: [
     { label: "PAGES REDESIGNED", value: 30 },
-    { label: "WORDS REWRITTEN", value: 0 },
     { label: "SHIPPED", text: "v1.1.1" },
   ] as { label: string; value?: number; text?: string }[],
   tags: ["HTML", "CSS", "JAVASCRIPT", "WORDPRESS", "REST API", "GIT"],
@@ -59,13 +58,13 @@ export const WORK = [
   { pair: "Networking", src: "/images/bob/networking-before.webp", archived: true, alt: "Networking page in 2022 with long paragraphs and plain bullet lines", caption: "Networking, before — archived 2022 via the Wayback Machine" },
   { pair: "Networking", src: "/images/bob/networking-after.webp", alt: "Redesigned Networking page with a dark hero, three summary cards, and a check-mark list", caption: "Networking, after — summary cards and a real checklist" },
   { src: "/images/bob/town-desktop.webp", alt: "Chester, Virginia service page with six summary cards on desktop", caption: "New town pages — six summary cards on desktop" },
-  { src: "/images/bob/town-phone.webp", alt: "Chester, Virginia service page on a phone with stacked cards", caption: "The same page on a phone" },
+  { phone: true, src: "/images/bob/phone-top.webp", alt: "Chester, Virginia page on an iPhone-sized screen: dark hero, headline, and a tap-to-call phone button", caption: "On a phone — hero and tap-to-call" },
+  { phone: true, src: "/images/bob/phone-cards.webp", alt: "Chester, Virginia page on an iPhone-sized screen: summary cards stacked in one column", caption: "On a phone — cards stack into one column" },
   { src: "/images/bob/services-parental.webp", alt: "Parental Controls page with a single summary card, checklist, and call-to-action block", caption: "Services — one card, a checklist, and a clear call to action" },
-] as { pair?: string; src: string; alt: string; caption: string; archived?: boolean }[];
+] as { pair?: string; phone?: boolean; src: string; alt: string; caption: string; archived?: boolean }[];
 
 export const RESULTS = [
   { value: "30", label: "pages on one managed bundle" },
   { value: "15", label: "pages turned into summary cards" },
-  { value: "0", label: "words of client copy rewritten" },
   { value: "7", label: "versioned releases, v1.0.6 → v1.1.1" },
 ];
