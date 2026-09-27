@@ -13,3 +13,6 @@ next-env.d.ts
 /.image-backups/
 # agent workspaces
 .superpowers/
+
+# local-only list of competitor names checked by the tests
+test/.blocked-terms
