@@ -3,7 +3,7 @@ import { Reveal } from "./Reveal";
 
 const HONORS = [
   "Cum Laude",
-  "Dean's List: Fall 2023, Spring 2024, Fall 2024, Spring 2025",
+  "Dean's List: 4 semesters",
 ];
 
 export function Education() {

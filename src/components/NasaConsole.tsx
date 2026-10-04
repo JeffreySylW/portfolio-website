@@ -53,11 +53,12 @@ export function NasaConsole() {
         </div>
 
         <p className="max-w-xl font-display text-sm sm:text-base leading-relaxed text-console-text/90 mb-7">
-          Built a real-time data pipeline processing UDP telemetry from secure
-          NASA test networks, enabling live monitoring in place of manual
-          review. Worked directly with a team of engineers on system
-          architecture and new features, and kept version history clean and
-          collaborative with Git throughout.
+          Modernized a client-side MATLAB application for real-time data
+          monitoring, building event-driven GUIs and back-end components that
+          unpack and display UDP data from secure networks. Worked directly
+          with a team of engineers on system architecture and new features,
+          and kept version history clean and collaborative with Git
+          throughout.
         </p>
 
         <div className="grid gap-x-8 sm:grid-cols-3 mb-7">

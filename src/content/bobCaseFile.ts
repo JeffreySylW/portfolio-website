@@ -7,13 +7,12 @@ export const BOB_SITE_SSL_OK = false;
 
 export const CARD = {
   label: "CLIENT WORK // BOB THE TECH GUY · CHESTERFIELD, VA",
-  dates: "SEP 2026 – PRESENT",
+  dates: "AUG 2026 – PRESENT",
   title: "Freelance Web Developer",
   summary:
     "Redesigned the WordPress site for a real small-business client relocating his computer-repair business to Chesterfield, VA — built to earn phone calls and compete with other local repair shops.",
   stats: [
-    { label: "PAGES REDESIGNED", value: 30 },
-    { label: "SHIPPED", text: "v1.1.1" },
+    { label: "VERSIONED RELEASES", value: 47 },
   ] as { label: string; value?: number; text?: string }[],
   tags: ["HTML", "CSS", "JAVASCRIPT", "WORDPRESS", "REST API", "GIT"],
 };
@@ -47,7 +46,7 @@ export const TOOLING = [
   { name: "node:test", detail: "68 automated tests covering the transforms and styles." },
   { name: "Content-safety checker", detail: "Proves no sentence was added, lost, reordered, or reworded." },
   { name: "Headless browser", detail: "End-to-end screenshots and layout measurements of the live pages." },
-  { name: "Git + GitHub", detail: "Tagged releases (v1.0.6 → v1.1.1) with one-line rollbacks." },
+  { name: "Git + GitHub", detail: "Tagged releases (v1.0.0 → v1.7.4) with one-line rollbacks." },
 ];
 
 export const AI_NOTE = "AI-assisted development (Claude Code), with every change verified test-first.";
@@ -66,5 +65,5 @@ export const WORK = [
 export const RESULTS = [
   { value: "30", label: "pages on one managed bundle" },
   { value: "15", label: "pages turned into summary cards" },
-  { value: "7", label: "versioned releases, v1.0.6 → v1.1.1" },
+  { value: "47", label: "versioned releases, v1.0.0 → v1.7.4" },
 ];

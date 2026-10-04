@@ -27,8 +27,8 @@ test("no street address and no competitor names anywhere in the copy", () => {
 });
 
 test("card and results use the approved numbers", () => {
-  assert.deepStrictEqual(B.CARD.stats.map((s) => s.value ?? s.text), [30, "v1.1.1"]);
-  assert.deepStrictEqual(B.RESULTS.map((r) => r.value), ["30", "15", "7"]);
+  assert.deepStrictEqual(B.CARD.stats.map((s) => s.value ?? s.text), [47]);
+  assert.deepStrictEqual(B.RESULTS.map((r) => r.value), ["30", "15", "47"]);
 });
 
 test("case file mentions TDD and end-to-end testing, AI note is one line", () => {
