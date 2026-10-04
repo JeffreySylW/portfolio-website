@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useInView } from "@/lib/useInView";
-import { AnimatedStat } from "./AnimatedStat";
 import { PixelSpaceBackground } from "./PixelSpaceBackground";
 import { NasaMissionLog } from "./NasaMissionLog";
 
@@ -60,30 +59,6 @@ export function NasaConsole() {
           and kept version history clean and collaborative with Git
           throughout.
         </p>
-
-        <div className="grid gap-x-8 sm:grid-cols-3 mb-7">
-          <AnimatedStat
-            label="MANUAL ANALYSIS TIME"
-            value={40}
-            prefix="▼ "
-            suffix="%"
-            trigger={inView}
-          />
-          <AnimatedStat
-            label="TEST SYSTEMS LIVE"
-            value={3}
-            trigger={inView}
-            durationMs={500}
-          />
-          <div className="flex items-baseline justify-between border-b border-console-grid py-3 sm:border-b-0 sm:py-0">
-            <span className="font-mono text-xs tracking-wider text-console-text/70">
-              PROTOCOL
-            </span>
-            <span className="font-mono text-lg sm:text-xl text-console-amber">
-              UDP
-            </span>
-          </div>
-        </div>
 
         <div className="flex gap-2 font-mono text-xs tracking-wider text-console-text/70 mb-7">
           {["PYTHON", "MATLAB", "GIT"].map((tag) => (
