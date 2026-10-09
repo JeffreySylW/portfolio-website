@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import Image from "next/image";
 import { BODIES } from "@/content/space";
-import { FIX, GALLERY, PIPELINE, QUOTE, SIDE_QUEST } from "@/content/nasaGallery";
+import { GALLERY, SECTIONS } from "@/content/nasaGallery";
 
 const NASA = BODIES.find((b) => b.id === "nasa")!;
 
@@ -76,38 +76,14 @@ export function NasaDeepDive({ onClose, returnFocusTo }: { onClose: () => void; 
         {NASA.tools.map((t) => <li key={t} className="rounded-sm border border-slate-700 px-2 py-1">{t}</li>)}
       </ul>
 
-      <section className="mt-8">
-        <Heading>SYSTEM ARCHITECTURE</Heading>
-        <ol className="grid gap-2 sm:grid-cols-5">
-          {PIPELINE.map((s) => (
-            <li key={s.label} className={`rounded-sm border px-3 py-3 ${s.mine ? "border-sky-400 bg-sky-400/5" : "border-slate-800"}`}>
-              <p className={`font-mono text-[11px] tracking-wider ${s.mine ? "text-sky-300" : "text-slate-400"}`}>{s.label}{s.mine && " (BUILT)"}</p>
-              <p className="mt-1 text-xs leading-snug text-slate-300">{s.detail}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <section className="mt-8">
-        <Heading>THE FIX</Heading>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {[FIX.before, FIX.after].map((f, i) => (
-            <div key={f.label} className={`rounded-sm border px-4 py-4 ${i ? "border-sky-400/50" : "border-slate-800"}`}>
-              <p className={`font-mono text-[11px] tracking-wider ${i ? "text-sky-300" : "text-slate-400"}`}>{f.label}</p>
-              <p className="mt-2 font-mono text-2xl">{f.value}</p>
-              <p className="font-mono text-[11px] tracking-wider text-slate-400">{f.unit}</p>
-              <p className="mt-3 text-xs leading-relaxed text-slate-300">{f.detail}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="mt-8">
-        <Heading>SIDE QUEST: WIND TUNNEL SURVEILLANCE</Heading>
-        <div className="space-y-3 text-sm leading-relaxed text-slate-300">
-          {SIDE_QUEST.map((p) => <p key={p}>{p}</p>)}
-        </div>
-      </section>
+      {SECTIONS.map((sec) => (
+        <section key={sec.heading} className="mt-8">
+          <Heading>{sec.heading.toUpperCase()}</Heading>
+          <div className="space-y-3 text-sm leading-relaxed text-slate-300">
+            {sec.paragraphs.map((p) => <p key={p}>{p}</p>)}
+          </div>
+        </section>
+      ))}
 
       <section className="mt-8">
         <Heading>PHOTOS AND FACILITIES TOURED</Heading>
@@ -133,8 +109,6 @@ export function NasaDeepDive({ onClose, returnFocusTo }: { onClose: () => void; 
           ))}
         </ul>
       </section>
-
-      <blockquote className="mt-8 border-l-2 border-sky-400 pl-4 text-sm italic leading-relaxed text-slate-300">&ldquo;{QUOTE}&rdquo;</blockquote>
 
       {shown && view !== null && (
         <div role="group" aria-label="Photo viewer" className="fixed inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[#03050b]/95 p-4">

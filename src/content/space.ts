@@ -33,7 +33,7 @@ export const BODIES: SpaceBody[] = [
     subtitle: "Software Engineering Intern, Amentum",
     dates: "MAY 2025 – AUG 2025",
     summary:
-      "Modernized a client-side MATLAB application for real-time data monitoring, building event-driven GUIs and back-end components that unpack and display UDP data from secure networks. Worked directly with a team of engineers on system architecture and new features, and kept version history clean and collaborative with Git throughout.",
+      "Built a MATLAB-based GUI to replace and extend a LabVIEW tool for real-time UDP data from wind-tunnel test sensors. It connects to the ARTIE server and displays 42 tags event-driven, through a dropdown on each of its 22 value slots.",
     tools: ["MATLAB", "Python", "UDP", "Git"],
     color: "#8fd3ff",
     look: "gas",
