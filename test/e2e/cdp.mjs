@@ -13,7 +13,7 @@ export async function launch() {
   const proc = spawn(EDGE, [
     "--headless=new", `--remote-debugging-port=${PORT}`,
     `--user-data-dir=${profile}`,
-    "--no-first-run", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist",
+    "--no-first-run", "--disable-features=CalculateNativeWinOcclusion", "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist",
     "about:blank",
   ], { stdio: "ignore" });
   for (let i = 0; i < 60; i++) {
@@ -42,6 +42,8 @@ export async function connect(wsUrl) {
   const send = (method, params = {}) =>
     new Promise((res, rej) => { pending.set(++id, { res, rej }); ws.send(JSON.stringify({ id, method, params })); });
   await send("Page.enable");
+  await send("Page.bringToFront");
+  await send("Emulation.setFocusEmulationEnabled", { enabled: true });
 
   const evaluate = async (expression) => {
     const r = await send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true });
@@ -52,6 +54,7 @@ export async function connect(wsUrl) {
     send, evaluate,
     async navigate(url) {
       await send("Page.navigate", { url });
+      await send("Page.bringToFront");
       await sleep(300);
       for (let i = 0; i < 100; i++) {
         if ((await evaluate("document.readyState")) === "complete") return;

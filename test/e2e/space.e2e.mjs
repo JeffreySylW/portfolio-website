@@ -68,22 +68,25 @@ try {
     // Labels ride the camera, so Bob's on-screen position is the camera probe.
     const probe = `(() => { const r = ${rectOf("Bob The Tech Guy")}; return r ? [r.x, r.y] : null; })()`;
     const before = await page.evaluate(probe);
-    const { x, y } = await page.evaluate(rectOf("NASA Langley Research Center"));
-    await page.clickAt(x, y);
-    // The click's state update lands a frame or two later; a lone rAF can fire before the
-    // jump renders. Sample up to 6 frames (flight would be far slower) and take the first jump.
-    const after = await page.evaluate(`new Promise((r) => {
-      let n = 0, p = null;
+    // Activate the button itself: a pixel click can land on an overlapping label and miss.
+    await page.evaluate(`[...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "NASA Langley Research Center").click()`);
+    // The click's state update lands some frames later (software GL frames can be slow). Sample frames until the
+    // probe has moved >20px in total, and require that move to happen within a single frame (a flight moves gradually).
+    const { after, step } = await page.evaluate(`new Promise((r) => {
+      let n = 0, prev = ${JSON.stringify(before)};
       const tick = () => {
-        p = ${probe};
-        if ((p && Math.abs(${before[0]} - p[0]) + Math.abs(${before[1]} - p[1]) > 20) || ++n >= 6) r(p);
-        else requestAnimationFrame(tick);
+        const p = ${probe};
+        const step = p ? Math.abs(prev[0] - p[0]) + Math.abs(prev[1] - p[1]) : 0;
+        const total = p ? Math.abs(${before[0]} - p[0]) + Math.abs(${before[1]} - p[1]) : 0;
+        if (total > 20 || ++n >= 300) r({ after: p, step });
+        else { if (p) prev = p; requestAnimationFrame(tick); }
       };
       requestAnimationFrame(tick);
     })`);
     assert(before && after, `Bob label probe missing: before=${before} after=${after}`);
     const moved = Math.abs(before[0] - after[0]) + Math.abs(before[1] - after[1]);
-    assert(moved > 20, `Bob label moved only ${moved.toFixed(1)}px in one frame: ${before} -> ${after}`);
+    assert(moved > 20, `Bob label moved only ${moved.toFixed(1)}px: ${before} -> ${after}`);
+    assert(step > 20, `camera flew instead of jumping: last frame step ${step.toFixed(1)}px`);
     return `${before} -> ${after}`;
   });
   await page.setReducedMotion(false);
@@ -121,11 +124,17 @@ try {
     await page.navigate(BASE + "/");
     await page.evaluate("location.reload()");
     await sleep(500);
+    assert(await page.waitFor(`!!document.querySelector("canvas")`), "scene not mounted");
     const n = await page.evaluate(`${HEADINGS}.length`);
     assert(n === 4, `${n} headings`);
     for (let i = 0; i < n; i++) {
       await page.evaluate(`${HEADINGS}[${i}].scrollIntoView({ behavior: "instant", block: "center" })`);
-      await sleep(1500); // scramble 700ms + reveal 800ms
+      // The text equals the final text before the scramble starts, so first wait (up to 3s) for it to
+      // start (the observer fires after hydration; skipped if it never starts), then for the final text (up to 3s).
+      const heading = `${HEADINGS}[${i}]`;
+      await page.waitFor(`${heading}.textContent.trim() !== ${heading}.getAttribute("aria-label")`, 3000);
+      assert(await page.waitFor(`${heading}.textContent.trim() === ${heading}.getAttribute("aria-label")`, 3000), `heading ${i} still scrambling`);
+      await sleep(900); // reveal fade
     }
     for (const s of await page.evaluate(headingState)) assert(s.opacity === 1 && s.text === s.label, `heading ${JSON.stringify(s)}`);
 
