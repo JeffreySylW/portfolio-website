@@ -16,10 +16,10 @@ export function Contact() {
   return (
     <section id="contact" className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
       <SectionHeading id="contact">contact</SectionHeading>
-      <Reveal>
-        <ul className="grid gap-4 sm:grid-cols-2">
-          {LINKS.map((link) => (
+      <ul className="grid gap-4 sm:grid-cols-2">
+          {LINKS.map((link, i) => (
             <li key={link.label}>
+              <Reveal i={i}>
               <a
                 href={link.href}
                 target={link.href.startsWith("http") ? "_blank" : undefined}
@@ -33,10 +33,10 @@ export function Contact() {
                   {link.value}
                 </span>
               </a>
+              </Reveal>
             </li>
           ))}
         </ul>
-      </Reveal>
       <p className="mt-16 font-mono text-xs tracking-wider text-ink-soft/70">
         &copy; {new Date().getFullYear()} Jeffrey Weaver
       </p>

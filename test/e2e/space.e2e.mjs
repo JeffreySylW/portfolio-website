@@ -108,6 +108,37 @@ try {
     return `sun off centre ${off.map((d) => d.toFixed(1))}px`;
   });
 
+  // Opacity of a heading times its ancestors' (reveal wrappers), plus whether its text is final.
+  const HEADINGS = `document.querySelectorAll("#timeline h2, #projects h2, #resume h2, #contact h2")`;
+  const headingState = `[...${HEADINGS}].map((h) => {
+    let o = 1; for (let n = h; n; n = n.parentElement) o *= parseFloat(getComputedStyle(n).opacity);
+    return { label: h.getAttribute("aria-label"), text: h.textContent.trim(), opacity: o };
+  })`;
+
+  await check("9 section headings visible and scramble settles; reduced motion is instant", async () => {
+    await page.setViewport(1280, 800);
+    await page.navigate(BASE + "/");
+    await page.evaluate("location.reload()");
+    await sleep(500);
+    const n = await page.evaluate(`${HEADINGS}.length`);
+    assert(n === 4, `${n} headings`);
+    for (let i = 0; i < n; i++) {
+      await page.evaluate(`${HEADINGS}[${i}].scrollIntoView({ behavior: "instant", block: "center" })`);
+      await sleep(1500); // scramble 700ms + reveal 800ms
+    }
+    for (const s of await page.evaluate(headingState)) assert(s.opacity === 1 && s.text === s.label, `heading ${JSON.stringify(s)}`);
+
+    await page.setReducedMotion(true);
+    await page.navigate(BASE + "/");
+    await page.evaluate("location.reload()");
+    await sleep(500);
+    await page.evaluate(`[...${HEADINGS}].forEach((h) => h.scrollIntoView({ behavior: "instant", block: "center" }))`);
+    const instant = await page.evaluate(`new Promise((r) => requestAnimationFrame(() => r(${headingState})))`);
+    await page.setReducedMotion(false);
+    for (const s of instant) assert(s.opacity === 1 && s.text === s.label, `reduced-motion heading ${JSON.stringify(s)}`);
+    return `${n} headings`;
+  });
+
   await check("7 320px: no horizontal scroll", async () => {
     await page.setViewport(320, 700);
     await page.navigate(BASE + "/");

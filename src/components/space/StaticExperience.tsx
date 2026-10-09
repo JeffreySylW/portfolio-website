@@ -2,6 +2,7 @@
 
 import { BODIES } from "@/content/space";
 import { SunIntro } from "./SunIntro";
+import { ScrambleHeading } from "@/components/ScrambleHeading";
 import { Timeline } from "./Timeline";
 
 export function StaticExperience() {
@@ -10,7 +11,7 @@ export function StaticExperience() {
       <SunIntro />
       <Timeline />
       <section aria-labelledby="bodies-heading" className="mx-auto max-w-3xl px-6 pb-20">
-        <h2 id="bodies-heading" className="font-mono text-xs tracking-wider text-sky-300">everything else</h2>
+        <ScrambleHeading id="bodies-heading" text="everything else" className="font-mono text-xs tracking-wider text-sky-300" />
         <ul className="mt-6 grid gap-4 sm:grid-cols-2">
           {BODIES.filter((b) => b.kind === "star").map((b) => (
             <li key={b.id} className="rounded-sm border border-slate-800 p-4">

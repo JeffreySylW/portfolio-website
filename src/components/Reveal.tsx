@@ -1,27 +1,26 @@
 "use client";
 
-import { useInView } from "@/lib/useInView";
-import { ReactNode } from "react";
+import { useOnEnter } from "@/lib/useInView";
+import type { CSSProperties, ReactNode } from "react";
+
+// Hidden/shown state lives in CSS (.reveal in globals.css); the final state is the default.
+export function markIn(el: HTMLElement) {
+  el.setAttribute("data-in", "");
+}
 
 export function Reveal({
   children,
   className = "",
-  delayMs = 0,
+  i = 0,
 }: {
   children: ReactNode;
   className?: string;
-  delayMs?: number;
+  /** stagger index; delay = i * 70ms, capped */
+  i?: number;
 }) {
-  const { ref, inView } = useInView<HTMLDivElement>();
-
+  const ref = useOnEnter<HTMLDivElement>(markIn);
   return (
-    <div
-      ref={ref}
-      className={`transition-all duration-700 ease-out ${
-        inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
-      } ${className}`}
-      style={{ transitionDelay: inView ? `${delayMs}ms` : "0ms" }}
-    >
+    <div ref={ref} className={`reveal ${className}`} style={{ "--i": i } as CSSProperties}>
       {children}
     </div>
   );
