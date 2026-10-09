@@ -68,6 +68,55 @@ html {
   }
 }
 
+:root {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Final, visible state is the default; hiding and motion apply only when motion is allowed. */
+.tl-dot {
+  background-color: #7dd3fc;
+  box-shadow: 0 0 10px 3px rgb(125 211 252 / 0.6);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    transition:
+      opacity 800ms var(--ease-out-expo),
+      transform 800ms var(--ease-out-expo);
+    transition-delay: calc(min(var(--i, 0), 6) * 70ms);
+  }
+  .reveal:not([data-in]) {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  .tl-dot {
+    transition:
+      background-color 600ms var(--ease-out-expo),
+      box-shadow 600ms var(--ease-out-expo),
+      transform 600ms var(--ease-out-expo);
+  }
+  .tl-dot:not([data-active]) {
+    background-color: #475569;
+    box-shadow: none;
+    transform: scale(0.8);
+  }
+}
+
+/* The line draws down with scroll where scroll-driven animations exist; otherwise it is simply full. */
+@keyframes tl-draw {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .tl-line {
+      transform-origin: top;
+      animation: tl-draw linear both;
+      animation-timeline: view();
+      animation-range: cover 20% cover 75%;
+    }
+  }
+}
+
 ::selection {
   background: var(--signal);
   color: var(--paper);

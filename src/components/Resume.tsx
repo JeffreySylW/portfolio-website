@@ -34,6 +34,8 @@ export function Resume() {
             className="h-[60vh] w-full bg-white"
           />
         </div>
+      </Reveal>
+      <Reveal i={2}>
         <div className="mt-4 flex items-center gap-6">
           <button
             type="button"
