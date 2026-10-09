@@ -52,5 +52,5 @@ export const GALLERY: GalleryImage[] = [
   { src: "/images/tours/flight-simulator.jpg", alt: "Group inside the full-dome flight simulator", name: "Flight Simulator", detail: "Simulated landing a plane inside the full-dome visual simulator.", width: 248, height: 162 },
   { src: "/images/tours/compressor-station.jpg", alt: "Group outdoors among the piping at the Compressor Station", name: "Compressor Station", detail: "How each facility on center gets its compressed air for testing.", width: 249, height: 162 },
   { src: "/images/internship/broadcast-control-room.jpg", alt: "Server rack running the wind tunnel surveillance system", name: "Surveillance Rack", detail: "The hardware behind the wind tunnel surveillance system, live.", width: 1179, height: 1578 },
-  { src: "/images/internship/wind-tunnel-model-display.jpg", alt: "Archival scale model of an early Langley wind tunnel on display", name: "Legacy Hardware", detail: "Archival scale model of an early Langley tunnel.", width: 4032, height: 3024 },
+  { src: "/images/internship/wind-tunnel-model-display.jpg", alt: "Group photo of interns at NASA Langley", name: "Legacy Hardware", detail: "Interns at NASA Langley", width: 4032, height: 3024 },
 ];
