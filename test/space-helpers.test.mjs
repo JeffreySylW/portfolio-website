@@ -37,6 +37,9 @@ import {
   lerpVec,
   flightDurationMs,
   rotateY,
+  followPosition,
+  flightPose,
+  orbitAngle,
 } from "../src/lib/cameraPath.ts";
 
 test("bodyPosition keeps a planet on its orbit radius", () => {
@@ -80,4 +83,27 @@ test("rotateY keeps distance from the axis and is periodic", () => {
   assert.equal(y, 2);
   const w = rotateY(v, 2 * Math.PI);
   v.forEach((c, i) => assert.ok(Math.abs(w[i] - c) < 1e-9));
+});
+
+test("flight ends exactly on the follow pose, facing the sun", () => {
+  const body = { orbitRadius: 8, startAngleDeg: 30 };
+  const cam = [4, 1.4, 0];
+  const now = 2;
+  const later = 3.5; // planet keeps orbiting during the flight
+  const from = [0, 14, 22];
+  const lookFrom = [0, 0, 21];
+  const sun = [0, 0, 0];
+  const speed = 0.05;
+  const a0 = orbitAngle(body, now, speed);
+  const follow = (t) => followPosition(bodyPosition(body, t, speed), cam, orbitAngle(body, t, speed) - a0);
+  const start = flightPose(from, follow(now), lookFrom, sun, 0);
+  assert.deepEqual(start.position, from);
+  assert.deepEqual(start.lookAt, lookFrom);
+  const end = flightPose(from, follow(later), lookFrom, sun, 1);
+  const want = follow(later);
+  assert.ok(end.position.every((v, i) => Math.abs(v - want[i]) < 1e-9));
+  assert.deepEqual(end.lookAt, sun);
+  // following continues from the same pose: no step at the hand-off
+  const next = follow(later + 1 / 60);
+  assert.ok(Math.hypot(...next.map((v, i) => v - end.position[i])) < 0.05);
 });

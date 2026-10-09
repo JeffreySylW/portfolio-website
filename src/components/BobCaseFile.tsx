@@ -57,10 +57,12 @@ export function BobCaseFile({
   open,
   onClose,
   originRect,
+  returnFocusTo,
 }: {
   open: boolean;
   onClose: () => void;
   originRect: DOMRect | null;
+  returnFocusTo?: HTMLElement | null;
 }) {
   const [rendered, setRendered] = useState(open);
   const [entered, setEntered] = useState(false);
@@ -73,13 +75,13 @@ export function BobCaseFile({
 
   useEffect(() => {
     if (!open || !rendered) return;
-    opener.current = document.activeElement;
+    opener.current = returnFocusTo ?? document.activeElement;
     const raf = requestAnimationFrame(() => {
       setEntered(true);
       closeRef.current?.focus();
     });
     return () => cancelAnimationFrame(raf);
-  }, [open, rendered]);
+  }, [open, rendered, returnFocusTo]);
 
   useEffect(() => {
     if (open || !rendered) return;

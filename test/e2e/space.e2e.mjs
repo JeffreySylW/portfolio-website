@@ -161,6 +161,30 @@ try {
     return `${imgs} images`;
   });
 
+  await check("11 NASA card opens only after the camera arrives, sun centred", async () => {
+    await page.setViewport(1280, 800);
+    await page.navigate(BASE + "/");
+    await page.evaluate("location.reload()");
+    await sleep(500);
+    assert(await page.waitFor(`!!(${rectOf("NASA Langley Research Center")})`), "NASA label missing");
+    await page.evaluate(`[...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "NASA Langley Research Center").focus()`);
+    // click, then sample for 300ms in-page: the dialog must stay closed
+    const early = await page.evaluate(`new Promise((r) => {
+      document.activeElement.click();
+      const t0 = performance.now(); let seen = false;
+      const id = setInterval(() => {
+        if (document.querySelector("dialog[open]")) seen = true;
+        if (performance.now() - t0 >= 300) { clearInterval(id); r(seen); }
+      }, 10);
+    })`);
+    assert(!early, "dialog opened within 300ms of the click");
+    assert(await page.waitFor(`!!document.querySelector("dialog[open]")`, 3000), "dialog not open within 3s");
+    const m = await page.evaluate(`(() => { const cv = document.querySelector("canvas").getBoundingClientRect(); const b = document.querySelector('button[aria-label^="About me"]'); const r = b.getBoundingClientRect(); const [dx, dy] = b.style.transform.match(/-?[0-9.]+/g).map(Number); return { x: r.x + r.width / 2 - dx - (cv.x + cv.width / 2), y: r.y + r.height / 2 - dy - (cv.y + cv.height / 2) }; })()`);
+    const off = Math.hypot(m.x, m.y);
+    assert(off <= 20, `sun ${off.toFixed(1)}px off centre when the dialog opened`);
+    return `sun off centre ${off.toFixed(1)}px`;
+  });
+
   await check("7 320px: no horizontal scroll", async () => {
     await page.setViewport(320, 700);
     await page.navigate(BASE + "/");

@@ -10,9 +10,9 @@ import {
   cameraTargetFor,
   easeInOutCubic,
   flightDurationMs,
-  lerpVec,
+  flightPose,
+  followPosition,
   orbitAngle,
-  rotateY,
   type Vec3,
 } from "@/lib/cameraPath";
 import { Starfield } from "./Starfield";
@@ -24,7 +24,11 @@ const homeFor = (aspect: number): { position: Vec3; lookAt: Vec3 } => {
   return { position: [0, HOME.position[1] * k, HOME.position[2] * k], lookAt: HOME.lookAt };
 };
 
-type Flight = { from: Vec3; to: Vec3; lookFrom: Vec3; lookTo: Vec3; start: number; duration: number };
+type Follow = { body: SpaceBody; cam: Vec3; angle0: number };
+type Flight = {
+  from: Vec3; to: Vec3; lookFrom: Vec3; lookTo: Vec3; start: number; duration: number;
+  follow: Follow | null; id: string | null;
+};
 
 const speedOf = (b: SpaceBody) => (b.kind === "star" ? 0.01 : 0.05);
 
@@ -101,18 +105,19 @@ function MilkyWay() {
   );
 }
 
-function CameraRig({ target, reducedMotion, time: timeRef }: {
+function CameraRig({ target, reducedMotion, time: timeRef, onArrive }: {
   target: string | null;
   reducedMotion: boolean;
   time: MutableRefObject<number>;
+  onArrive?: (id: string) => void;
 }) {
   const { camera, size } = useThree();
   const aspect = size.width / size.height;
   const flight = useRef<Flight | null>(null);
   const lastTarget = useRef<string | null>(null);
-  // arrival camera offset from the followed body's live position
-  const pending = useRef<SpaceBody | null>(null);
-  const follow = useRef<{ body: SpaceBody; cam: Vec3; angle0: number } | null>(null);
+  const follow = useRef<Follow | null>(null);
+  const arrive = useRef(onArrive);
+  useEffect(() => { arrive.current = onArrive; });
 
   useEffect(() => {
     // initial placement / resize while at home
@@ -123,8 +128,13 @@ function CameraRig({ target, reducedMotion, time: timeRef }: {
     }
   }, [aspect, camera]);
 
+  // camera position that tracks a followed body (arrival offset turned with its orbit)
+  const followPos = (f: Follow, now: number): Vec3 =>
+    followPosition(livePos(f.body, now), f.cam, orbitAngle(f.body, now, speedOf(f.body)) - f.angle0);
+
   useFrame(({ clock }) => {
-    timeRef.current = clock.elapsedTime;
+    const now = clock.elapsedTime;
+    timeRef.current = now;
     if (target !== lastTarget.current) {
       lastTarget.current = target;
       follow.current = null;
@@ -132,67 +142,63 @@ function CameraRig({ target, reducedMotion, time: timeRef }: {
       const look = new THREE.Vector3(0, 0, 0);
       camera.getWorldDirection(look);
       const lookNow = camera.position.clone().add(look).toArray() as Vec3;
-      let to: { position: Vec3; lookAt: Vec3 } = homeFor(aspect);
-      pending.current = null;
-      if (target && target !== "sun") {
-        const body = BODIES.find((b) => b.id === target);
-        if (body) {
-          to = cameraTargetFor(livePos(body, clock.elapsedTime), body.kind === "star" ? 2.5 : 4);
-          pending.current = body;
-        }
+      const home = homeFor(aspect);
+      let to: Vec3 = home.position;
+      let fol: Follow | null = null;
+      const body = target && target !== "sun" ? BODIES.find((b) => b.id === target) : undefined;
+      if (body) {
+        const p = livePos(body, now);
+        const pos = cameraTargetFor(p, body.kind === "star" ? 2.5 : 4).position;
+        fol = { body, cam: [pos[0] - p[0], pos[1] - p[1], pos[2] - p[2]], angle0: orbitAngle(body, now, speedOf(body)) };
+        to = pos;
       }
       if (reducedMotion) {
-        camera.position.set(...to.position);
-        camera.lookAt(...to.lookAt);
+        camera.position.set(...to);
+        camera.lookAt(0, 0, 0);
         flight.current = null;
+        follow.current = fol;
       } else {
         flight.current = {
           from: cur,
-          to: to.position,
+          to,
           lookFrom: lookNow,
-          lookTo: to.lookAt,
-          start: clock.elapsedTime,
-          duration: flightDurationMs(cur, to.position) / 1000,
+          lookTo: home.lookAt,
+          start: now,
+          duration: flightDurationMs(cur, to) / 1000,
+          follow: fol,
+          id: target,
         };
       }
     }
     const f = flight.current;
     if (f) {
-      const t = Math.min(1, (clock.elapsedTime - f.start) / f.duration);
-      const e = easeInOutCubic(t);
-      camera.position.set(...lerpVec(f.from, f.to, e));
-      camera.lookAt(...lerpVec(f.lookFrom, f.lookTo, e));
+      const t = Math.min(1, (now - f.start) / f.duration);
+      // the end point is the live follow pose, so the hand-off to following has no step
+      const end = f.follow ? followPos(f.follow, now) : f.to;
+      const pose = flightPose(f.from, end, f.lookFrom, f.lookTo, easeInOutCubic(t));
+      camera.position.set(...pose.position);
+      camera.lookAt(...pose.lookAt);
       if (t >= 1) {
         flight.current = null;
-        const body = pending.current;
-        if (body) {
-          const p = livePos(body, clock.elapsedTime);
-          follow.current = {
-            body,
-            cam: [f.to[0] - p[0], f.to[1] - p[1], f.to[2] - p[2]],
-            angle0: orbitAngle(body, clock.elapsedTime, speedOf(body)),
-          };
-        }
+        follow.current = f.follow;
+        if (f.id) arrive.current?.(f.id);
       }
     } else if (follow.current) {
-      const { body, cam, angle0 } = follow.current;
-      const p = livePos(body, clock.elapsedTime);
-      // turn the arrival offset with the body so it mirrors the orbit exactly
-      const r = rotateY(cam, orbitAngle(body, clock.elapsedTime, speedOf(body)) - angle0);
-      camera.position.set(p[0] + r[0], p[1] + r[1], p[2] + r[2]);
+      camera.position.set(...followPos(follow.current, now));
       camera.lookAt(0, 0, 0); // face the sun while following
     }
   });
   return null;
 }
 
-export function GalaxyCanvas({ selectedId, onSelect, reducedMotion, paused = false, labelFor, onCreated }: {
+export function GalaxyCanvas({ selectedId, onSelect, reducedMotion, paused = false, labelFor, onCreated, onArrive }: {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   reducedMotion: boolean;
   paused?: boolean;
   labelFor: (id: string) => ReactNode;
   onCreated?: (canvas: HTMLCanvasElement) => void;
+  onArrive?: (id: string) => void;
 }) {
   const time = useRef(0);
   // drei Html swaps its mount target once the canvas is in the DOM, which empties the first label; mount bodies after that
@@ -218,7 +224,7 @@ export function GalaxyCanvas({ selectedId, onSelect, reducedMotion, paused = fal
           ))}
         </>
       )}
-      <CameraRig target={selectedId} reducedMotion={reducedMotion} time={time} />
+      <CameraRig target={selectedId} reducedMotion={reducedMotion} time={time} onArrive={onArrive} />
     </Canvas>
   );
 }

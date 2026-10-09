@@ -43,3 +43,14 @@ export function rotateY(v: Vec3, angle: number): Vec3 {
   const s = Math.sin(angle);
   return [v[0] * c - v[2] * s, v[1], v[0] * s + v[2] * c];
 }
+
+/** Camera position that follows a body: its live position plus the arrival offset turned by the orbit since arrival was planned. */
+export function followPosition(bodyPos: Vec3, cam: Vec3, dAngle: number): Vec3 {
+  const r = rotateY(cam, dAngle);
+  return [bodyPos[0] + r[0], bodyPos[1] + r[1], bodyPos[2] + r[2]];
+}
+
+/** Position and look point part-way (eased t) through a flight; at t=1 they equal `to` and `lookTo`. */
+export function flightPose(from: Vec3, to: Vec3, lookFrom: Vec3, lookTo: Vec3, e: number): { position: Vec3; lookAt: Vec3 } {
+  return { position: lerpVec(from, to, e), lookAt: lerpVec(lookFrom, lookTo, e) };
+}
