@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --paper: #f6f5f1;
-  --ink: #1b1d1f;
-  --ink-soft: #5b6066;
-  --line: #d8d6cf;
-  --signal: #2b5d4f;
+  --paper: #03050b;
+  --ink: #e6edf7;
+  --ink-soft: #9fb3d4;
+  --line: #1d2740;
+  --signal: #6ec6ff;
   --grid-line: color-mix(in srgb, var(--ink) 6%, transparent);
 
   --console-bg: #05070a;

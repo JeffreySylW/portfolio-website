@@ -24,12 +24,12 @@ export function Contact() {
                 href={link.href}
                 target={link.href.startsWith("http") ? "_blank" : undefined}
                 rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                className="group flex items-baseline justify-between rounded-sm border border-line px-4 py-3 transition-colors hover:border-signal focus-visible:border-signal outline-none"
+                className="group flex items-baseline justify-between gap-4 rounded-sm border border-line px-4 py-3 transition-colors hover:border-signal focus-visible:border-signal outline-none"
               >
                 <span className="font-mono text-xs tracking-wider text-ink-soft">
                   {link.label.toUpperCase()}
                 </span>
-                <span className="font-mono text-sm text-ink group-hover:text-signal">
+                <span className="min-w-0 break-all text-right font-mono text-sm text-ink group-hover:text-signal">
                   {link.value}
                 </span>
               </a>

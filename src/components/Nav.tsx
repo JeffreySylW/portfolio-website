@@ -3,17 +3,15 @@
 import { useEffect, useState } from "react";
 
 const LINKS = [
-  { id: "about", label: "about" },
-  { id: "experience", label: "experience" },
+  { id: "top", label: "galaxy" },
+  { id: "timeline", label: "experience" },
   { id: "projects", label: "projects" },
-  { id: "education", label: "education" },
-  { id: "skills", label: "skills" },
   { id: "resume", label: "resume" },
   { id: "contact", label: "contact" },
 ];
 
 export function Nav() {
-  const [active, setActive] = useState<string>("about");
+  const [active, setActive] = useState<string>("top");
 
   useEffect(() => {
     const sections = LINKS.map((l) => document.getElementById(l.id)).filter(
@@ -41,7 +39,7 @@ export function Nav() {
         <a href="#top" className="text-ink hover:text-signal transition-colors">
           JEFFREY.WEAVER
         </a>
-        <ul className="flex gap-5">
+        <ul className="flex flex-wrap justify-end gap-x-5 gap-y-1">
           {LINKS.map((link) => (
             <li key={link.id}>
               <a
