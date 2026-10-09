@@ -24,6 +24,7 @@ const rectOf = (text) => `(() => {
   return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
 })()`;
 const panelTitle = `document.querySelector("aside h2")?.textContent ?? null`;
+const bobOpen = `!!document.querySelector('[role="dialog"][aria-label="Bob The Tech Guy case file"]')`;
 
 const edge = await launch();
 let page;
@@ -37,16 +38,16 @@ try {
     assert(await page.waitFor(`!!(${rectOf("Bob The Tech Guy")})`), "button 'Bob The Tech Guy' not found");
   });
 
-  await check("2 click Bob opens story panel", async () => {
+  await check("2 click Bob opens the case file", async () => {
     const { x, y } = await page.evaluate(rectOf("Bob The Tech Guy"));
     await page.clickAt(x, y);
-    assert(await page.waitFor(`${panelTitle} === "Bob The Tech Guy"`, 5000), `panel h2 = ${await page.evaluate(panelTitle)}`);
+    assert(await page.waitFor(bobOpen, 5000), "Bob case file did not open");
   });
 
-  await check("3 Escape closes panel and refocuses Bob label", async () => {
-    assert(await page.evaluate(`!!document.querySelector("aside")`), "no panel open to dismiss");
+  await check("3 Escape closes case file and refocuses Bob label", async () => {
+    assert(await page.evaluate(bobOpen), "no case file open to dismiss");
     await page.pressEscape();
-    assert(await page.waitFor(`!document.querySelector("aside")`, 5000), "panel still open");
+    assert(await page.waitFor(`!document.querySelector('[role="dialog"]')`, 5000), "case file still open");
     const focused = await page.evaluate(`document.activeElement?.textContent?.trim()`);
     assert(focused === "Bob The Tech Guy", `focus on ${JSON.stringify(focused)}`);
   });
@@ -95,7 +96,7 @@ try {
     assert(await page.waitFor(`!!(${rectOf("Bob The Tech Guy")})`), "Bob label missing");
     const c = await page.evaluate(rectOf("Bob The Tech Guy"));
     await page.clickAt(c.x, c.y);
-    assert(await page.waitFor(`${panelTitle} === "Bob The Tech Guy"`, 5000), "panel did not open");
+    assert(await page.waitFor(bobOpen, 5000), "case file did not open");
     await sleep(4500); // flight finished
     // Sun proxy: its label button, minus the label's own translate(off, -off) styling, gives the sun's screen position; centre is the canvas centre.
     const sample = () => page.evaluate(`(() => { const cv = document.querySelector("canvas").getBoundingClientRect(); return { sun: (() => { const b = document.querySelector('button[aria-label^="About me"]'); if (!b) return null; const r = b.getBoundingClientRect(); const [dx, dy] = b.style.transform.match(/-?[0-9.]+/g).map(Number); return { x: r.x + r.width / 2 - dx, y: r.y + r.height / 2 - dy }; })(), cx: cv.x + cv.width / 2, cy: cv.y + cv.height / 2 }; })()`);
@@ -106,6 +107,27 @@ try {
     const off = [a, b].map((m) => Math.hypot(m.sun.x - m.cx, m.sun.y - m.cy));
     assert(off.every((d) => d <= 20), `sun not at canvas centre, off by ${off.map((d) => d.toFixed(1))}px`);
     return `sun off centre ${off.map((d) => d.toFixed(1))}px`;
+  });
+
+  await check("9 NASA deep dive: gallery opens and Escape closes it", async () => {
+    await page.setViewport(1280, 800);
+    await page.navigate(BASE + "/");
+    await page.evaluate("location.reload()");
+    await sleep(500);
+    assert(await page.waitFor(`!!(${rectOf("NASA Langley Research Center")})`), "NASA label missing");
+    // The NASA label sits among overlapping labels; activate the button itself rather than a pixel.
+    await page.evaluate(`[...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "NASA Langley Research Center").focus()`);
+    await page.evaluate(`document.activeElement.click()`);
+    assert(await page.waitFor(`!!document.querySelector("dialog[open]")`, 5000), "dialog did not open");
+    const imgs = await page.evaluate(`document.querySelectorAll("dialog[open] img").length`);
+    assert(imgs >= 10, `${imgs} gallery images`);
+    const focus = await page.evaluate(`document.activeElement?.textContent?.trim()`);
+    assert(focus?.startsWith("close"), `focus on ${JSON.stringify(focus)}`);
+    await page.pressEscape();
+    assert(await page.waitFor(`!document.querySelector("dialog[open]")`, 5000), "dialog still open after Escape");
+    const back = await page.evaluate(`document.activeElement?.textContent?.trim()`);
+    assert(back === "NASA Langley Research Center", `focus returned to ${JSON.stringify(back)}`);
+    return `${imgs} images`;
   });
 
   await check("7 320px: no horizontal scroll", async () => {

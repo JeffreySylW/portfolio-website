@@ -186,10 +186,11 @@ function CameraRig({ target, reducedMotion, time: timeRef }: {
   return null;
 }
 
-export function GalaxyCanvas({ selectedId, onSelect, reducedMotion, labelFor, onCreated }: {
+export function GalaxyCanvas({ selectedId, onSelect, reducedMotion, paused = false, labelFor, onCreated }: {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   reducedMotion: boolean;
+  paused?: boolean;
   labelFor: (id: string) => ReactNode;
   onCreated?: (canvas: HTMLCanvasElement) => void;
 }) {
@@ -199,6 +200,7 @@ export function GalaxyCanvas({ selectedId, onSelect, reducedMotion, labelFor, on
 
   return (
     <Canvas
+      frameloop={paused ? "never" : "always"}
       camera={{ position: HOME.position, fov: 50, near: 0.1, far: 400 }}
       dpr={[1, 1.75]}
       onCreated={({ gl }) => { onCreated?.(gl.domElement); setReady(true); }}
