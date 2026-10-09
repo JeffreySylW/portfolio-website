@@ -3,16 +3,17 @@
 import { BODIES, SUN } from "@/content/space";
 
 export function BodyLabel({ id, onActivate }: { id: string; onActivate: (id: string) => void }) {
-  const label = id === "sun" ? SUN.name : BODIES.find((b) => b.id === id)?.name ?? id;
+  const label = id === "sun" ? "about me" : BODIES.find((b) => b.id === id)?.name ?? id;
   const kind = id === "sun" ? "sun" : BODIES.find((b) => b.id === id)?.kind ?? "";
   const body = BODIES.find((b) => b.id === id);
-  const dim = kind === "star" ? "opacity-40 hover:opacity-100 focus-visible:opacity-100" : "opacity-60 hover:opacity-100 focus-visible:opacity-100";
+  const dim = kind === "sun" ? "opacity-100" : kind === "star" ? "opacity-40 hover:opacity-100 focus-visible:opacity-100" : "opacity-60 hover:opacity-100 focus-visible:opacity-100";
   const hide = kind === "station" || kind === "module" ? "hidden sm:flex " : "flex ";
   // push the label out past the body's edge (about 34px per world unit at the home view), up and to the right
   const off = Math.round((body?.size ?? 1.6) * 34 * 0.71) + 4;
   return (
     <button
       type="button"
+      aria-label={id === "sun" ? `About me: ${SUN.name}` : undefined}
       onPointerDown={(e) => e.stopPropagation()}
       onClick={(e) => { e.stopPropagation(); onActivate(id); }}
       style={{ transform: `translate(${off}px, ${-off}px)` }}

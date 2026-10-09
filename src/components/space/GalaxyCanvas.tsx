@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useEffect, useRef, type MutableRefObject, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html, useTexture } from "@react-three/drei";
+import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { BODIES, type SpaceBody } from "@/content/space";
 import {
@@ -14,6 +14,7 @@ import {
   type Vec3,
 } from "@/lib/cameraPath";
 import { Starfield } from "./Starfield";
+import { proceduralTexture } from "./proceduralTexture";
 
 const HOME: { position: Vec3; lookAt: Vec3 } = { position: [0, 14, 22], lookAt: [0, 0, 0] };
 // portrait: pull back (2x) so labelled orbits stay on screen; desktop unchanged
@@ -32,11 +33,6 @@ function livePos(body: SpaceBody, t: number): Vec3 {
   return [x + o[0], y + o[1], z + o[2]];
 }
 
-function TexturedMaterial({ url }: { url: string }) {
-  const map = useTexture(url);
-  return <meshStandardMaterial map={map} color="#ffffff" emissive="#ffffff" emissiveMap={map} emissiveIntensity={0.25} roughness={0.7} />;
-}
-
 function Body({ body, onSelect, labelFor, time }: {
   body: SpaceBody;
   onSelect: (id: string) => void;
@@ -45,8 +41,11 @@ function Body({ body, onSelect, labelFor, time }: {
 }) {
   const group = useRef<THREE.Group>(null);
   const isStar = body.kind === "star";
+  const map = useMemo(() => proceduralTexture(body.id), [body.id]);
+  const mat = useRef<THREE.MeshStandardMaterial>(null);
 
   useFrame(() => {
+    if (isStar && mat.current) mat.current.emissiveIntensity = 1.6 + 0.6 * Math.sin(time.current * 1.5 + body.startAngleDeg);
     if (!group.current) return;
     const parent = body.parent ? BODIES.find((b) => b.id === body.parent) : undefined;
     const [x, y, z] = bodyPosition(body, time.current, isStar ? 0.01 : 0.05);
@@ -58,13 +57,9 @@ function Body({ body, onSelect, labelFor, time }: {
     <group ref={group} onClick={(e) => { e.stopPropagation(); onSelect(body.id); }}>
       <mesh>
         <sphereGeometry args={[body.size, 32, 32]} />
-        {body.texture ? (
-          <TexturedMaterial url={body.texture} />
-        ) : (
-          <meshStandardMaterial color={body.color} emissive={body.color} emissiveIntensity={isStar ? 2 : 0.25} roughness={0.7} />
-        )}
+        <meshStandardMaterial ref={mat} map={map} color="#ffffff" emissive="#ffffff" emissiveMap={map} emissiveIntensity={isStar ? 2 : 0.3} roughness={0.7} />
       </mesh>
-      {body.texture && (
+      {body.kind === "planet" && (
         <mesh>
           <sphereGeometry args={[body.size * 1.08, 32, 32]} />
           <meshBasicMaterial color={body.color} side={THREE.BackSide} transparent opacity={0.15} depthWrite={false} />
@@ -75,12 +70,16 @@ function Body({ body, onSelect, labelFor, time }: {
   );
 }
 
-function Sun({ onSelect, labelFor }: { onSelect: (id: string | null) => void; labelFor: (id: string) => ReactNode }) {
+function Sun({ onSelect, labelFor, time }: { onSelect: (id: string | null) => void; labelFor: (id: string) => ReactNode; time: MutableRefObject<number> }) {
+  const map = useMemo(() => proceduralTexture("sun"), []);
+  const mat = useRef<THREE.MeshStandardMaterial>(null);
+  // slow churn: scroll the (wrapping) texture
+  useFrame(() => { if (mat.current?.map) mat.current.map.offset.x = (time.current * 0.01) % 1; });
   return (
     <group onClick={(e) => { e.stopPropagation(); onSelect("sun"); }}>
       <mesh>
         <sphereGeometry args={[1.6, 48, 48]} />
-        <meshStandardMaterial color="#f5b041" emissive="#f5b041" emissiveIntensity={1.4} />
+        <meshStandardMaterial ref={mat} map={map} color="#ffffff" emissive="#ffffff" emissiveMap={map} emissiveIntensity={1.4} />
       </mesh>
       <mesh>
         <sphereGeometry args={[2.4, 32, 32]} />
@@ -183,23 +182,27 @@ export function GalaxyCanvas({ selectedId, onSelect, reducedMotion, labelFor, on
   onCreated?: (canvas: HTMLCanvasElement) => void;
 }) {
   const time = useRef(0);
+  // drei Html swaps its mount target once the canvas is in the DOM, which empties the first label; mount bodies after that
+  const [ready, setReady] = useState(false);
 
   return (
     <Canvas
       camera={{ position: HOME.position, fov: 50, near: 0.1, far: 200 }}
       dpr={[1, 1.75]}
-      onCreated={({ gl }) => onCreated?.(gl.domElement)}
+      onCreated={({ gl }) => { onCreated?.(gl.domElement); setReady(true); }}
       onPointerMissed={() => onSelect(null)}
     >
       <color attach="background" args={["#03050b"]} />
       <ambientLight intensity={0.15} />
       <Starfield reducedMotion={reducedMotion} />
-      <Sun onSelect={onSelect} labelFor={labelFor} />
-      <Suspense fallback={null}>
-        {BODIES.map((b) => (
-          <Body key={b.id} body={b} onSelect={(id) => onSelect(id)} labelFor={labelFor} time={time} />
-        ))}
-      </Suspense>
+      {ready && (
+        <>
+          <Sun onSelect={onSelect} labelFor={labelFor} time={time} />
+          {BODIES.map((b) => (
+            <Body key={b.id} body={b} onSelect={(id) => onSelect(id)} labelFor={labelFor} time={time} />
+          ))}
+        </>
+      )}
       <CameraRig target={selectedId} reducedMotion={reducedMotion} time={time} />
     </Canvas>
   );

@@ -10,7 +10,7 @@ export interface SpaceBody {
   tools: string[];
   parent?: string;
   color: string;
-  texture?: string;
+  look: "gas" | "rock" | "station" | "module" | "star";
   orbitRadius: number;
   startAngleDeg: number;
   size: number;
@@ -36,7 +36,7 @@ export const BODIES: SpaceBody[] = [
       "Modernized a client-side MATLAB application for real-time data monitoring, building event-driven GUIs and back-end components that unpack and display UDP data from secure networks. Worked directly with a team of engineers on system architecture and new features, and kept version history clean and collaborative with Git throughout.",
     tools: ["MATLAB", "Python", "UDP", "Git"],
     color: "#8fd3ff",
-    texture: "/textures/earth-2k.jpg",
+    look: "gas",
     orbitRadius: 6,
     startAngleDeg: 20,
     size: 0.9,
@@ -51,13 +51,14 @@ export const BODIES: SpaceBody[] = [
       "Redesigned the WordPress site for a small-business client relocating his computer-repair business to Chesterfield, VA, built to earn phone calls and compete with other local repair shops.",
     tools: ["HTML", "CSS", "JavaScript", "WordPress", "REST API", "Git"],
     color: "#ffb199",
-    texture: "/textures/mars-2k.jpg",
+    look: "rock",
     orbitRadius: 10,
     startAngleDeg: 200,
     size: 0.95,
   },
   {
     id: "education",
+    look: "station",
     kind: "station",
     name: "Virginia Commonwealth University",
     subtitle: "B.S. Computer Science, Software Engineering concentration, AI minor",
@@ -72,6 +73,7 @@ export const BODIES: SpaceBody[] = [
   },
   {
     id: "aspire",
+    look: "module",
     kind: "module",
     name: "DoD ASPIRE Capstone",
     subtitle: "LiDAR & Camera Sensor Data Fusion Researcher, U.S. Army",
@@ -87,6 +89,7 @@ export const BODIES: SpaceBody[] = [
   },
   {
     id: "ta",
+    look: "module",
     kind: "module",
     name: "Computer Science Teaching Assistant",
     subtitle: "VCU College of Engineering",
@@ -102,6 +105,7 @@ export const BODIES: SpaceBody[] = [
   },
   {
     id: "skills-languages",
+    look: "star",
     kind: "star",
     name: "Languages",
     subtitle: "Skills",
@@ -114,6 +118,7 @@ export const BODIES: SpaceBody[] = [
   },
   {
     id: "skills-web",
+    look: "star",
     kind: "star",
     name: "Web",
     subtitle: "Skills",
@@ -126,6 +131,7 @@ export const BODIES: SpaceBody[] = [
   },
   {
     id: "skills-tools",
+    look: "star",
     kind: "star",
     name: "Tools and practices",
     subtitle: "Skills",
@@ -138,6 +144,7 @@ export const BODIES: SpaceBody[] = [
   },
   {
     id: "sports-analytics",
+    look: "star",
     kind: "star",
     name: "Sports Analytics Platform",
     subtitle: "Project, AUG 2024 – DEC 2025",

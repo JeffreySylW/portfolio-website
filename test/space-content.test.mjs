@@ -48,10 +48,9 @@ test("content contains no street address and no competitor names", () => {
   for (const t of blocked) assert.ok(!text.toLowerCase().includes(t.toLowerCase()), "content mentions a blocked term");
 });
 
-test("nasa and bob have textures that exist under public/textures", () => {
-  for (const id of ["nasa", "bob"]) {
-    const b = S.BODIES.find((x) => x.id === id);
-    assert.ok(b.texture?.startsWith("/textures/"), `${id} needs a texture`);
-    assert.ok(existsSync(new URL(`../public${b.texture}`, import.meta.url)), `${id} texture file missing`);
-  }
+test("every body has a procedural look matching its kind", () => {
+  const looks = { planet: ["gas", "rock"], station: ["station"], module: ["module"], star: ["star"] };
+  for (const b of S.BODIES) assert.ok(looks[b.kind].includes(b.look), `${b.id} needs a valid look`);
+  assert.equal(S.BODIES.find((x) => x.id === "nasa").look, "gas");
+  assert.equal(S.BODIES.find((x) => x.id === "bob").look, "rock");
 });
