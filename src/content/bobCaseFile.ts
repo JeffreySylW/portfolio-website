@@ -53,9 +53,9 @@ export const AI_NOTE = "AI-assisted development (Claude Code), with every change
 
 export const WORK = [
   { pair: "Home", src: "/images/bob/home-before.webp", archived: true, alt: "Bob The Tech Guy homepage in 2022: old pixel logo, a public login bar, and a collage of brand logos", caption: "Home, before — archived 2022 via the Wayback Machine" },
-  { pair: "Home", src: "/images/bob/home-after.webp", alt: "Redesigned homepage with a full-width dark hero, a dialable phone button, and a 5-star trust line", caption: "Home, after — full-width hero and a dialable call button" },
+  { pair: "Home", src: "/images/bob/home-after.webp", alt: "Current homepage: full-width dark hero with Bob's photo, a dialable phone button, a 5-star trust line, live opening hours, and service shortcuts", caption: "Home, after — hero with a call button, live hours, and service shortcuts" },
   { pair: "Networking", src: "/images/bob/networking-before.webp", archived: true, alt: "Networking page in 2022 with long paragraphs and plain bullet lines", caption: "Networking, before — archived 2022 via the Wayback Machine" },
-  { pair: "Networking", src: "/images/bob/networking-after.webp", alt: "Redesigned Networking page with a dark hero, three summary cards, and a check-mark list", caption: "Networking, after — summary cards and a real checklist" },
+  { pair: "Networking", src: "/images/bob/networking-after.webp", alt: "Current Networking page with a dark hero, three summary cards, and check-mark lists", caption: "Networking, after — summary cards and a real checklist" },
   { src: "/images/bob/town-desktop.webp", alt: "Chester, Virginia service page with six summary cards on desktop", caption: "New town pages — six summary cards on desktop" },
   { phone: true, src: "/images/bob/phone-top.webp", alt: "Chester, Virginia page on an iPhone-sized screen: dark hero, headline, and a tap-to-call phone button", caption: "On a phone — hero and tap-to-call" },
   { phone: true, src: "/images/bob/phone-cards.webp", alt: "Chester, Virginia page on an iPhone-sized screen: summary cards stacked in one column", caption: "On a phone — cards stack into one column" },
