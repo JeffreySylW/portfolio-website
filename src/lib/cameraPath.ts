@@ -31,3 +31,15 @@ export function flightDurationMs(from: Vec3, to: Vec3): number {
   const dist = Math.hypot(to[0] - from[0], to[1] - from[1], to[2] - from[2]);
   return Math.min(1400, Math.max(600, 600 + dist * 60));
 }
+
+/** Orbit angle (radians) of a body at time t; same maths as bodyPosition. */
+export function orbitAngle(body: { startAngleDeg: number }, timeSec: number, speed = DEFAULT_SPEED): number {
+  return (body.startAngleDeg * Math.PI) / 180 + timeSec * speed;
+}
+
+/** Rotate v about the Y axis by `angle` radians, in the direction orbitAngle increases. */
+export function rotateY(v: Vec3, angle: number): Vec3 {
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  return [v[0] * c - v[2] * s, v[1], v[0] * s + v[2] * c];
+}
