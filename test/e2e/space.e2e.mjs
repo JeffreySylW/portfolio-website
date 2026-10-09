@@ -87,7 +87,7 @@ try {
   });
   await page.setReducedMotion(false);
 
-  await check("8 camera follows the selected body", async () => {
+  await check("8 camera faces the sun while following a planet", async () => {
     await page.setViewport(1280, 800);
     await page.navigate(BASE + "/");
     await page.evaluate("location.reload()");
@@ -97,13 +97,15 @@ try {
     await page.clickAt(c.x, c.y);
     assert(await page.waitFor(`${panelTitle} === "Bob The Tech Guy"`, 5000), "panel did not open");
     await sleep(4500); // flight finished
-    const a = await page.evaluate(rectOf("Bob The Tech Guy"));
+    // Sun proxy: its label button, minus the label's own translate(off, -off) styling, gives the sun's screen position; centre is the canvas centre.
+    const sample = () => page.evaluate(`(() => { const cv = document.querySelector("canvas").getBoundingClientRect(); return { sun: (() => { const b = document.querySelector('button[aria-label^="About me"]'); if (!b) return null; const r = b.getBoundingClientRect(); const [dx, dy] = b.style.transform.match(/-?[0-9.]+/g).map(Number); return { x: r.x + r.width / 2 - dx, y: r.y + r.height / 2 - dy }; })(), cx: cv.x + cv.width / 2, cy: cv.y + cv.height / 2 }; })()`);
+    const a = await sample();
     await sleep(1000);
-    const b = await page.evaluate(rectOf("Bob The Tech Guy"));
-    assert(a && b, "label missing after flight");
-    const moved = Math.hypot(a.x - b.x, a.y - b.y);
-    assert(moved <= 20, `label drifted ${moved.toFixed(1)}px in 1s`);
-    return `drift ${moved.toFixed(1)}px`;
+    const b = await sample();
+    assert(a.sun && b.sun, "sun label missing after flight");
+    const off = [a, b].map((m) => Math.hypot(m.sun.x - m.cx, m.sun.y - m.cy));
+    assert(off.every((d) => d <= 20), `sun not at canvas centre, off by ${off.map((d) => d.toFixed(1))}px`);
+    return `sun off centre ${off.map((d) => d.toFixed(1))}px`;
   });
 
   await check("7 320px: no horizontal scroll", async () => {
