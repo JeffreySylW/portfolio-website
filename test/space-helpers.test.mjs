@@ -36,6 +36,7 @@ import {
   easeInOutCubic,
   lerpVec,
   flightDurationMs,
+  rotateY,
 } from "../src/lib/cameraPath.ts";
 
 test("bodyPosition keeps a planet on its orbit radius", () => {
@@ -70,4 +71,13 @@ test("lerpVec interpolates each axis", () => {
 test("flightDurationMs is bounded for short and long flights", () => {
   assert.equal(flightDurationMs([0, 0, 0], [0, 0, 0]), 600);
   assert.equal(flightDurationMs([0, 0, 0], [100, 0, 0]), 1400);
+});
+
+test("rotateY keeps distance from the axis and is periodic", () => {
+  const v = [3, 2, 4];
+  const [x, y, z] = rotateY(v, 1.234);
+  assert.ok(Math.abs(Math.hypot(x, z) - 5) < 1e-9);
+  assert.equal(y, 2);
+  const w = rotateY(v, 2 * Math.PI);
+  v.forEach((c, i) => assert.ok(Math.abs(w[i] - c) < 1e-9));
 });

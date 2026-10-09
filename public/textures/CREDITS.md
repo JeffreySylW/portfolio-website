@@ -3,3 +3,4 @@ Licence: Creative Commons Attribution 4.0 International (CC BY 4.0), https://cre
 Files (2048x1024 equirectangular JPEG, copied from Wikimedia Commons):
 - mars-2k.jpg: https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_2k_mars.jpg
 - earth-2k.jpg: https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_2k_earth_daymap.jpg
+- milkyway-2k.jpg (scene background): https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_2k_stars_milky_way.jpg
