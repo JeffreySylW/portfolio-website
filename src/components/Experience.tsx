@@ -13,11 +13,15 @@ export function Experience() {
 
       <div className="space-y-8">
         <Reveal>
-          <NasaConsole />
+          <div className="relative ml-[calc(50%-50cqw)] w-[100cqw]">
+            <NasaConsole />
+          </div>
         </Reveal>
 
         <Reveal delayMs={50}>
-          <BobConsole />
+          <div className="relative ml-[calc(50%-50cqw)] w-[100cqw]">
+            <BobConsole />
+          </div>
         </Reveal>
 
         <Reveal delayMs={100}>

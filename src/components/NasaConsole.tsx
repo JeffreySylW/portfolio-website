@@ -21,7 +21,7 @@ export function NasaConsole() {
         type="button"
         ref={ref}
         onClick={handleOpen}
-        className={`group relative block w-full overflow-hidden rounded-sm border border-console-grid bg-console-bg px-6 py-7 sm:px-8 sm:py-8 text-left transition-opacity duration-500 outline-none focus-visible:border-console-amber ${
+        className={`group relative block w-full overflow-hidden rounded-sm border border-console-grid bg-console-bg py-7 sm:py-8 px-[max(1.5rem,calc((100%_-_48rem)/2_+_1.5rem))] sm:px-[max(2rem,calc((100%_-_48rem)/2_+_2rem))] text-left transition-opacity duration-500 outline-none focus-visible:border-console-amber ${
           inView ? "opacity-100" : "opacity-90"
         }`}
       >

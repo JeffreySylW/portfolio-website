@@ -16,7 +16,7 @@ export function BobConsole() {
     <>
       <div
         ref={ref}
-        className="relative isolate cursor-pointer overflow-hidden rounded-sm border border-pcb-trace bg-pcb-bg px-6 py-7 transition-colors hover:border-pcb-green/60 has-[button:focus-visible]:border-pcb-green sm:px-8 sm:py-8"
+        className="relative isolate cursor-pointer overflow-hidden rounded-sm border border-pcb-trace bg-pcb-bg py-7 transition-colors px-[max(1.5rem,calc((100%_-_48rem)/2_+_1.5rem))] sm:px-[max(2rem,calc((100%_-_48rem)/2_+_2rem))]  hover:border-pcb-green/60 has-[button:focus-visible]:border-pcb-green sm:py-8"
       >
         <CircuitBoard active={inView} />
         {/* The whole card opens the case file; the live-site link sits above it. */}

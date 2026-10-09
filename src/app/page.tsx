@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <>
       <Nav />
-      <main>
+      <main className="@container overflow-x-clip">
         <Hero />
         <About />
         <Experience />
