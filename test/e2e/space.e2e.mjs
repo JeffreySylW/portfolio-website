@@ -69,8 +69,17 @@ try {
     const before = await page.evaluate(probe);
     const { x, y } = await page.evaluate(rectOf("NASA Langley Research Center"));
     await page.clickAt(x, y);
-    // Exactly one frame after the click, read the probe in the same evaluation.
-    const after = await page.evaluate(`new Promise((r) => requestAnimationFrame(() => r(${probe})))`);
+    // The click's state update lands a frame or two later; a lone rAF can fire before the
+    // jump renders. Sample up to 6 frames (flight would be far slower) and take the first jump.
+    const after = await page.evaluate(`new Promise((r) => {
+      let n = 0, p = null;
+      const tick = () => {
+        p = ${probe};
+        if ((p && Math.abs(${before[0]} - p[0]) + Math.abs(${before[1]} - p[1]) > 20) || ++n >= 6) r(p);
+        else requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    })`);
     assert(before && after, `Bob label probe missing: before=${before} after=${after}`);
     const moved = Math.abs(before[0] - after[0]) + Math.abs(before[1] - after[1]);
     assert(moved > 20, `Bob label moved only ${moved.toFixed(1)}px in one frame: ${before} -> ${after}`);
