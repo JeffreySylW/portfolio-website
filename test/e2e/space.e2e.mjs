@@ -78,6 +78,25 @@ try {
   });
   await page.setReducedMotion(false);
 
+  await check("8 camera follows the selected body", async () => {
+    await page.setViewport(1280, 800);
+    await page.navigate(BASE + "/");
+    await page.evaluate("location.reload()");
+    await sleep(500);
+    assert(await page.waitFor(`!!(${rectOf("Bob The Tech Guy")})`), "Bob label missing");
+    const c = await page.evaluate(rectOf("Bob The Tech Guy"));
+    await page.clickAt(c.x, c.y);
+    assert(await page.waitFor(`${panelTitle} === "Bob The Tech Guy"`, 5000), "panel did not open");
+    await sleep(4500); // flight finished
+    const a = await page.evaluate(rectOf("Bob The Tech Guy"));
+    await sleep(1000);
+    const b = await page.evaluate(rectOf("Bob The Tech Guy"));
+    assert(a && b, "label missing after flight");
+    const moved = Math.hypot(a.x - b.x, a.y - b.y);
+    assert(moved <= 20, `label drifted ${moved.toFixed(1)}px in 1s`);
+    return `drift ${moved.toFixed(1)}px`;
+  });
+
   await check("7 320px: no horizontal scroll", async () => {
     await page.setViewport(320, 700);
     await page.navigate(BASE + "/");

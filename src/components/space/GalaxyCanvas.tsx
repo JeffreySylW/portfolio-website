@@ -24,6 +24,14 @@ const homeFor = (aspect: number): { position: Vec3; lookAt: Vec3 } => {
 
 type Flight = { from: Vec3; to: Vec3; lookFrom: Vec3; lookTo: Vec3; start: number; duration: number };
 
+// Live world position, same maths as Body's useFrame.
+function livePos(body: SpaceBody, t: number): Vec3 {
+  const parent = body.parent ? BODIES.find((b) => b.id === body.parent) : undefined;
+  const [x, y, z] = bodyPosition(body, t, body.kind === "star" ? 0.01 : 0.05);
+  const o = parent ? bodyPosition(parent, t) : [0, 0, 0];
+  return [x + o[0], y + o[1], z + o[2]];
+}
+
 function TexturedMaterial({ url }: { url: string }) {
   const map = useTexture(url);
   return <meshStandardMaterial map={map} color="#ffffff" emissive="#ffffff" emissiveMap={map} emissiveIntensity={0.25} roughness={0.7} />;
@@ -93,6 +101,9 @@ function CameraRig({ target, reducedMotion, time: timeRef }: {
   const aspect = size.width / size.height;
   const flight = useRef<Flight | null>(null);
   const lastTarget = useRef<string | null>(null);
+  // arrival offsets (camera, lookAt) from the followed body's live position
+  const pending = useRef<SpaceBody | null>(null);
+  const follow = useRef<{ body: SpaceBody; cam: Vec3; look: Vec3 } | null>(null);
 
   useEffect(() => {
     // initial placement / resize while at home
@@ -107,19 +118,18 @@ function CameraRig({ target, reducedMotion, time: timeRef }: {
     timeRef.current = clock.elapsedTime;
     if (target !== lastTarget.current) {
       lastTarget.current = target;
+      follow.current = null;
       const cur = camera.position.toArray() as Vec3;
       const look = new THREE.Vector3(0, 0, 0);
       camera.getWorldDirection(look);
       const lookNow = camera.position.clone().add(look).toArray() as Vec3;
       let to: { position: Vec3; lookAt: Vec3 } = homeFor(aspect);
+      pending.current = null;
       if (target && target !== "sun") {
         const body = BODIES.find((b) => b.id === target);
-        const parent = body?.parent ? BODIES.find((b) => b.id === body.parent) : undefined;
         if (body) {
-          const base = bodyPosition(body, clock.elapsedTime, body.kind === "star" ? 0.01 : 0.05);
-          const offset = parent ? bodyPosition(parent, clock.elapsedTime) : [0, 0, 0];
-          const pos: Vec3 = [base[0] + offset[0], base[1], base[2] + offset[2]];
-          to = cameraTargetFor(pos, body.kind === "star" ? 2.5 : 4);
+          to = cameraTargetFor(livePos(body, clock.elapsedTime), body.kind === "star" ? 2.5 : 4);
+          pending.current = body;
         }
       }
       if (reducedMotion) {
@@ -143,7 +153,23 @@ function CameraRig({ target, reducedMotion, time: timeRef }: {
       const e = easeInOutCubic(t);
       camera.position.set(...lerpVec(f.from, f.to, e));
       camera.lookAt(...lerpVec(f.lookFrom, f.lookTo, e));
-      if (t >= 1) flight.current = null;
+      if (t >= 1) {
+        flight.current = null;
+        const body = pending.current;
+        if (body) {
+          const p = livePos(body, clock.elapsedTime);
+          follow.current = {
+            body,
+            cam: [f.to[0] - p[0], f.to[1] - p[1], f.to[2] - p[2]],
+            look: [f.lookTo[0] - p[0], f.lookTo[1] - p[1], f.lookTo[2] - p[2]],
+          };
+        }
+      }
+    } else if (follow.current) {
+      const { body, cam, look } = follow.current;
+      const p = livePos(body, clock.elapsedTime);
+      camera.position.set(p[0] + cam[0], p[1] + cam[1], p[2] + cam[2]);
+      camera.lookAt(p[0] + look[0], p[1] + look[1], p[2] + look[2]);
     }
   });
   return null;
