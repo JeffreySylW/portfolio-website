@@ -100,9 +100,9 @@ function CameraRig({ target, reducedMotion, time: timeRef }: {
   const aspect = size.width / size.height;
   const flight = useRef<Flight | null>(null);
   const lastTarget = useRef<string | null>(null);
-  // arrival offsets (camera, lookAt) from the followed body's live position
+  // arrival camera offset from the followed body's live position
   const pending = useRef<SpaceBody | null>(null);
-  const follow = useRef<{ body: SpaceBody; cam: Vec3; look: Vec3 } | null>(null);
+  const follow = useRef<{ body: SpaceBody; cam: Vec3 } | null>(null);
 
   useEffect(() => {
     // initial placement / resize while at home
@@ -160,15 +160,14 @@ function CameraRig({ target, reducedMotion, time: timeRef }: {
           follow.current = {
             body,
             cam: [f.to[0] - p[0], f.to[1] - p[1], f.to[2] - p[2]],
-            look: [f.lookTo[0] - p[0], f.lookTo[1] - p[1], f.lookTo[2] - p[2]],
           };
         }
       }
     } else if (follow.current) {
-      const { body, cam, look } = follow.current;
+      const { body, cam } = follow.current;
       const p = livePos(body, clock.elapsedTime);
       camera.position.set(p[0] + cam[0], p[1] + cam[1], p[2] + cam[2]);
-      camera.lookAt(p[0] + look[0], p[1] + look[1], p[2] + look[2]);
+      camera.lookAt(0, 0, 0); // face the sun while following
     }
   });
   return null;
