@@ -40,6 +40,16 @@ export function Contact() {
       <p className="mt-16 font-mono text-xs tracking-wider text-ink-soft/70">
         &copy; {new Date().getFullYear()} Jeffrey Weaver
       </p>
+      <p className="mt-2 font-mono text-xs tracking-wider text-ink-soft">
+        Planet textures:{" "}
+        <a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener noreferrer" className="underline hover:text-signal">
+          Solar System Scope
+        </a>
+        ,{" "}
+        <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" className="underline hover:text-signal">
+          CC BY 4.0
+        </a>
+      </p>
     </section>
   );
 }

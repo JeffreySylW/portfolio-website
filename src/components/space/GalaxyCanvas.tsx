@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, type MutableRefObject, type ReactNode } from "react";
+import { Suspense, useEffect, useRef, type MutableRefObject, type ReactNode } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+import { Html, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { BODIES, type SpaceBody } from "@/content/space";
 import {
@@ -23,6 +23,11 @@ const homeFor = (aspect: number): { position: Vec3; lookAt: Vec3 } => {
 };
 
 type Flight = { from: Vec3; to: Vec3; lookFrom: Vec3; lookTo: Vec3; start: number; duration: number };
+
+function TexturedMaterial({ url }: { url: string }) {
+  const map = useTexture(url);
+  return <meshStandardMaterial map={map} color="#ffffff" emissive="#ffffff" emissiveMap={map} emissiveIntensity={0.25} roughness={0.7} />;
+}
 
 function Body({ body, onSelect, labelFor, time }: {
   body: SpaceBody;
@@ -45,8 +50,18 @@ function Body({ body, onSelect, labelFor, time }: {
     <group ref={group} onClick={(e) => { e.stopPropagation(); onSelect(body.id); }}>
       <mesh>
         <sphereGeometry args={[body.size, 32, 32]} />
-        <meshStandardMaterial color={body.color} emissive={body.color} emissiveIntensity={isStar ? 2 : 0.25} roughness={0.7} />
+        {body.texture ? (
+          <TexturedMaterial url={body.texture} />
+        ) : (
+          <meshStandardMaterial color={body.color} emissive={body.color} emissiveIntensity={isStar ? 2 : 0.25} roughness={0.7} />
+        )}
       </mesh>
+      {body.texture && (
+        <mesh>
+          <sphereGeometry args={[body.size * 1.08, 32, 32]} />
+          <meshBasicMaterial color={body.color} side={THREE.BackSide} transparent opacity={0.15} depthWrite={false} />
+        </mesh>
+      )}
       <Html center>{labelFor(body.id)}</Html>
     </group>
   );
@@ -58,6 +73,10 @@ function Sun({ onSelect, labelFor }: { onSelect: (id: string | null) => void; la
       <mesh>
         <sphereGeometry args={[1.6, 48, 48]} />
         <meshStandardMaterial color="#f5b041" emissive="#f5b041" emissiveIntensity={1.4} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[2.4, 32, 32]} />
+        <meshBasicMaterial color="#f5b041" transparent opacity={0.18} depthWrite={false} />
       </mesh>
       <pointLight color="#ffd9a0" intensity={40} distance={60} />
       <Html center>{labelFor("sun")}</Html>
@@ -150,9 +169,11 @@ export function GalaxyCanvas({ selectedId, onSelect, reducedMotion, labelFor, on
       <ambientLight intensity={0.15} />
       <Starfield reducedMotion={reducedMotion} />
       <Sun onSelect={onSelect} labelFor={labelFor} />
-      {BODIES.map((b) => (
-        <Body key={b.id} body={b} onSelect={(id) => onSelect(id)} labelFor={labelFor} time={time} />
-      ))}
+      <Suspense fallback={null}>
+        {BODIES.map((b) => (
+          <Body key={b.id} body={b} onSelect={(id) => onSelect(id)} labelFor={labelFor} time={time} />
+        ))}
+      </Suspense>
       <CameraRig target={selectedId} reducedMotion={reducedMotion} time={time} />
     </Canvas>
   );

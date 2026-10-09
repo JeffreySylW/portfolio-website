@@ -47,3 +47,11 @@ test("content contains no street address and no competitor names", () => {
   const blocked = existsSync("test/.blocked-terms") ? readFileSync("test/.blocked-terms", "utf8").split(/\r?\n/).map((l) => l.trim()).filter(Boolean) : [];
   for (const t of blocked) assert.ok(!text.toLowerCase().includes(t.toLowerCase()), "content mentions a blocked term");
 });
+
+test("nasa and bob have textures that exist under public/textures", () => {
+  for (const id of ["nasa", "bob"]) {
+    const b = S.BODIES.find((x) => x.id === id);
+    assert.ok(b.texture?.startsWith("/textures/"), `${id} needs a texture`);
+    assert.ok(existsSync(new URL(`../public${b.texture}`, import.meta.url)), `${id} texture file missing`);
+  }
+});
