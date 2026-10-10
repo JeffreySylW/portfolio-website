@@ -54,3 +54,11 @@ export function followPosition(bodyPos: Vec3, cam: Vec3, dAngle: number): Vec3 {
 export function flightPose(from: Vec3, to: Vec3, lookFrom: Vec3, lookTo: Vec3, e: number): { position: Vec3; lookAt: Vec3 } {
   return { position: lerpVec(from, to, e), lookAt: lerpVec(lookFrom, lookTo, e) };
 }
+
+/** Y rotation (three.js convention) that turns a sphere's +X axis, the centre of its texture, toward the camera. */
+export function faceYaw(bodyPos: Vec3, camPos: Vec3): number {
+  const dx = camPos[0] - bodyPos[0];
+  const dz = camPos[2] - bodyPos[2];
+  if (dx === 0 && dz === 0) return 0;
+  return Math.atan2(-dz, dx);
+}
