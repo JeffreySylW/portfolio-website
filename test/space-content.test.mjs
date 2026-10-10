@@ -54,3 +54,13 @@ test("every body has a procedural look matching its kind", () => {
   assert.equal(S.BODIES.find((x) => x.id === "nasa").look, "gas");
   assert.equal(S.BODIES.find((x) => x.id === "bob").look, "rock");
 });
+
+test("textured bodies point at baked texture files; skills stars stay plain", () => {
+  const textured = S.BODIES.filter((b) => b.texture).map((b) => b.id).sort();
+  assert.deepEqual(textured, ["aspire", "bob", "education", "nasa", "ta"]);
+  for (const b of S.BODIES.filter((x) => x.texture)) {
+    assert.equal(b.texture, `/textures/planets/${b.id}.webp`);
+    assert.ok(existsSync("public" + b.texture), `${b.id} texture missing`);
+  }
+  for (const b of S.BODIES.filter((x) => x.kind === "star")) assert.equal(b.texture, undefined, `${b.id} must stay a plain star`);
+});

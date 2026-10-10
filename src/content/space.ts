@@ -14,6 +14,8 @@ export interface SpaceBody {
   orbitRadius: number;
   startAngleDeg: number;
   size: number;
+  /** Baked equirectangular texture; the centre of the image faces the camera. Plain sphere when absent. */
+  texture?: string;
 }
 
 export const SUN = {
@@ -40,6 +42,7 @@ export const BODIES: SpaceBody[] = [
     orbitRadius: 6,
     startAngleDeg: 20,
     size: 0.9,
+    texture: "/textures/planets/nasa.webp",
   },
   {
     id: "bob",
@@ -55,6 +58,7 @@ export const BODIES: SpaceBody[] = [
     orbitRadius: 10,
     startAngleDeg: 200,
     size: 0.95,
+    texture: "/textures/planets/bob.webp",
   },
   {
     id: "education",
@@ -70,6 +74,7 @@ export const BODIES: SpaceBody[] = [
     orbitRadius: 2.5,
     startAngleDeg: 60,
     size: 0.5,
+    texture: "/textures/planets/education.webp",
   },
   {
     id: "aspire",
@@ -86,6 +91,7 @@ export const BODIES: SpaceBody[] = [
     orbitRadius: 1.1,
     startAngleDeg: 0,
     size: 0.2,
+    texture: "/textures/planets/aspire.webp",
   },
   {
     id: "ta",
@@ -102,6 +108,7 @@ export const BODIES: SpaceBody[] = [
     orbitRadius: 1.1,
     startAngleDeg: 180,
     size: 0.2,
+    texture: "/textures/planets/ta.webp",
   },
   {
     id: "skills-languages",

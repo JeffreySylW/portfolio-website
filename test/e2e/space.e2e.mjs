@@ -194,6 +194,30 @@ try {
     return `sun off centre ${off.toFixed(1)}px`;
   });
 
+  await check("12 textured planets: all five textures were fetched", async () => {
+    await page.setViewport(1280, 800);
+    await page.navigate(BASE + "/");
+    await page.evaluate("location.reload()");
+    await sleep(500);
+    assert(await page.waitFor(`!!(${rectOf("Bob The Tech Guy")})`), "scene did not load");
+    const ok = await page.waitFor(`["nasa","bob","education","aspire","ta"].every((id) => performance.getEntriesByType("resource").some((e) => e.name.endsWith("/textures/planets/" + id + ".webp") && e.responseStatus === 200))`, 15000);
+    assert(ok, "a planet texture was not fetched with status 200");
+  });
+
+  await check("14 a texture that fails to load leaves the plain sphere, not the static fallback", async () => {
+    await page.send("Network.enable");
+    await page.send("Network.setBlockedURLs", { urls: ["*/textures/planets/bob.webp"] });
+    try {
+      await page.navigate(BASE + "/");
+      await page.evaluate("location.reload()");
+      await sleep(500);
+      assert(await page.waitFor(`!!(${rectOf("Bob The Tech Guy")})`), "Bob label missing: scene fell back");
+      assert(await page.evaluate(`!!document.querySelector("canvas")`), "no canvas: the scene dropped to the static fallback");
+    } finally {
+      await page.send("Network.setBlockedURLs", { urls: [] });
+    }
+  });
+
   await check("7 320px: no horizontal scroll", async () => {
     await page.setViewport(320, 700);
     await page.navigate(BASE + "/");

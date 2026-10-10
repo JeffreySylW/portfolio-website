@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState, type MutableRefObject, type ReactNode } from "react";
+import { Suspense, useEffect, useRef, useState, type MutableRefObject, type ReactNode, type RefObject } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -9,6 +9,7 @@ import {
   bodyPosition,
   cameraTargetFor,
   easeInOutCubic,
+  faceYaw,
   flightDurationMs,
   flightPose,
   followPosition,
@@ -16,6 +17,7 @@ import {
   type Vec3,
 } from "@/lib/cameraPath";
 import { Starfield } from "./Starfield";
+import { TextureBoundary } from "./TextureBoundary";
 
 const HOME: { position: Vec3; lookAt: Vec3 } = { position: [0, 14, 22], lookAt: [0, 0, 0] };
 // portrait: pull back (2x) so labelled orbits stay on screen; desktop unchanged
@@ -40,6 +42,27 @@ function livePos(body: SpaceBody, t: number): Vec3 {
   return [x + o[0], y + o[1], z + o[2]];
 }
 
+// A textured body: the texture is both colour and glow (the camera sees the side facing away from the sun, which
+// is unlit), and the mesh turns each frame so the logo side faces the camera.
+function TexturedSphere({ body, group }: { body: SpaceBody; group: RefObject<THREE.Group | null> }) {
+  const map = useLoader(THREE.TextureLoader, body.texture!);
+  const mesh = useRef<THREE.Mesh>(null);
+  useFrame(({ camera }) => {
+    const g = group.current;
+    if (!g || !mesh.current) return;
+    mesh.current.rotation.y = faceYaw(g.position.toArray() as Vec3, camera.position.toArray() as Vec3);
+  });
+  return (
+    <mesh ref={mesh}>
+      <sphereGeometry args={[body.size, 64, 48]} />
+      <meshStandardMaterial emissive="#ffffff" emissiveIntensity={0.6} roughness={0.7}>
+        <primitive object={map} attach="map" colorSpace={THREE.SRGBColorSpace} anisotropy={8} />
+        <primitive object={map} attach="emissiveMap" colorSpace={THREE.SRGBColorSpace} anisotropy={8} />
+      </meshStandardMaterial>
+    </mesh>
+  );
+}
+
 function Body({ body, onSelect, labelFor, time }: {
   body: SpaceBody;
   onSelect: (id: string) => void;
@@ -59,13 +82,23 @@ function Body({ body, onSelect, labelFor, time }: {
     if (parent) group.current.position.add(new THREE.Vector3(...bodyPosition(parent, time.current)));
   });
 
+  const plain = (
+    <mesh>
+      <sphereGeometry args={[body.size, 32, 32]} />
+      <meshStandardMaterial ref={mat} color={body.color} emissive={body.color} emissiveIntensity={isStar ? 2 : 0.3} roughness={0.7} />
+    </mesh>
+  );
+
   return (
     <group ref={group} onClick={(e) => { e.stopPropagation(); onSelect(body.id); }}>
-      <mesh>
-        <sphereGeometry args={[body.size, 32, 32]} />
-        <meshStandardMaterial ref={mat} color={body.color} emissive={body.color} emissiveIntensity={isStar ? 2 : 0.3} roughness={0.7} />
-      </mesh>
-      {body.kind === "planet" && (
+      {body.texture ? (
+        <TextureBoundary fallback={plain}>
+          <Suspense fallback={plain}>
+            <TexturedSphere body={body} group={group} />
+          </Suspense>
+        </TextureBoundary>
+      ) : plain}
+      {(body.kind === "planet" || body.texture) && (
         <mesh>
           <sphereGeometry args={[body.size * 1.08, 32, 32]} />
           <meshBasicMaterial color={body.color} side={THREE.BackSide} transparent opacity={0.15} depthWrite={false} />
