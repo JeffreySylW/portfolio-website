@@ -61,8 +61,8 @@ export default function SpaceScene() {
   return (
     <>
       <div id="top" className="relative h-[100svh] w-full overflow-hidden bg-[#03050b]">
-        {/* labels use a high z-index; hide them behind the full-screen case file */}
-        <div className={`absolute inset-0${selected === "bob" && cardOpen ? " invisible" : ""}`}>
+        {/* labels use a high z-index; hide only them (not the canvas) behind the see-through case file */}
+        <div className={`absolute inset-0${selected === "bob" && cardOpen ? " [&_button]:invisible" : ""}`}>
           <SceneBoundary onError={() => setWebgl(false)}>
             <GalaxyCanvas
               selectedId={selected}

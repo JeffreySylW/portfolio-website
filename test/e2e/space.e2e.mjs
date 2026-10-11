@@ -25,6 +25,20 @@ const rectOf = (text) => `(() => {
 })()`;
 const panelTitle = `document.querySelector("aside h2")?.textContent ?? null`;
 const bobOpen = `!!document.querySelector('[role="dialog"][aria-label="Bob The Tech Guy case file"]')`;
+// Worst case: white behind the card. Blends the card's translucent background over white, then the text over that.
+const contrastOf = (cardSel, textSel) => `(() => {
+  const cx = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+  const px = (css, under) => { cx.fillStyle = under; cx.fillRect(0, 0, 1, 1); cx.fillStyle = css; cx.fillRect(0, 0, 1, 1); return [...cx.getImageData(0, 0, 1, 1).data].slice(0, 3); };
+  const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+  const card = document.querySelector(${JSON.stringify(cardSel)});
+  const text = document.querySelector(${JSON.stringify(textSel)});
+  if (!card || !text) return null;
+  const css = getComputedStyle(card).backgroundColor;
+  const bg = px(css, "#ffffff");
+  const fg = px(getComputedStyle(text).color, "rgb(" + bg.join(",") + ")");
+  const [hi, lo] = [lum(fg), lum(bg)].sort((a, b) => b - a);
+  return { ratio: (hi + 0.05) / (lo + 0.05), seeThrough: px(css, "#ffffff").join() !== px(css, "#000000").join() };
+})()`;
 
 const edge = await launch();
 let page;
@@ -267,6 +281,54 @@ try {
     const wrapped = await page.evaluate(`document.querySelector('dialog[open] [role="group"] span[aria-live]').textContent`);
     assert(wrapped.trim() === "16 / 16", `wrapped to ${wrapped}`);
     await page.pressEscape();
+    await page.pressEscape();
+  });
+
+  await check("18 NASA card is see-through and its text stays AA-readable", async () => {
+    await openNasaCard(1280, 800);
+    for (const sel of ["dialog[open] > p", "dialog[open] #nasa-dates", "dialog[open] section p", "dialog[open] section li button span:last-child span:last-child"]) {
+      const c = await page.evaluate(contrastOf("dialog[open]", sel));
+      assert(c, `missing ${sel}`);
+      assert(c.seeThrough, "NASA card background is opaque");
+      assert(c.ratio >= 4.5, `${sel}: contrast ${c.ratio.toFixed(2)}`);
+    }
+    await page.pressEscape();
+  });
+
+  await check("19 story panel is see-through and readable", async () => {
+    await page.setViewport(1280, 800);
+    await page.navigate(BASE + "/#education");
+    await page.evaluate("location.reload()");
+    assert(await page.waitFor(`${panelTitle} === "Virginia Commonwealth University"`), "panel missing");
+    for (const sel of ["aside p:nth-of-type(1)", "aside p:nth-of-type(2)", "aside p:nth-of-type(3)"]) {
+      const c = await page.evaluate(contrastOf("aside", sel));
+      assert(c && c.seeThrough, `${sel}: not see-through`);
+      assert(c.ratio >= 4.5, `${sel}: contrast ${c.ratio.toFixed(2)}`);
+    }
+  });
+
+  await check("20 Bob case file is see-through and readable", async () => {
+    await page.setViewport(1280, 800);
+    await page.navigate(BASE + "/");
+    await page.evaluate("location.reload()");
+    assert(await page.waitFor(`!!(${rectOf("Bob The Tech Guy")})`), "Bob label missing");
+    const canvasWidth = `Math.round(document.querySelector("canvas").getBoundingClientRect().width)`;
+    const widthBefore = await page.evaluate(canvasWidth);
+    await page.evaluate(`[...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Bob The Tech Guy").click()`);
+    assert(await page.waitFor(bobOpen, 8000), "case file did not open");
+    await sleep(600);
+    // Locking page scroll must not resize the canvas: a paused canvas cannot redraw, so a resize leaves it blank behind the card.
+    const widthAfter = await page.evaluate(canvasWidth);
+    assert(widthAfter === widthBefore, `canvas went from ${widthBefore}px to ${widthAfter}px wide when the case file opened`);
+    // the planet must stay drawn behind the card; only the floating labels are hidden
+    const vis = await page.evaluate(`({ canvas: getComputedStyle(document.querySelector("canvas")).visibility, label: getComputedStyle([...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "NASA Langley Research Center")).visibility })`);
+    assert(vis.canvas === "visible", `canvas is ${vis.canvas} behind the case file`);
+    assert(vis.label === "hidden", `scene labels are ${vis.label} over the case file`);
+    for (const sel of ['[role="dialog"] p.font-display', '[role="dialog"] figcaption']) {
+      const c = await page.evaluate(contrastOf('[role="dialog"] .card-glass', sel));
+      assert(c && c.seeThrough, `${sel}: not see-through`);
+      assert(c.ratio >= 4.5, `${sel}: contrast ${c.ratio.toFixed(2)}`);
+    }
     await page.pressEscape();
   });
 

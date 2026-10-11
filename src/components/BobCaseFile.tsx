@@ -37,7 +37,7 @@ function Phone({ w }: { w: (typeof WORK)[number] }) {
           <div aria-hidden="true" className="absolute left-1/2 top-1.5 h-4 w-16 -translate-x-1/2 rounded-full bg-[#0b0f0c]" />
         </div>
       </div>
-      <figcaption className="mt-2 px-2.5 text-center font-mono text-[10px] tracking-wider text-pcb-text/65">{w.caption}</figcaption>
+      <figcaption className="mt-2 px-2.5 text-center font-mono text-[10px] tracking-wider text-pcb-text/80">{w.caption}</figcaption>
     </figure>
   );
 }
@@ -48,7 +48,7 @@ function Shot({ w }: { w: (typeof WORK)[number] }) {
       <div className="relative bg-pcb-panel" style={{ aspectRatio: "4 / 3" }}>
         <Image src={w.src} alt={w.alt} fill sizes="(min-width: 768px) 384px, (min-width: 640px) 50vw, 100vw" className="object-cover object-top" />
       </div>
-      <figcaption className="px-2.5 py-2 font-mono text-[10px] tracking-wider text-pcb-text/65">{w.caption}</figcaption>
+      <figcaption className="px-2.5 py-2 font-mono text-[10px] tracking-wider text-pcb-text/80">{w.caption}</figcaption>
     </figure>
   );
 }
@@ -137,12 +137,12 @@ export function BobCaseFile({
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Bob The Tech Guy case file" className="fixed inset-0 z-[100]">
       <div
         aria-hidden="true"
-        className={`absolute inset-0 bg-pcb-bg/70 backdrop-blur-md transition-opacity duration-300 ease-out ${entered ? "opacity-100" : "opacity-0"}`}
+        className={`absolute inset-0 bg-pcb-bg/10 transition-opacity duration-300 ease-out ${entered ? "opacity-100" : "opacity-0"}`}
       />
       <div
         aria-hidden="true"
-        style={shape}
-        className="absolute inset-0 origin-top-left bg-pcb-bg transition-[transform,border-radius] duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+        style={{ ...shape, "--card-tint": "var(--pcb-bg)" } as CSSProperties}
+        className="card-glass absolute inset-0 origin-top-left transition-[transform,border-radius] duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
       />
       <div
         aria-hidden="true"
@@ -186,7 +186,7 @@ export function BobCaseFile({
               {COMMUNICATION.map((c) => (
                 <div key={c.title} className="rounded-sm border border-pcb-trace bg-pcb-panel/60 px-4 py-4">
                   <p className="font-mono text-[11px] tracking-wider text-pcb-green">{c.title.toUpperCase()}</p>
-                  <p className="mt-2 font-display text-sm leading-relaxed text-pcb-text/75">{c.detail}</p>
+                  <p className="mt-2 font-display text-sm leading-relaxed text-pcb-text/80">{c.detail}</p>
                 </div>
               ))}
             </div>
@@ -200,10 +200,10 @@ export function BobCaseFile({
                   key={s.label}
                   className={`rounded-sm border px-3 py-3 ${s.test ? "border-pcb-green/60 bg-pcb-green/5" : "border-pcb-trace"}`}
                 >
-                  <p className={`font-mono text-[11px] tracking-wider ${s.test ? "text-pcb-green" : "text-pcb-text/70"}`}>
+                  <p className={`font-mono text-[11px] tracking-wider ${s.test ? "text-pcb-green" : "text-pcb-text/80"}`}>
                     {String(i + 1).padStart(2, "0")} {s.label}
                   </p>
-                  <p className="mt-1 font-display text-xs leading-snug text-pcb-text/75">{s.detail}</p>
+                  <p className="mt-1 font-display text-xs leading-snug text-pcb-text/80">{s.detail}</p>
                 </li>
               ))}
             </ol>
@@ -215,11 +215,11 @@ export function BobCaseFile({
               {TOOLING.map((t) => (
                 <div key={t.name} className="rounded-sm border border-pcb-trace px-4 py-3">
                   <p className="font-mono text-[11px] tracking-wider text-pcb-green">{t.name}</p>
-                  <p className="mt-1 font-display text-xs leading-snug text-pcb-text/70">{t.detail}</p>
+                  <p className="mt-1 font-display text-xs leading-snug text-pcb-text/80">{t.detail}</p>
                 </div>
               ))}
             </div>
-            <p className="mt-3 font-mono text-[10px] tracking-wider text-pcb-text/70">{AI_NOTE}</p>
+            <p className="mt-3 font-mono text-[10px] tracking-wider text-pcb-text/80">{AI_NOTE}</p>
           </section>
 
           <section className="mb-10">
@@ -243,7 +243,7 @@ export function BobCaseFile({
               {RESULTS.map((r) => (
                 <div key={r.label} className="rounded-sm border border-pcb-trace px-4 py-4">
                   <p className="font-mono text-3xl text-pcb-green">{r.value}</p>
-                  <p className="mt-1 font-mono text-[11px] tracking-wider text-pcb-text/65">{r.label}</p>
+                  <p className="mt-1 font-mono text-[11px] tracking-wider text-pcb-text/80">{r.label}</p>
                 </div>
               ))}
             </div>
@@ -258,7 +258,7 @@ export function BobCaseFile({
                 see it live &#8599;
               </a>
               {!BOB_SITE_SSL_OK && (
-                <span id="bob-ssl-note-casefile" className="font-mono text-[10px] tracking-wider text-pcb-text/70">
+                <span id="bob-ssl-note-casefile" className="font-mono text-[10px] tracking-wider text-pcb-text/80">
                   SSL certificate pending — the browser may warn you
                 </span>
               )}
