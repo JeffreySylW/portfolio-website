@@ -171,14 +171,20 @@ html {
 }
 
 /* Native dialog fade for the planet deep dives (skipped under reduced motion). */
-.deep-dialog::backdrop { background: rgb(3 5 11 / 0.35); }
+.deep-dialog::backdrop { background: rgb(3 5 11 / 0.35); backdrop-filter: blur(var(--card-blur)); }
 
 /* See-through cards: the planet being followed shows behind them. Tune --card-alpha / --card-blur here. */
 :root { --card-alpha: 0.74; --card-blur: 3px; }
 .card-glass {
+  background-color: rgb(7 11 22 / 0.74); /* browsers without color-mix */
   background-color: color-mix(in srgb, var(--card-tint, #070b16) calc(var(--card-alpha) * 100%), transparent);
   -webkit-backdrop-filter: blur(var(--card-blur));
   backdrop-filter: blur(var(--card-blur));
+}
+.deep-dialog.card-glass {
+  /* no backdrop-filter here: it would make the dialog the containing block of its position:fixed photo viewer */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 @media (prefers-reduced-transparency: reduce) {
   .card-glass {

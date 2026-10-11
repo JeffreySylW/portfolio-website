@@ -28,3 +28,13 @@ test("the three cards use .card-glass instead of a near-solid colour", () => {
     assert.doesNotMatch(src, /bg-\[#070b16\](\/9\d)?"|bg-\[#070b16\]\/95/, `${f} still has a near-solid background`);
   }
 });
+
+test("a backdrop-filter on the dialog would trap its fixed photo viewer, so the dialog blurs via ::backdrop instead", () => {
+  assert.match(css, /\.deep-dialog\.card-glass\s*\{[^}]*backdrop-filter:\s*none/s);
+  assert.match(css, /\.deep-dialog::backdrop\s*\{[^}]*backdrop-filter:\s*blur\(var\(--card-blur\)\)/s);
+});
+
+test("browsers without color-mix still get a translucent card, not a transparent one", () => {
+  const rule = css.match(/\.card-glass\s*\{[^}]*\}/s)[0];
+  assert.ok(rule.indexOf("background-color: rgb(") !== -1 && rule.indexOf("background-color: rgb(") < rule.indexOf("color-mix"), "plain rgb() fallback must come before the color-mix line");
+});

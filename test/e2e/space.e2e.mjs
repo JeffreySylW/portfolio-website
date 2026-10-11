@@ -265,7 +265,11 @@ try {
   await check("17 photo viewer steps with the arrow keys and wraps around", async () => {
     await openNasaCard(1280, 800);
     const names = await page.evaluate(`[...document.querySelectorAll("dialog[open] li button")].map((b) => b.getAttribute("aria-label").replace(/^View | full size$/g, ""))`);
+    await page.evaluate(`document.querySelector("dialog[open]").scrollTop = 1500`); // viewer must stay full-screen even when the card is scrolled
     await page.evaluate(`document.querySelector("dialog[open] li button").click()`); // first photo (a Makerspace one)
+    await sleep(300);
+    const box = await page.evaluate(`(() => { const r = document.querySelector('dialog[open] [role="group"]').getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height, vw: document.documentElement.clientWidth, vh: document.documentElement.clientHeight }; })()`);
+    assert(Math.abs(box.x) < 1 && Math.abs(box.y) < 1 && Math.abs(box.w - box.vw) < 1 && Math.abs(box.h - box.vh) < 1, `viewer is not full-screen: ${JSON.stringify(box)}`);
     const shownName = () => page.evaluate(`document.querySelector('dialog[open] [role="group"] p')?.textContent ?? null`);
     assert((await shownName()) === names[0], `viewer opened on ${await shownName()}`);
     const key = async (k) => {
