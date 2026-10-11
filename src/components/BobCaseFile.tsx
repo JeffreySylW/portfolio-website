@@ -24,32 +24,30 @@ function Label({ n, children }: { n: string; children: ReactNode }) {
   );
 }
 
-// Real 390×844 phone captures, drawn inside a simple phone body so the shape reads as a phone.
-function Phone({ w }: { w: (typeof WORK)[number] }) {
+function Shot({ w }: { w: (typeof WORK)[number] }) {
   return (
-    <figure className="flex flex-col items-center">
-      <div className="w-full max-w-[210px] rounded-[2rem] border border-pcb-trace bg-[#0b0f0c] p-2 shadow-[0_0_0_1px_rgba(0,0,0,0.6)]">
-        <div className="relative overflow-hidden rounded-[1.5rem] bg-black" style={{ aspectRatio: "390 / 844" }}>
-          {/* status-bar strip so the camera pill does not cover the page */}
-          <div className="absolute inset-x-0 bottom-0 top-6">
-            <Image src={w.src} alt={w.alt} fill sizes="210px" className="object-cover object-top" />
-          </div>
-          <div aria-hidden="true" className="absolute left-1/2 top-1.5 h-4 w-16 -translate-x-1/2 rounded-full bg-[#0b0f0c]" />
-        </div>
-      </div>
-      <figcaption className="mt-2 px-2.5 text-center font-mono text-[10px] tracking-wider text-pcb-text/80">{w.caption}</figcaption>
+    <figure className="mb-3 overflow-hidden rounded-sm border border-pcb-trace">
+      <Image
+        src={w.src}
+        alt={w.alt}
+        width={w.width}
+        height={w.height}
+        loading="lazy"
+        sizes="(min-width: 768px) 360px, calc(100vw - 2rem)"
+        className={`h-auto bg-pcb-panel ${w.phone ? "mx-auto w-full max-w-[200px]" : "w-full"}`}
+      />
+      <figcaption className="px-2.5 py-2 font-mono text-[10px] tracking-wider text-pcb-text/80">{w.caption}</figcaption>
     </figure>
   );
 }
 
-function Shot({ w }: { w: (typeof WORK)[number] }) {
+function Side({ side, title, note }: { side: "before" | "after"; title: string; note: string }) {
   return (
-    <figure className="overflow-hidden rounded-sm border border-pcb-trace">
-      <div className="relative bg-pcb-panel" style={{ aspectRatio: "4 / 3" }}>
-        <Image src={w.src} alt={w.alt} fill sizes="(min-width: 768px) 384px, (min-width: 640px) 50vw, 100vw" className="object-cover object-top" />
-      </div>
-      <figcaption className="px-2.5 py-2 font-mono text-[10px] tracking-wider text-pcb-text/80">{w.caption}</figcaption>
-    </figure>
+    <div className="min-w-0">
+      <h3 className="mb-1 font-mono text-xs tracking-wider text-pcb-green">{title}</h3>
+      <p className="mb-3 font-mono text-[10px] tracking-wider text-pcb-text/80">{note}</p>
+      {WORK.filter((w) => w.side === side).map((w) => <Shot key={w.src} w={w} />)}
+    </div>
   );
 }
 
@@ -130,10 +128,6 @@ export function BobCaseFile({
             borderRadius: `${8 / Math.max(sx, sy, 0.001)}px`,
           };
         })();
-
-  const pairs = ["Home", "Networking"];
-  const phones = WORK.filter((w) => w.phone);
-  const singles = WORK.filter((w) => !w.pair && !w.phone);
 
   return createPortal(
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Bob The Tech Guy case file" className="fixed inset-0 z-[100]">
@@ -231,16 +225,10 @@ export function BobCaseFile({
 
           <section className="mb-10">
             <Label n="05">THE WORK</Label>
-            {pairs.map((p) => (
-              <div key={p} className="mb-4 grid gap-3 sm:grid-cols-2">
-                {WORK.filter((w) => w.pair === p).map((w) => <Shot key={w.src} w={w} />)}
-              </div>
-            ))}
-            <div className="mb-6 grid gap-3 sm:grid-cols-2">
-              {singles.map((w) => <Shot key={w.src} w={w} />)}
-            </div>
-            <div className="grid grid-cols-2 gap-4 sm:mx-auto sm:max-w-md">
-              {phones.map((w) => <Phone key={w.src} w={w} />)}
+            <div className="grid gap-6 md:grid-cols-[1fr_1px_1fr] md:gap-5">
+              <Side side="before" title="BEFORE" note="The old site" />
+              <div aria-hidden="true" className="h-px bg-pcb-trace md:h-auto md:w-px" />
+              <Side side="after" title="AFTER" note="The new site" />
             </div>
           </section>
 

@@ -15,8 +15,15 @@ test("every image exists, is under 250 KB and has alt text", () => {
   }
 });
 
-test("archived images say so", () => {
-  for (const w of B.WORK.filter((x) => x.archived)) assert.match(w.caption, /archived 2022 via the Wayback Machine/);
+test("every WORK image has a side and dimensions; every before image has an archived caption", () => {
+  for (const w of B.WORK) {
+    assert.ok(w.side === "before" || w.side === "after", w.src);
+    assert.ok(w.width > 0 && w.height > 0, w.src);
+    assert.strictEqual(!!w.archived, w.side === "before", w.src);
+  }
+  assert.ok(B.WORK.filter((w) => w.side === "before").length >= 5);
+  assert.ok(B.WORK.filter((w) => w.side === "after").length >= 6);
+  for (const w of B.WORK.filter((x) => x.side === "before")) assert.match(w.caption, /archived 2022 via the Wayback Machine/);
 });
 
 test("no street address and no competitor names anywhere in the copy", () => {
