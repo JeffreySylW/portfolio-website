@@ -160,7 +160,7 @@ try {
     await page.evaluate(`document.activeElement.click()`);
     assert(await page.waitFor(`!!document.querySelector("dialog[open]")`, 5000), "dialog did not open");
     const imgs = await page.evaluate(`document.querySelectorAll("dialog[open] img").length`);
-    assert(imgs >= 10, `${imgs} gallery images`);
+    assert(imgs >= 16, `${imgs} gallery images`);
     const focus = await page.evaluate(`document.activeElement?.textContent?.trim()`);
     assert(focus?.startsWith("close"), `focus on ${JSON.stringify(focus)}`);
     await page.pressEscape();
@@ -216,6 +216,58 @@ try {
     } finally {
       await page.send("Network.setBlockedURLs", { urls: [] });
     }
+  });
+
+  const openNasaCard = async (w, h) => {
+    await page.setViewport(w, h);
+    await page.navigate(BASE + "/");
+    await page.evaluate("location.reload()");
+    await sleep(500);
+    assert(await page.waitFor(`!!(${rectOf("NASA Langley Research Center")})`), "NASA label missing");
+    await page.evaluate(`[...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "NASA Langley Research Center").click()`);
+    assert(await page.waitFor(`!!document.querySelector("dialog[open]")`, 8000), "NASA card did not open");
+  };
+
+  await check("15 NASA card: Makerspace photos load and every caption is its own", async () => {
+    await openNasaCard(1280, 800);
+    const r = await page.evaluate(`(() => {
+      const sec = [...document.querySelectorAll("dialog[open] section")].find((s) => s.querySelector("h3")?.textContent === "MAKERSPACE");
+      const imgs = sec ? [...sec.querySelectorAll("img")] : [];
+      const caps = [...document.querySelectorAll("dialog[open] li button")].map((b) => b.textContent);
+      return { n: imgs.length, loaded: imgs.every((i) => i.complete), all: caps.length, unique: new Set(caps).size };
+    })()`);
+    assert(r.n === 5, `${r.n} Makerspace photos`);
+    assert(r.all === 16 && r.unique === 16, `${r.unique} unique of ${r.all} photo captions`);
+    await page.pressEscape();
+  });
+
+  await check("16 NASA card at 390px: no horizontal overflow", async () => {
+    await openNasaCard(390, 844);
+    const o = await page.evaluate(`({ page: document.documentElement.scrollWidth - innerWidth, card: (() => { const d = document.querySelector("dialog[open]"); return d.scrollWidth - d.clientWidth; })() })`);
+    assert(o.page <= 0 && o.card <= 0, `overflow: page ${o.page}px, card ${o.card}px`);
+    await page.pressEscape();
+  });
+
+  await check("17 photo viewer steps with the arrow keys and wraps around", async () => {
+    await openNasaCard(1280, 800);
+    const names = await page.evaluate(`[...document.querySelectorAll("dialog[open] li button")].map((b) => b.getAttribute("aria-label").replace(/^View | full size$/g, ""))`);
+    await page.evaluate(`document.querySelector("dialog[open] li button").click()`); // first photo (a Makerspace one)
+    const shownName = () => page.evaluate(`document.querySelector('dialog[open] [role="group"] p')?.textContent ?? null`);
+    assert((await shownName()) === names[0], `viewer opened on ${await shownName()}`);
+    const key = async (k) => {
+      const code = { key: k, code: k, windowsVirtualKeyCode: k === "ArrowRight" ? 39 : 37 };
+      await page.send("Input.dispatchKeyEvent", { type: "rawKeyDown", ...code });
+      await page.send("Input.dispatchKeyEvent", { type: "keyUp", ...code });
+      await sleep(150);
+    };
+    await key("ArrowRight");
+    assert((await shownName()) !== names[0], "ArrowRight did not move on");
+    await key("ArrowLeft");
+    await key("ArrowLeft");
+    const wrapped = await page.evaluate(`document.querySelector('dialog[open] [role="group"] span[aria-live]').textContent`);
+    assert(wrapped.trim() === "16 / 16", `wrapped to ${wrapped}`);
+    await page.pressEscape();
+    await page.pressEscape();
   });
 
   await check("7 320px: no horizontal scroll", async () => {

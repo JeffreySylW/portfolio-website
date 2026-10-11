@@ -3,12 +3,47 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import Image from "next/image";
 import { BODIES } from "@/content/space";
-import { GALLERY, SECTIONS } from "@/content/nasaGallery";
+import { GALLERY, SECTIONS, inGroup, type GalleryImage } from "@/content/nasaGallery";
 
 const NASA = BODIES.find((b) => b.id === "nasa")!;
+const SHOWN_IN_GRID = GALLERY.filter((g) => g.group !== "makerspace"); // tours, then internship
 
 function Heading({ children }: { children: string }) {
   return <h3 className="mb-3 font-mono text-xs tracking-wider text-sky-300">{children}</h3>;
+}
+
+function PhotoGrid({ images, masonry, register, onOpen }: {
+  images: GalleryImage[];
+  masonry?: boolean;
+  register: (index: number, el: HTMLButtonElement | null) => void;
+  onOpen: (index: number) => void;
+}) {
+  return (
+    <ul className={masonry ? "columns-2 gap-3 sm:columns-3" : "grid grid-cols-2 gap-3 sm:grid-cols-3"}>
+      {images.map((g) => {
+        const i = GALLERY.indexOf(g);
+        return (
+          <li key={g.src} className={masonry ? "mb-3 break-inside-avoid" : undefined}>
+            <button
+              type="button"
+              ref={(el) => register(i, el)}
+              onClick={() => onOpen(i)}
+              aria-label={`View ${g.name} full size`}
+              className="group block w-full overflow-hidden rounded-sm border border-slate-800 text-left outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+            >
+              <span className={`relative block overflow-hidden bg-[#0d1117] ${masonry ? "" : "aspect-[4/3]"}`} style={masonry ? { aspectRatio: `${g.width} / ${g.height}` } : undefined}>
+                <Image src={g.src} alt={g.alt} width={g.width} height={g.height} sizes="(min-width: 896px) 270px, 45vw" loading="lazy" className="h-full w-full object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-105" />
+              </span>
+              <span className="block px-2.5 py-2">
+                <span className="block font-mono text-[10px] tracking-wider text-sky-300">{g.name}</span>
+                <span className="mt-0.5 block text-[11px] leading-snug text-slate-300">{g.detail}</span>
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
 }
 
 export function NasaDeepDive({ onClose, returnFocusTo }: { onClose: () => void; returnFocusTo: HTMLElement | null }) {
@@ -25,6 +60,8 @@ export function NasaDeepDive({ onClose, returnFocusTo }: { onClose: () => void; 
   useEffect(() => {
     if (view !== null) viewerClose.current?.focus();
   }, [view]);
+
+  const register = (i: number, el: HTMLButtonElement | null) => { cards.current[i] = el; };
 
   const closeViewer = () => {
     const i = view;
@@ -59,7 +96,7 @@ export function NasaDeepDive({ onClose, returnFocusTo }: { onClose: () => void; 
         returnFocusTo?.focus();
         onClose();
       }}
-      className="deep-dialog m-auto max-h-[92dvh] w-[min(56rem,calc(100%-1rem))] overflow-y-auto rounded-md border border-sky-900 bg-[#070b16] p-5 text-slate-100 sm:p-8"
+      className="deep-dialog card-glass m-auto max-h-[92dvh] w-[min(56rem,calc(100%-1rem))] overflow-y-auto rounded-md border border-sky-900 p-5 text-slate-100 sm:p-8"
     >
       <div className="flex items-start justify-between gap-4">
         <button type="button" onClick={() => dialog.current?.close()} className="order-2 shrink-0 rounded-sm font-mono text-xs tracking-wider text-sky-200 outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-sky-300">
@@ -68,7 +105,7 @@ export function NasaDeepDive({ onClose, returnFocusTo }: { onClose: () => void; 
         <div className="order-1">
           <p className="font-mono text-xs tracking-wider text-sky-300">{NASA.subtitle}</p>
           <h2 id="nasa-title" className="mt-1 font-display text-2xl sm:text-3xl">{NASA.name}</h2>
-          <p className="mt-1 font-mono text-[11px] text-slate-400">{NASA.dates}</p>
+          <p id="nasa-dates" className="mt-1 font-mono text-[11px] text-slate-300">{NASA.dates}</p>
         </div>
       </div>
       <p className="mt-4 text-sm leading-relaxed text-slate-300">{NASA.summary}</p>
@@ -82,32 +119,17 @@ export function NasaDeepDive({ onClose, returnFocusTo }: { onClose: () => void; 
           <div className="space-y-3 text-sm leading-relaxed text-slate-300">
             {sec.paragraphs.map((p) => <p key={p}>{p}</p>)}
           </div>
+          {sec.heading === "Makerspace" && (
+            <div className="mt-4">
+              <PhotoGrid images={inGroup("makerspace")} masonry register={register} onOpen={setView} />
+            </div>
+          )}
         </section>
       ))}
 
       <section className="mt-8">
         <Heading>PHOTOS AND FACILITIES TOURED</Heading>
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {GALLERY.map((g, i) => (
-            <li key={g.src}>
-              <button
-                type="button"
-                ref={(el) => { cards.current[i] = el; }}
-                onClick={() => setView(i)}
-                aria-label={`View ${g.name} full size`}
-                className="group block w-full overflow-hidden rounded-sm border border-slate-800 text-left outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
-              >
-                <span className="relative block aspect-[4/3] overflow-hidden bg-[#0d1117]">
-                  <Image src={g.src} alt={g.alt} width={g.width} height={g.height} sizes="(min-width: 896px) 270px, 45vw" loading="lazy" className="h-full w-full object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-105" />
-                </span>
-                <span className="block px-2.5 py-2">
-                  <span className="block font-mono text-[10px] tracking-wider text-sky-300">{g.name}</span>
-                  <span className="mt-0.5 block text-[11px] leading-snug text-slate-400">{g.detail}</span>
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        <PhotoGrid images={SHOWN_IN_GRID} register={register} onOpen={setView} />
       </section>
 
       {shown && view !== null && (
