@@ -53,7 +53,7 @@ export const BODIES: SpaceBody[] = [
     summary:
       "Redesigned the WordPress site for a small-business client relocating his computer-repair business to Chesterfield, VA, built to earn phone calls and compete with other local repair shops.",
     tools: ["HTML", "CSS", "JavaScript", "WordPress", "REST API", "Git"],
-    color: "#ffb199",
+    color: "#6ee08a",
     look: "rock",
     orbitRadius: 10,
     startAngleDeg: 200,
@@ -104,7 +104,7 @@ export const BODIES: SpaceBody[] = [
       "TA for Introduction to Data Structures (CMSC 256, Java) and Computers and Programming (CMSC 210, Python). Ran office-hours debugging and grading, and mentored 150+ students; lab and test scores rose 20%.",
     tools: ["Java", "Python", "Data Structures", "Mentorship"],
     parent: "education",
-    color: "#e57373",
+    color: "#b9d8c4",
     orbitRadius: 1.1,
     startAngleDeg: 180,
     size: 0.2,

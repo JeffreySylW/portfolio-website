@@ -64,3 +64,14 @@ test("textured bodies point at baked texture files; skills stars stay plain", ()
   }
   for (const b of S.BODIES.filter((x) => x.kind === "star")) assert.equal(b.texture, undefined, `${b.id} must stay a plain star`);
 });
+
+test("a textured body's glow and label colour matches the dominant colour of its planet", () => {
+  const dominant = (hex) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    return r > g && r > b ? "red" : g >= r && g >= b ? "green" : "blue";
+  };
+  const expected = { nasa: "blue", bob: "green", aspire: "green", ta: "green" };
+  for (const [id, channel] of Object.entries(expected)) {
+    assert.equal(dominant(S.BODIES.find((b) => b.id === id).color), channel, `${id} glow colour`);
+  }
+});
