@@ -3,10 +3,14 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import Image from "next/image";
 import { BODIES } from "@/content/space";
-import { GALLERY, SECTIONS, inGroup, type GalleryImage } from "@/content/nasaGallery";
+import { GALLERY, SECTIONS, inGroup, type GalleryGroup, type GalleryImage } from "@/content/nasaGallery";
 
 const NASA = BODIES.find((b) => b.id === "nasa")!;
-const SHOWN_IN_GRID = GALLERY.filter((g) => g.group !== "makerspace"); // tours, then internship
+// Photos shown inside a section, as on the matching slide of the presentation; the tours get their own grid at the end.
+const SECTION_PHOTOS: Record<string, GalleryGroup> = {
+  "Side quest 1: wind tunnel surveillance system": "surveillance",
+  Makerspace: "makerspace",
+};
 
 function Heading({ children }: { children: string }) {
   return <h3 className="mb-3 font-mono text-xs tracking-wider text-sky-300">{children}</h3>;
@@ -119,9 +123,9 @@ export function NasaDeepDive({ onClose, returnFocusTo }: { onClose: () => void; 
           <div className="space-y-3 text-sm leading-relaxed text-slate-300">
             {sec.paragraphs.map((p) => <p key={p}>{p}</p>)}
           </div>
-          {sec.heading === "Makerspace" && (
+          {SECTION_PHOTOS[sec.heading] && (
             <div className="mt-4">
-              <PhotoGrid images={inGroup("makerspace")} masonry register={register} onOpen={setView} />
+              <PhotoGrid images={inGroup(SECTION_PHOTOS[sec.heading])} masonry register={register} onOpen={setView} />
             </div>
           )}
         </section>
@@ -129,7 +133,7 @@ export function NasaDeepDive({ onClose, returnFocusTo }: { onClose: () => void; 
 
       <section className="mt-8">
         <Heading>PHOTOS AND FACILITIES TOURED</Heading>
-        <PhotoGrid images={SHOWN_IN_GRID} register={register} onOpen={setView} />
+        <PhotoGrid images={inGroup("tours")} register={register} onOpen={setView} />
       </section>
 
       {shown && view !== null && (

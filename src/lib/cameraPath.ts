@@ -62,3 +62,10 @@ export function faceYaw(bodyPos: Vec3, camPos: Vec3): number {
   if (dx === 0 && dz === 0) return 0;
   return Math.atan2(-dz, dx);
 }
+
+const TURN = 2 * Math.PI;
+
+/** Spin (radians) added to a textured planet's camera-facing yaw: it turns at `speed` rad/s, kept in [0, 2π). */
+export function nextSpin(offset: number, dt: number, speed: number): number {
+  return (offset + dt * speed) % TURN;
+}

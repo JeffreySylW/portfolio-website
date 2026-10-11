@@ -1,4 +1,4 @@
-// Crops the Makerspace and Tours photos out of the internship presentation as WebP.
+// Crops the Side Quest #1, Makerspace and Tours photos out of the internship presentation as WebP.
 // Usage: node scripts/make-internship-images.mjs "C:/Users/there/Downloads/Summer 2025 Internship Experience.pdf"
 // Boxes were measured on a 0.7-scale render of the slides (1007x566) and are scaled up to SCALE here.
 import { pdfToPng } from "pdf-to-png-converter";
@@ -12,6 +12,8 @@ const K = SCALE / 0.7;
 
 // [slide, output (under public/images), [left, top, right, bottom] at 0.7 scale, output width, output height]
 const CROPS = [
+  [8, "surveillance/lab-room-cameras", [734, 395, 994, 555], 1000, 615],
+  [10, "surveillance/demo", [6, 305, 216, 556], 900, 1076],
   [11, "makerspace/room", [24, 21, 359, 184], 1000, 500],
   [11, "makerspace/drone-lab", [24, 203, 359, 366], 1000, 500],
   [11, "makerspace/printers", [24, 381, 359, 549], 1000, 500],
@@ -20,7 +22,6 @@ const CROPS = [
   [12, "tours/wind-tunnel-14x22", [26, 59, 203, 179], 1000, 680],
   [12, "tours/the-gantry", [233, 59, 420, 179], 1000, 680],
   [12, "tours/transonic-dynamics-tunnel", [450, 59, 636, 179], 1000, 680],
-  [12, "tours/unitary-plan-wind-tunnel", [655, 59, 841, 179], 1000, 680],
   [12, "tours/national-transonic-facility", [26, 342, 184, 450], 1000, 680],
   [12, "tours/scramjet", [214, 342, 381, 450], 1000, 680],
   [12, "tours/eight-foot-high-temp-tunnel", [410, 342, 577, 450], 1000, 680],
@@ -29,7 +30,8 @@ const CROPS = [
 ];
 
 mkdirSync("public/images/makerspace", { recursive: true });
-const pages = await pdfToPng(pdf, { viewportScale: SCALE, useSystemFonts: true, pagesToProcess: [11, 12] });
+mkdirSync("public/images/surveillance", { recursive: true });
+const pages = await pdfToPng(pdf, { viewportScale: SCALE, useSystemFonts: true, pagesToProcess: [8, 10, 11, 12] });
 for (const [slide, file, [l, t, r, b], w, h] of CROPS) {
   const page = pages.find((p) => p.pageNumber === slide);
   await sharp(page.content)
@@ -39,3 +41,7 @@ for (const [slide, file, [l, t, r, b], w, h] of CROPS) {
     .toFile(`public/images/${file}.webp`);
   console.log(`wrote public/images/${file}.webp ${w}x${h}`);
 }
+
+// The Unitary Plan photo exists as Jeff's original, far sharper than its copy in the PDF.
+await sharp("scripts/assets/unitary-plan-original.jpg").resize(1200, 900, { fit: "cover" }).webp({ quality: 82, effort: 6 }).toFile("public/images/tours/unitary-plan-wind-tunnel.webp");
+console.log("wrote public/images/tours/unitary-plan-wind-tunnel.webp 1200x900");

@@ -18,12 +18,34 @@ const DECK_TOURS = {
   "Compressor Station": "Witnessed the process of how each facility on center gets their compressed air for tests!",
 };
 
-test("the gallery has 5 makerspace, 9 tour and 2 internship photos, in page order", () => {
-  assert.strictEqual(GALLERY.length, 16);
+// Sentences from the "Side Quest #1" and "Beyond the Desk" slides, word for word.
+const DECK_SIDE_QUEST_1 = [
+  "Our goal was to build a system that combined live video with real-time test data.",
+  "We started by positioning two cameras on the test section for different angles.",
+  "Demoing wind tunnel surveillance systems in the lab room.",
+];
+
+test("the gallery has 3 surveillance, 5 makerspace and 9 tour photos, in page order", () => {
+  assert.strictEqual(GALLERY.length, 17);
   assert.deepStrictEqual(GALLERY.map((g) => g.group), [
-    ...Array(5).fill("makerspace"), ...Array(9).fill("tours"), ...Array(2).fill("internship"),
+    ...Array(3).fill("surveillance"), ...Array(5).fill("makerspace"), ...Array(9).fill("tours"),
   ]);
   assert.strictEqual(inGroup("tours").length, 9);
+});
+
+test("no photo is shown twice (the Unitary Plan group photo was also listed as 'Legacy Hardware')", () => {
+  assert.ok(!GALLERY.some((g) => /legacy hardware/i.test(g.name)), "Legacy Hardware duplicate is back");
+  const srcs = GALLERY.map((g) => g.src);
+  assert.strictEqual(new Set(srcs).size, srcs.length);
+});
+
+test("Side Quest #1 photos carry the presentation's own sentences", () => {
+  assert.deepStrictEqual(inGroup("surveillance").map((g) => g.detail), DECK_SIDE_QUEST_1);
+});
+
+test("the Unitary Plan tile uses the sharp original photo, not the soft crop from the PDF", () => {
+  const upwt = inGroup("tours").find((g) => g.name === "Unitary Plan Wind Tunnel");
+  assert.ok(upwt.width >= 1200, `Unitary Plan tile is ${upwt.width}px wide`);
 });
 
 test("every image exists, matches its recorded size, and has alt text and a caption", async () => {

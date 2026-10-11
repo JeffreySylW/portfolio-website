@@ -43,7 +43,7 @@ export default function SpaceScene() {
     setSelected(id);
   }, []);
 
-  // cards (NASA, Bob) open once the camera has arrived (at once under reduced motion); the canvas freezes then
+  // cards (NASA, Bob) open once the camera has arrived (at once under reduced motion); the galaxy keeps moving behind them
   const deep = selected === "nasa" || selected === "bob";
   const cardOpen = deep && (reduced || arrived === selected);
 
@@ -68,7 +68,6 @@ export default function SpaceScene() {
               selectedId={selected}
               onSelect={choose}
               reducedMotion={reduced}
-              paused={cardOpen}
               onArrive={setArrived}
               onCreated={(canvas) => canvas.addEventListener("webglcontextlost", () => setWebgl(false), { once: true })}
               labelFor={(id) => <BodyLabel id={id} onActivate={choose} />}

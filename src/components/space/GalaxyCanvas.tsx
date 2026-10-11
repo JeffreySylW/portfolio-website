@@ -10,6 +10,7 @@ import {
   cameraTargetFor,
   easeInOutCubic,
   faceYaw,
+  nextSpin,
   flightDurationMs,
   flightPose,
   followPosition,
@@ -42,15 +43,25 @@ function livePos(body: SpaceBody, t: number): Vec3 {
   return [x + o[0], y + o[1], z + o[2]];
 }
 
+// One turn every ~25 s; none under reduced motion.
+const SPIN_SPEED = 0.25;
+
 // A textured body: the texture is both colour and glow (the camera sees the side facing away from the sun, which
-// is unlit), and the mesh turns each frame so the logo side faces the camera.
-function TexturedSphere({ body, group }: { body: SpaceBody; group: RefObject<THREE.Group | null> }) {
+// is unlit). The planet spins on top of facing the camera, so its logo comes round every turn.
+function TexturedSphere({ body, group, spinSpeed }: {
+  body: SpaceBody;
+  group: RefObject<THREE.Group | null>;
+  spinSpeed: number;
+}) {
   const map = useLoader(THREE.TextureLoader, body.texture!);
   const mesh = useRef<THREE.Mesh>(null);
-  useFrame(({ camera }) => {
+  // start each planet at a different point in its turn
+  const spin = useRef((body.startAngleDeg * Math.PI) / 180);
+  useFrame(({ camera }, delta) => {
     const g = group.current;
     if (!g || !mesh.current) return;
-    mesh.current.rotation.y = faceYaw(g.position.toArray() as Vec3, camera.position.toArray() as Vec3);
+    spin.current = nextSpin(spin.current, Math.min(delta, 0.1), spinSpeed);
+    mesh.current.rotation.y = faceYaw(g.position.toArray() as Vec3, camera.position.toArray() as Vec3) + spin.current;
   });
   return (
     <mesh ref={mesh}>
@@ -63,11 +74,12 @@ function TexturedSphere({ body, group }: { body: SpaceBody; group: RefObject<THR
   );
 }
 
-function Body({ body, onSelect, labelFor, time }: {
+function Body({ body, onSelect, labelFor, time, reducedMotion }: {
   body: SpaceBody;
   onSelect: (id: string) => void;
   labelFor: (id: string) => ReactNode;
   time: MutableRefObject<number>;
+  reducedMotion: boolean;
 }) {
   const group = useRef<THREE.Group>(null);
   const isStar = body.kind === "star";
@@ -94,7 +106,7 @@ function Body({ body, onSelect, labelFor, time }: {
       {body.texture ? (
         <TextureBoundary fallback={plain}>
           <Suspense fallback={plain}>
-            <TexturedSphere body={body} group={group} />
+            <TexturedSphere body={body} group={group} spinSpeed={reducedMotion ? 0 : SPIN_SPEED} />
           </Suspense>
         </TextureBoundary>
       ) : plain}
@@ -224,11 +236,10 @@ function CameraRig({ target, reducedMotion, time: timeRef, onArrive }: {
   return null;
 }
 
-export function GalaxyCanvas({ selectedId, onSelect, reducedMotion, paused = false, labelFor, onCreated, onArrive }: {
+export function GalaxyCanvas({ selectedId, onSelect, reducedMotion, labelFor, onCreated, onArrive }: {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   reducedMotion: boolean;
-  paused?: boolean;
   labelFor: (id: string) => ReactNode;
   onCreated?: (canvas: HTMLCanvasElement) => void;
   onArrive?: (id: string) => void;
@@ -239,7 +250,6 @@ export function GalaxyCanvas({ selectedId, onSelect, reducedMotion, paused = fal
 
   return (
     <Canvas
-      frameloop={paused ? "never" : "always"}
       camera={{ position: HOME.position, fov: 50, near: 0.1, far: 400 }}
       dpr={[1, 1.75]}
       onCreated={({ gl }) => { onCreated?.(gl.domElement); setReady(true); }}
@@ -253,7 +263,7 @@ export function GalaxyCanvas({ selectedId, onSelect, reducedMotion, paused = fal
         <>
           <Sun onSelect={onSelect} labelFor={labelFor} />
           {BODIES.map((b) => (
-            <Body key={b.id} body={b} onSelect={(id) => onSelect(id)} labelFor={labelFor} time={time} />
+            <Body key={b.id} body={b} onSelect={(id) => onSelect(id)} labelFor={labelFor} time={time} reducedMotion={reducedMotion} />
           ))}
         </>
       )}

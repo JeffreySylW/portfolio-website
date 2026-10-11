@@ -1,5 +1,6 @@
 // Run against a live build: npm run build; npm run start -- -p 3111
 import { launch, connect, shutdown } from "./cdp.mjs";
+import sharp from "sharp";
 
 const BASE = "http://localhost:3111";
 const results = [];
@@ -174,7 +175,7 @@ try {
     await page.evaluate(`document.activeElement.click()`);
     assert(await page.waitFor(`!!document.querySelector("dialog[open]")`, 5000), "dialog did not open");
     const imgs = await page.evaluate(`document.querySelectorAll("dialog[open] img").length`);
-    assert(imgs >= 16, `${imgs} gallery images`);
+    assert(imgs >= 17, `${imgs} gallery images`);
     const focus = await page.evaluate(`document.activeElement?.textContent?.trim()`);
     assert(focus?.startsWith("close"), `focus on ${JSON.stringify(focus)}`);
     await page.pressEscape();
@@ -242,16 +243,16 @@ try {
     assert(await page.waitFor(`!!document.querySelector("dialog[open]")`, 8000), "NASA card did not open");
   };
 
-  await check("15 NASA card: Makerspace photos load and every caption is its own", async () => {
+  await check("15 NASA card: Side Quest 1 and Makerspace photos sit in their sections, every caption its own", async () => {
     await openNasaCard(1280, 800);
     const r = await page.evaluate(`(() => {
-      const sec = [...document.querySelectorAll("dialog[open] section")].find((s) => s.querySelector("h3")?.textContent === "MAKERSPACE");
-      const imgs = sec ? [...sec.querySelectorAll("img")] : [];
+      const photosIn = (h) => { const sec = [...document.querySelectorAll("dialog[open] section")].find((s) => s.querySelector("h3")?.textContent === h); return sec ? sec.querySelectorAll("img").length : 0; };
       const caps = [...document.querySelectorAll("dialog[open] li button")].map((b) => b.textContent);
-      return { n: imgs.length, loaded: imgs.every((i) => i.complete), all: caps.length, unique: new Set(caps).size };
+      return { maker: photosIn("MAKERSPACE"), quest: photosIn("SIDE QUEST 1: WIND TUNNEL SURVEILLANCE SYSTEM"), all: caps.length, unique: new Set(caps).size };
     })()`);
-    assert(r.n === 5, `${r.n} Makerspace photos`);
-    assert(r.all === 16 && r.unique === 16, `${r.unique} unique of ${r.all} photo captions`);
+    assert(r.maker === 5, `${r.maker} Makerspace photos`);
+    assert(r.quest === 3, `${r.quest} Side Quest 1 photos`);
+    assert(r.all === 17 && r.unique === 17, `${r.unique} unique of ${r.all} photo captions`);
     await page.pressEscape();
   });
 
@@ -283,7 +284,7 @@ try {
     await key("ArrowLeft");
     await key("ArrowLeft");
     const wrapped = await page.evaluate(`document.querySelector('dialog[open] [role="group"] span[aria-live]').textContent`);
-    assert(wrapped.trim() === "16 / 16", `wrapped to ${wrapped}`);
+    assert(wrapped.trim() === "17 / 17", `wrapped to ${wrapped}`);
     await page.pressEscape();
     await page.pressEscape();
   });
@@ -334,6 +335,26 @@ try {
       assert(c.ratio >= 4.5, `${sel}: contrast ${c.ratio.toFixed(2)}`);
     }
     await page.pressEscape();
+  });
+
+  await check("21 the galaxy keeps moving behind an open card", async () => {
+    await openNasaCard(1280, 800);
+    await sleep(1000);
+    // the followed planet sits behind the middle of the card; two captures 3s apart must differ there.
+    // A frozen canvas gives 0; a spinning planet seen through the 74%-opaque card gives about 0.4.
+    const grab = async () => {
+      const r = await page.send("Page.captureScreenshot", { format: "png", clip: { x: 440, y: 200, width: 400, height: 400, scale: 1 } });
+      return (await sharp(Buffer.from(r.data, "base64")).removeAlpha().raw().toBuffer());
+    };
+    const a = await grab();
+    await sleep(3000);
+    const b = await grab();
+    let sum = 0;
+    for (let i = 0; i < a.length; i++) sum += Math.abs(a[i] - b[i]);
+    const diff = sum / a.length;
+    assert(diff > 0.1, `the scene is frozen behind the card: mean pixel change ${diff.toFixed(3)}`);
+    await page.pressEscape();
+    return `mean pixel change ${diff.toFixed(2)}`;
   });
 
   await check("7 320px: no horizontal scroll", async () => {

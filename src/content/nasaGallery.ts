@@ -1,6 +1,6 @@
 // Words and pictures for the NASA deep dive. Copy comes from the old mission-log card.
 
-export type GalleryGroup = "makerspace" | "tours" | "internship";
+export type GalleryGroup = "surveillance" | "makerspace" | "tours";
 
 export interface GalleryImage {
   src: string;
@@ -86,22 +86,23 @@ export const SECTIONS: Section[] = [
 ];
 
 export const GALLERY: GalleryImage[] = [
-  { group: "makerspace", src: "/images/makerspace/room.webp", alt: "Larkworks Makerspace workshop with desks, tool cabinets and the Larkworks sign on the wall", name: "Larkworks Makerspace", detail: "Where I learned the 3D printing workflow.", width: 1000, height: 500 },
+  { group: "surveillance", src: "/images/internship/broadcast-control-room.jpg", alt: "Jeff and a fellow intern beside the equipment rack that runs the wind tunnel surveillance system", name: "Surveillance System Rack", detail: "Our goal was to build a system that combined live video with real-time test data.", width: 1179, height: 1578 },
+  { group: "surveillance", src: "/images/surveillance/lab-room-cameras.webp", alt: "A camera feed of the lab room, with two interns giving a thumbs up", name: "Lab Room Cameras", detail: "We started by positioning two cameras on the test section for different angles.", width: 1000, height: 615 },
+  { group: "surveillance", src: "/images/surveillance/demo.webp", alt: "Two surveillance screens of the lab room with date, time and TAG Screen 3 overlaid as text tags", name: "Surveillance Demo", detail: "Demoing wind tunnel surveillance systems in the lab room.", width: 900, height: 1076 },
+  { group: "makerspace", src: "/images/makerspace/room.webp", alt: "Larkworks Makerspace workshop with desks, tool cabinets and the Larkworks sign on the wall", name: "Larkworks Makerspace", detail: "Thanks to Ian, I learned the entire 3D printing workflow.", width: 1000, height: 500 },
   { group: "makerspace", src: "/images/makerspace/drone-lab.webp", alt: "Drones and a robot dog on display in the makerspace, with a poster behind them", name: "Makerspace Demo Area", detail: "Drones and a robot dog on display.", width: 1000, height: 500 },
-  { group: "makerspace", src: "/images/makerspace/printers.webp", alt: "Rows of 3D printers on shelves in the makerspace", name: "3D Printers", detail: "Hands-on with the printers, from loading filament to troubleshooting prints.", width: 1000, height: 500 },
-  { group: "makerspace", src: "/images/makerspace/slicer.webp", alt: "Slicer software on a monitor showing a 3D model on the print bed", name: "Slicer Software", detail: "Getting the STL file ready for the printer.", width: 1000, height: 720 },
-  { group: "makerspace", src: "/images/makerspace/first-print.webp", alt: "A hand holding the finished white 3D-printed Hollow Knight figurine", name: "First Ever 3D Print", detail: "A Hollow Knight figurine. It got a warning, but it was a learning experience.", width: 1000, height: 816 },
+  { group: "makerspace", src: "/images/makerspace/printers.webp", alt: "Rows of 3D printers on shelves in the makerspace", name: "3D Printers", detail: "Hands-on experience with the printers, from loading different types of filament to troubleshooting prints.", width: 1000, height: 500 },
+  { group: "makerspace", src: "/images/makerspace/slicer.webp", alt: "Slicer software on a monitor showing a 3D model on the print bed", name: "Slicer Software", detail: "Getting the STL file ready to print.", width: 1000, height: 720 },
+  { group: "makerspace", src: "/images/makerspace/first-print.webp", alt: "A hand holding the finished white 3D-printed Hollow Knight figurine", name: "First Ever 3D Print!", detail: "Got a warning. It's okay though, it was a \"learning experience\".", width: 1000, height: 816 },
   { group: "tours", src: "/images/tours/wind-tunnel-14x22.webp", alt: "Empty test section of the 14x22 subsonic wind tunnel", name: "14 x 22 Subsonic Wind Tunnel", detail: "Saw the massive tunnel used to test everything from aircraft landings to Mars helicopters!", width: 1000, height: 680 },
   { group: "tours", src: "/images/tours/the-gantry.webp", alt: "Group of interns in hard hats beneath the Gantry at NASA Langley", name: "The Gantry", detail: "Witnessed a helicopter crash-test in person, and the inside!", width: 1000, height: 680 },
   { group: "tours", src: "/images/tours/transonic-dynamics-tunnel.webp", alt: "Large cylindrical Transonic Dynamics Tunnel structure", name: "Transonic Dynamics Tunnel", detail: "Saw how this unique heavy-gas tunnel tests the limits of aircraft structures to prevent them from breaking apart in flight.", width: 1000, height: 680 },
-  { group: "tours", src: "/images/tours/unitary-plan-wind-tunnel.webp", alt: "Group indoors at the Unitary Plan Wind Tunnel with aircraft models on the wall", name: "Unitary Plan Wind Tunnel", detail: "Learned how its massive 100,000+ horsepower & giant compressors drive system creates supersonic conditions for testing America's most advanced aircraft.", width: 1000, height: 680 },
+  { group: "tours", src: "/images/tours/unitary-plan-wind-tunnel.webp", alt: "Group indoors at the Unitary Plan Wind Tunnel with aircraft models on the wall", name: "Unitary Plan Wind Tunnel", detail: "Learned how its massive 100,000+ horsepower & giant compressors drive system creates supersonic conditions for testing America's most advanced aircraft.", width: 1200, height: 900 },
   { group: "tours", src: "/images/tours/national-transonic-facility.webp", alt: "Group standing inside a large pipe at the National Transonic Facility", name: "National Transonic Facility", detail: "Saw the world's largest cryogenic, high pressure, closed circuit wind tunnel!", width: 1000, height: 680 },
   { group: "tours", src: "/images/tours/scramjet.webp", alt: "Group indoors with a SCRAMJET test article on display", name: "SCRAMJET", detail: "Saw and learned about a supersonic combustion ramjet!", width: 1000, height: 680 },
   { group: "tours", src: "/images/tours/eight-foot-high-temp-tunnel.webp", alt: "Group atop the sphere of the 8-Foot High Temperature Tunnel", name: "8 Foot High Temperature Tunnel", detail: "Witnessed a hypersonic wind tunnel that creates extreme heat and Mach 7 speeds!", width: 1000, height: 680 },
   { group: "tours", src: "/images/tours/flight-simulator.webp", alt: "Group inside the full-dome flight simulator", name: "Flight Simulator", detail: "Simulated landing a plane.", width: 1000, height: 680 },
   { group: "tours", src: "/images/tours/compressor-station.webp", alt: "Group outdoors among the piping at the Compressor Station", name: "Compressor Station", detail: "Witnessed the process of how each facility on center gets their compressed air for tests!", width: 1000, height: 680 },
-  { group: "internship", src: "/images/internship/broadcast-control-room.jpg", alt: "Server rack running the wind tunnel surveillance system", name: "Surveillance Rack", detail: "The hardware behind the wind tunnel surveillance system, live.", width: 1179, height: 1578 },
-  { group: "internship", src: "/images/internship/wind-tunnel-model-display.jpg", alt: "Group photo of interns at NASA Langley", name: "Legacy Hardware", detail: "Interns at NASA Langley", width: 4032, height: 3024 },
 ];
 
 export const inGroup = (group: GalleryGroup): GalleryImage[] => GALLERY.filter((g) => g.group === group);
