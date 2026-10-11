@@ -55,6 +55,14 @@ export function NasaDeepDive({ onClose, returnFocusTo }: { onClose: () => void; 
   const viewerClose = useRef<HTMLButtonElement>(null);
   const cards = useRef<(HTMLButtonElement | null)[]>([]);
   const [view, setView] = useState<number | null>(null);
+  // a click outside the card closes it; both press and release must be outside, so selecting text never does
+  const pressedOutside = useRef(false);
+  const isOutside = (e: { target: EventTarget; clientX: number; clientY: number }) => {
+    const d = dialog.current;
+    if (!d || e.target !== d) return false;
+    const r = d.getBoundingClientRect();
+    return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+  };
 
   useEffect(() => {
     const d = dialog.current;
@@ -89,6 +97,11 @@ export function NasaDeepDive({ onClose, returnFocusTo }: { onClose: () => void; 
       ref={dialog}
       aria-labelledby="nasa-title"
       onKeyDown={onKeyDown}
+      onPointerDown={(e) => { pressedOutside.current = isOutside(e); }}
+      onClick={(e) => {
+        if (pressedOutside.current && isOutside(e)) dialog.current?.close();
+        pressedOutside.current = false;
+      }}
       onCancel={(e) => {
         // Escape steps back from the viewer to the grid first
         if (view !== null) {

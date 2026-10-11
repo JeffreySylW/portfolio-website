@@ -65,7 +65,10 @@ export function faceYaw(bodyPos: Vec3, camPos: Vec3): number {
 
 const TURN = 2 * Math.PI;
 
-/** Spin (radians) added to a textured planet's camera-facing yaw: it turns at `speed` rad/s, kept in [0, 2π). */
+/** How fast textured planets turn, in rad/s: one turn about every 63 seconds. */
+export const PLANET_SPIN_SPEED = 0.1;
+
+/** Spin (radians) added to a textured planet's camera-facing yaw: it turns at `speed` rad/s (negative = the other way), kept in [0, 2π). */
 export function nextSpin(offset: number, dt: number, speed: number): number {
-  return (offset + dt * speed) % TURN;
+  return (((offset + dt * speed) % TURN) + TURN) % TURN;
 }

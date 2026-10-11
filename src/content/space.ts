@@ -16,6 +16,8 @@ export interface SpaceBody {
   size: number;
   /** Baked equirectangular texture; the centre of the image faces the camera. Plain sphere when absent. */
   texture?: string;
+  /** Spin speed for a textured planet, as a multiple of PLANET_SPIN_SPEED; negative turns the other way. */
+  spin?: number;
 }
 
 export const SUN = {
@@ -43,6 +45,7 @@ export const BODIES: SpaceBody[] = [
     startAngleDeg: 20,
     size: 0.9,
     texture: "/textures/planets/nasa.webp",
+    spin: 1,
   },
   {
     id: "bob",
@@ -59,6 +62,7 @@ export const BODIES: SpaceBody[] = [
     startAngleDeg: 200,
     size: 0.95,
     texture: "/textures/planets/bob.webp",
+    spin: -1.25,
   },
   {
     id: "education",
@@ -75,6 +79,7 @@ export const BODIES: SpaceBody[] = [
     startAngleDeg: 60,
     size: 0.5,
     texture: "/textures/planets/education.webp",
+    spin: 0.8,
   },
   {
     id: "aspire",
@@ -92,6 +97,7 @@ export const BODIES: SpaceBody[] = [
     startAngleDeg: 0,
     size: 0.2,
     texture: "/textures/planets/aspire.webp",
+    spin: -0.9,
   },
   {
     id: "ta",
@@ -109,6 +115,7 @@ export const BODIES: SpaceBody[] = [
     startAngleDeg: 180,
     size: 0.2,
     texture: "/textures/planets/ta.webp",
+    spin: 1.2,
   },
   {
     id: "skills-languages",

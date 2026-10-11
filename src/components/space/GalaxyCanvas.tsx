@@ -11,6 +11,7 @@ import {
   easeInOutCubic,
   faceYaw,
   nextSpin,
+  PLANET_SPIN_SPEED,
   flightDurationMs,
   flightPose,
   followPosition,
@@ -42,9 +43,6 @@ function livePos(body: SpaceBody, t: number): Vec3 {
   const o = parent ? bodyPosition(parent, t) : [0, 0, 0];
   return [x + o[0], y + o[1], z + o[2]];
 }
-
-// One turn every ~25 s; none under reduced motion.
-const SPIN_SPEED = 0.25;
 
 // A textured body: the texture is both colour and glow (the camera sees the side facing away from the sun, which
 // is unlit). The planet spins on top of facing the camera, so its logo comes round every turn.
@@ -106,7 +104,7 @@ function Body({ body, onSelect, labelFor, time, reducedMotion }: {
       {body.texture ? (
         <TextureBoundary fallback={plain}>
           <Suspense fallback={plain}>
-            <TexturedSphere body={body} group={group} spinSpeed={reducedMotion ? 0 : SPIN_SPEED} />
+            <TexturedSphere body={body} group={group} spinSpeed={reducedMotion ? 0 : PLANET_SPIN_SPEED * (body.spin ?? 1)} />
           </Suspense>
         </TextureBoundary>
       ) : plain}

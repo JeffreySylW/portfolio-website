@@ -1,7 +1,7 @@
 // run: NODE_OPTIONS=--experimental-strip-types node --test test/planetSpin.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { nextSpin } from "../src/lib/cameraPath.ts";
+import { nextSpin, PLANET_SPIN_SPEED } from "../src/lib/cameraPath.ts";
 
 const TURN = 2 * Math.PI;
 const run = (offset, seconds, speed) => {
@@ -24,4 +24,16 @@ test("the turn wraps at a full revolution so it never grows without bound", () =
 
 test("speed 0 (reduced motion) leaves the logo facing the camera", () => {
   assert.equal(run(0, 5, 0), 0);
+});
+
+test("planets turn slowly: one full turn takes about a minute", () => {
+  assert.ok(PLANET_SPIN_SPEED > 0, "planets must still turn");
+  const secondsPerTurn = TURN / PLANET_SPIN_SPEED;
+  assert.ok(secondsPerTurn >= 55 && secondsPerTurn <= 75, `one turn takes ${secondsPerTurn.toFixed(0)}s`);
+});
+
+test("a planet turning the other way still wraps into [0, 2π)", () => {
+  const w = nextSpin(0.05, 1, -0.4);
+  assert.ok(w >= 0 && w < TURN, `offset ${w} not wrapped`);
+  assert.ok(Math.abs(w - (TURN - 0.35)) < 1e-9);
 });

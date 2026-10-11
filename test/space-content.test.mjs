@@ -75,3 +75,15 @@ test("a textured body's glow and label colour matches the dominant colour of its
     assert.equal(dominant(S.BODIES.find((b) => b.id === id).color), channel, `${id} glow colour`);
   }
 });
+
+test("textured planets don't all spin the same way, and each turns in roughly a minute", () => {
+  const TURN = 2 * Math.PI, BASE = 0.1; // PLANET_SPIN_SPEED
+  const spins = S.BODIES.filter((b) => b.texture).map((b) => [b.id, b.spin]);
+  for (const [id, spin] of spins) {
+    assert.equal(typeof spin, "number", `${id} needs a spin`);
+    const seconds = TURN / Math.abs(BASE * spin);
+    assert.ok(seconds >= 45 && seconds <= 90, `${id} turns once every ${seconds.toFixed(0)}s`);
+  }
+  assert.ok(spins.some(([, s]) => s > 0) && spins.some(([, s]) => s < 0), "every planet spins the same way");
+  assert.ok(new Set(spins.map(([, s]) => Math.abs(s))).size > 2, "every planet spins at the same speed");
+});

@@ -341,13 +341,13 @@ try {
     await openNasaCard(1280, 800);
     await sleep(1000);
     // the followed planet sits behind the middle of the card; two captures 3s apart must differ there.
-    // A frozen canvas gives 0; a spinning planet seen through the 74%-opaque card gives about 0.4.
+    // A frozen canvas gives 0; a slowly spinning planet seen through the 74%-opaque card gives a few tenths.
     const grab = async () => {
       const r = await page.send("Page.captureScreenshot", { format: "png", clip: { x: 440, y: 200, width: 400, height: 400, scale: 1 } });
       return (await sharp(Buffer.from(r.data, "base64")).removeAlpha().raw().toBuffer());
     };
     const a = await grab();
-    await sleep(3000);
+    await sleep(6000);
     const b = await grab();
     let sum = 0;
     for (let i = 0; i < a.length; i++) sum += Math.abs(a[i] - b[i]);
@@ -355,6 +355,42 @@ try {
     assert(diff > 0.1, `the scene is frozen behind the card: mean pixel change ${diff.toFixed(3)}`);
     await page.pressEscape();
     return `mean pixel change ${diff.toFixed(2)}`;
+  });
+
+  await check("22 clicking outside the NASA card closes it; clicking inside its padding does not", async () => {
+    await openNasaCard(1280, 800);
+    const r = await page.evaluate(`(() => { const b = document.querySelector("dialog[open]").getBoundingClientRect(); return { x: b.left + 6, y: b.top + 300 }; })()`);
+    await page.clickAt(r.x, r.y);
+    await sleep(400);
+    assert(await page.evaluate(`!!document.querySelector("dialog[open]")`), "a click inside the card's padding closed it");
+    await page.clickAt(60, 400);
+    assert(await page.waitFor(`!document.querySelector("dialog[open]")`, 3000), "clicking outside did not close the card");
+  });
+
+  await check("23 clicking beside the Bob case file closes it; clicking its text does not", async () => {
+    await page.setViewport(1280, 800);
+    await page.navigate(BASE + "/");
+    await page.evaluate("location.reload()");
+    assert(await page.waitFor(`!!(${rectOf("Bob The Tech Guy")})`), "Bob label missing");
+    await page.evaluate(`[...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Bob The Tech Guy").click()`);
+    assert(await page.waitFor(bobOpen, 8000), "case file did not open");
+    await sleep(700);
+    const t = await page.evaluate(`(() => { const r = document.querySelector('[role="dialog"] p.font-display').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`);
+    await page.clickAt(t.x, t.y);
+    await sleep(400);
+    assert(await page.evaluate(bobOpen), "clicking the case file's text closed it");
+    await page.clickAt(60, 400);
+    assert(await page.waitFor(`!(${bobOpen})`, 3000), "clicking beside the case file did not close it");
+  });
+
+  await check("24 clicking empty space closes a story panel", async () => {
+    await page.setViewport(1280, 800);
+    await page.navigate(BASE + "/#education");
+    await page.evaluate("location.reload()");
+    assert(await page.waitFor(`${panelTitle} === "Virginia Commonwealth University"`), "panel missing");
+    await sleep(2500);
+    await page.clickAt(300, 80);
+    assert(await page.waitFor(`!document.querySelector("aside h2")`, 3000), "clicking empty space did not close the panel");
   });
 
   await check("7 320px: no horizontal scroll", async () => {

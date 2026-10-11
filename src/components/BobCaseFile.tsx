@@ -69,6 +69,8 @@ export function BobCaseFile({
   const closeRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(null);
+  // a click beside the case file's content closes it; press and release must both land there
+  const pressedOutside = useRef(false);
 
   if (open && !rendered) setRendered(true);
   if (!open && entered) setEntered(false);
@@ -153,6 +155,11 @@ export function BobCaseFile({
 
       <div
         style={{ pointerEvents: entered ? "auto" : "none" }}
+        onPointerDown={(e) => { pressedOutside.current = e.target === e.currentTarget; }}
+        onClick={(e) => {
+          if (pressedOutside.current && e.target === e.currentTarget) onClose();
+          pressedOutside.current = false;
+        }}
         className={`relative z-10 h-full overflow-y-auto px-4 py-6 transition-opacity ease-out sm:py-10 ${
           entered ? "opacity-100 duration-200 delay-150" : "opacity-0 duration-100"
         }`}
