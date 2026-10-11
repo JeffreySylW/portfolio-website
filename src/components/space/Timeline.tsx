@@ -39,7 +39,7 @@ export function Timeline({ onSelect }: { onSelect?: (id: string) => void }) {
   const items = TIMELINE.map((id) => BODIES.find((b) => b.id === id)).filter(Boolean) as SpaceBody[];
   return (
     <section id="timeline" aria-labelledby="timeline-heading" className="mx-auto max-w-3xl px-6 py-16">
-      <ScrambleHeading id="timeline-heading" text="experience, newest first" className="font-mono text-xs tracking-wider text-sky-300" />
+      <ScrambleHeading id="timeline-heading" text="experience" className="font-mono text-xs tracking-wider text-sky-300" />
       <ol className="relative mt-8 pl-8">
         <span aria-hidden="true" className="absolute left-0 top-0 h-full w-px bg-slate-700" />
         <span aria-hidden="true" className="tl-line absolute left-0 top-0 h-full w-px bg-sky-300/80" />

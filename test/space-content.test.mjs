@@ -87,3 +87,48 @@ test("textured planets don't all spin the same way, and each turns in roughly a 
   assert.ok(spins.some(([, s]) => s > 0) && spins.some(([, s]) => s < 0), "every planet spins the same way");
   assert.ok(new Set(spins.map(([, s]) => Math.abs(s))).size > 2, "every planet spins at the same speed");
 });
+
+test("orbits sit at natural distances: clear of the sun's glow and of each other, with gaps that widen outward", () => {
+  const SUN_GLOW = 2.4; // radius of the sun's glow in GalaxyCanvas
+  const moonsOf = (id) => S.BODIES.filter((b) => b.parent === id);
+  const reach = (b) => Math.max(b.size, ...moonsOf(b.id).map((m) => m.orbitRadius + m.size));
+  const bands = S.BODIES.filter((b) => !b.parent && b.kind !== "star")
+    .sort((a, b) => a.orbitRadius - b.orbitRadius)
+    .map((b) => ({ id: b.id, inner: b.orbitRadius - reach(b), outer: b.orbitRadius + reach(b) }));
+  let gap = bands[0].inner - SUN_GLOW;
+  assert.ok(gap >= 0.6, `${bands[0].id} is only ${gap.toFixed(2)} from the sun's glow`);
+  for (let i = 1; i < bands.length; i++) {
+    const next = bands[i].inner - bands[i - 1].outer;
+    assert.ok(next >= gap - 1e-9, `gap inside ${bands[i].id} (${next.toFixed(2)}) is narrower than the one before it (${gap.toFixed(2)})`);
+    gap = next;
+  }
+  const outermost = bands[bands.length - 1].outer;
+  for (const s of S.BODIES.filter((b) => b.kind === "star")) {
+    assert.ok(s.orbitRadius - s.size - outermost >= gap, `${s.id} crowds the outermost planet`);
+  }
+  for (const m of S.BODIES.filter((b) => b.parent)) {
+    const p = S.BODIES.find((b) => b.id === m.parent);
+    assert.ok(m.orbitRadius - m.size - p.size >= 0.3, `${m.id} touches ${p.id}`);
+  }
+});
+
+test("when the page loads, no planet or moon looks like it is touching the sun from the home view", async () => {
+  const { bodyPosition } = await import("../src/lib/cameraPath.ts");
+  const CAM = [0, 14, 22]; // HOME camera in GalaxyCanvas, looking at the sun
+  const SUN_GLOW = 2.4;
+  const sub = (a, b) => a.map((v, i) => v - b[i]);
+  const len = (v) => Math.hypot(...v);
+  const angle = (a, b) => (Math.acos(a.reduce((s, v, i) => s + v * b[i], 0) / (len(a) * len(b))) * 180) / Math.PI;
+  const deg = (r) => (r * 180) / Math.PI;
+  const toSun = sub([0, 0, 0], CAM);
+  const glow = deg(Math.asin(SUN_GLOW / len(toSun)));
+  for (const b of S.BODIES.filter((x) => x.kind !== "star")) {
+    const parent = b.parent ? S.BODIES.find((x) => x.id === b.parent) : null;
+    const p = bodyPosition(b, 0);
+    const o = parent ? bodyPosition(parent, 0) : [0, 0, 0];
+    const toBody = sub([p[0] + o[0], p[1] + o[1], p[2] + o[2]], CAM);
+    const apart = angle(toBody, toSun);
+    const needed = glow + deg(Math.asin(b.size / len(toBody))) + 1;
+    assert.ok(apart >= needed, `${b.id} sits ${apart.toFixed(1)}° from the sun on screen, needs ${needed.toFixed(1)}°`);
+  }
+});
