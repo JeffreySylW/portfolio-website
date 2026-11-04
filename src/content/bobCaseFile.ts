@@ -8,13 +8,13 @@ export const BOB_SITE_SSL_OK = false;
 export const CARD = {
   label: "CLIENT WORK // BOB THE TECH GUY · CHESTERFIELD, VA",
   dates: "AUG 2026 – PRESENT",
-  title: "Freelance Web Developer",
+  title: "Freelance Software Engineer",
   summary:
-    "Redesigned the WordPress site for a real small-business client relocating his computer-repair business to Chesterfield, VA — built to earn phone calls and compete with other local repair shops.",
+    "Engineered the software behind a real small-business site: a versioned JavaScript/CSS bundle on a live WordPress host, release safeguards, automated tests and a serverless AI chatbot. Now building Bob's e-commerce system.",
   stats: [
-    { label: "VERSIONED RELEASES", value: 47 },
+    { label: "VERSIONED RELEASES", text: "75+" },
   ] as { label: string; value?: number; text?: string }[],
-  tags: ["HTML", "CSS", "JAVASCRIPT", "WORDPRESS", "REST API", "GIT"],
+  tags: ["JAVASCRIPT", "CSS", "CLOUDFLARE WORKERS", "ANTHROPIC API", "WORDPRESS", "REST API", "GIT"],
 };
 
 export const CLIENT = [
@@ -33,20 +33,21 @@ export const PIPELINE = [
   { label: "DISCOVER", detail: "Measured every page to find the walls of text." },
   { label: "SPEC", detail: "Wrote the design; client approved it." },
   { label: "PLAN", detail: "Broke it into small tasks with exact tests." },
-  { label: "TEST-FIRST", detail: "Test-driven development: every change began as a failing test.", test: true },
+  { label: "TEST-FIRST", detail: "Test-driven development: changes began as failing tests.", test: true },
   { label: "DRY RUN", detail: "Ran every change against live content without saving." },
   { label: "SHIP ONE PAGE", detail: "Released to a single page first." },
-  { label: "VERIFY LIVE", detail: "End-to-end testing against the live site: public HTML on all 30 pages, screenshots at desktop and phone widths.", test: true },
+  { label: "VERIFY LIVE", detail: "End-to-end testing against the live site: public HTML on every published page, screenshots at desktop and phone widths.", test: true },
   { label: "REVIEW", detail: "An independent code review before calling it done." },
 ] as { label: string; detail: string; test?: boolean }[];
 
 export const TOOLING = [
   { name: "CSS / JS bundle", detail: "One versioned stylesheet and script, served from a CDN (jsDelivr) to every page." },
   { name: "WordPress REST API", detail: "Scripted, reversible content updates with every page backed up first." },
-  { name: "node:test", detail: "68 automated tests covering the transforms and styles." },
+  { name: "node:test", detail: "Automated unit tests covering the transforms, styles and AI helper." },
   { name: "Content-safety checker", detail: "Proves no sentence was added, lost, reordered, or reworded." },
   { name: "Headless browser", detail: "End-to-end screenshots and layout measurements of the live pages." },
-  { name: "Git + GitHub", detail: "Tagged releases (v1.0.0 → v1.7.4) with one-line rollbacks." },
+  { name: "Git + GitHub", detail: "Tagged releases (v1.0.0 → v1.8.29) with one-line rollbacks." },
+  { name: "Cloudflare Workers + Anthropic API", detail: "Serverless AI chatbot that sends leads to the owner, labeled by source." },
 ];
 
 export const AI_NOTE = "AI-assisted development (Claude Code), with every change verified test-first.";
@@ -70,7 +71,7 @@ export const WORK = [
 ] as { side: "before" | "after"; src: string; width: number; height: number; alt: string; caption: string; archived?: boolean; phone?: boolean }[];
 
 export const RESULTS = [
-  { value: "30", label: "pages on one managed bundle" },
+  { value: "27", label: "pages on one managed bundle" },
   { value: "15", label: "pages turned into summary cards" },
-  { value: "47", label: "versioned releases, v1.0.0 → v1.7.4" },
+  { value: "75+", label: "versioned releases, v1.0.0 → v1.8.29" },
 ];
