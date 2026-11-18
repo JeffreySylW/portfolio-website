@@ -17,8 +17,8 @@ console.log(`wrote ${OUT}/day-2700.webp`);
 const { data, info } = await sharp(SRC).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 const texture = { width: info.width, height: info.height, data };
 
-// size -> CSS width it is shown at (desktop hero 1100 px, phones 620 px)
-for (const [size, css] of [[1600, 1100], [900, 620]]) {
+// size -> CSS width it is shown at (desktop hero ~1100 px, phones ~600 px at 2x / 620 px at 1.5x)
+for (const [size, css] of [[1600, 1100], [1200, 600], [900, 620]]) {
   const pad = Math.round(size * EARTH_VIEW.padRatio);
   const rgba = paintGlobe({ texture, size, pad, lon0: EARTH_VIEW.lon0, lat0: EARTH_VIEW.lat0, sun: EARTH_VIEW.defaultSun, block: blockFor(size, css) });
   const file = `${OUT}/globe-${size}.webp`;

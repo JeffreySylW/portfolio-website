@@ -52,7 +52,7 @@ export function Hero() {
         {/* eslint-disable-next-line @next/next/no-img-element -- exact pixels matter: the night side must not be resampled */}
         <img
           src="/textures/earth/globe-1600.webp"
-          srcSet="/textures/earth/globe-900.webp 900w, /textures/earth/globe-1600.webp 1600w"
+          srcSet="/textures/earth/globe-900.webp 900w, /textures/earth/globe-1200.webp 1200w, /textures/earth/globe-1600.webp 1600w"
           sizes="(min-width: 768px) min(78vw, 1180px), 150vw"
           width={1600}
           height={1600}

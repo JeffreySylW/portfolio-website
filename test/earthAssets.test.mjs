@@ -6,7 +6,7 @@ import sharp from "sharp";
 const kb = (f) => statSync(f).size / 1024;
 
 test("baked globes exist, are square, and stay small enough for a fast first paint", async () => {
-  for (const [size, budget] of [[1600, 200], [900, 100]]) {
+  for (const [size, budget] of [[1600, 200], [1200, 130], [900, 100]]) {
     const f = `public/textures/earth/globe-${size}.webp`;
     const m = await sharp(f).metadata();
     assert.equal(m.width, size); assert.equal(m.height, size); assert.ok(m.hasAlpha);
