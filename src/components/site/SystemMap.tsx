@@ -242,26 +242,19 @@ export function SystemMap() {
                 );
               })}
             </ol>
-            <div className="gal-body gal-upright gal-core-slot" style={{ "--s": 64, "--x": 0.5, "--y": 0.5, "--ghost": `url(${ME_CARD.face.src})` } as Vars}>
-              <a
-                href="#me"
-                data-core
-                aria-label={`${ME_CARD.title}: about me`}
-                className="gal-core phase"
-                onPointerEnter={() => sound.play(0)}
-                onFocus={() => sound.play(0)}
-              >
-                <span className="phase-wrap">
-                  <span data-phase className="phase-body">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- small, already sized */}
-                    <img src={ME_CARD.face.src} alt="" width={ME_CARD.face.width} height={ME_CARD.face.height} loading="lazy" decoding="async" />
-                  </span>
-                </span>
-                <span aria-hidden="true" className="gal-core-label px-label">
-                  <span className="text-on-sky text-starlight">Hi, I&apos;m Jeff</span>
-                </span>
-              </a>
-            </div>
+            {/* the galaxy's yellow core is Jeff: an outline over the bar, lit up on hover; no photo until it is opened */}
+            <a
+              href="#me"
+              data-core
+              aria-label={`${ME_CARD.title}: about me`}
+              className="gal-core"
+              onPointerEnter={() => sound.play(0)}
+              onFocus={() => sound.play(0)}
+            >
+              <span aria-hidden="true" className="gal-core-label px-label">
+                <span className="text-on-sky text-starlight">{ME_CARD.title}</span>
+              </span>
+            </a>
             </div>
           </div>
           <figcaption className="px-label mt-3 text-center text-[12px] leading-[1.6] text-lavender md:text-right">
@@ -276,8 +269,7 @@ export function SystemMap() {
       <ul className="mt-6 border-b border-indigo md:hidden" aria-label="Experience in the galaxy">
         <li className="border-t border-indigo">
           <a href="#me" className="px-label flex min-h-[56px] items-center gap-4 py-2 text-[12px] leading-[1.6] text-starlight no-underline">
-            {/* eslint-disable-next-line @next/next/no-img-element -- tiny copy of the core photo */}
-            <img src={ME_CARD.face.src} alt="" width={40} height={40} loading="lazy" decoding="async" className="h-10 w-10 shrink-0 rounded-full" />
+            <span aria-hidden="true" className="gal-core-chip h-10 w-10 shrink-0" />
             <span>
               {ME_CARD.title}
               <br />

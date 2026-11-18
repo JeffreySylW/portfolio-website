@@ -10,7 +10,7 @@ test("the 'me' card says what Jeff asked for, with his photos", () => {
   assert.match(ME_CARD.lead, /this is my portfolio website/i);
   assert.match(ME_CARD.lead, /my road as a software engineer/i);
   assert.ok(ME_CARD.photos.length === 3);
-  for (const p of [...ME_CARD.photos, ME_CARD.face]) {
+  for (const p of ME_CARD.photos) {
     assert.ok(p.alt && p.alt.length > 10, `alt for ${p.src}`);
     assert.ok(p.width > 0 && p.height > 0);
     for (const src of [p.src, ...(p.small ? [p.small] : [])]) {
@@ -47,7 +47,10 @@ test("every planet opens a card, and the core opens the 'me' card", () => {
   const map = readFileSync("src/components/site/SystemMap.tsx", "utf8");
   assert.match(map, /href=\{`#\$\{p\.id\}`\}/, "planets link to their card");
   assert.match(map, /href="#me"/, "the core links to the me card");
-  assert.match(map, /gal-core[^"]*phase|phase[^"]*gal-core/, "the core glitches like the planets");
+  assert.match(map, /className="gal-core"/, "the core is an outline over the galaxy's bar");
+  assert.doesNotMatch(map, /ME_CARD\.face|face-\d+\.webp|ME_CARD\.photos/, "no photo of Jeff on the map: only inside the card");
+  const css = readFileSync("src/app/globals.css", "utf8");
+  assert.match(css, /\.gal-core:hover,\s*\.gal-core:focus-visible\s*\{[^}]*backdrop-filter:\s*brightness/, "hover lights up the yellow core");
 });
 
 test("the Milky Way swirls slowly, labels stay upright, and nothing turns under reduced motion", () => {

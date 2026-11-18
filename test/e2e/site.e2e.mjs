@@ -342,11 +342,14 @@ try {
     await page.waitFor(`!document.querySelector("dialog[open]")`, 5000);
   });
 
-  await check("22 the core: Jeff's photo glitches on hover and opens 'Hi, I'm Jeff' with his photos", async () => {
+  await check("22 the core: an outline over the yellow bar, lit on hover, no photo until clicked; opens 'Hi, I'm Jeff' with his photos", async () => {
+    const before = await page.evaluate(`(() => { const c = document.querySelector("#system [data-core]"); return { imgs: c.querySelectorAll("img").length, bf: getComputedStyle(c).backdropFilter }; })()`);
+    assert(before.imgs === 0 && before.bf === "none", JSON.stringify(before));
+    assert(!(await page.evaluate(`[...document.querySelectorAll("#system img")].some((i) => i.src.includes("/images/me/"))`)), "a photo of Jeff shows on the map");
     await hoverAt("#system [data-core]");
-    await sleep(120);
-    const anim = await page.evaluate(`getComputedStyle(document.querySelector("#system [data-core] [data-phase]")).animationName`);
-    assert(anim === "phase-core", `core animation ${anim}`);
+    await sleep(250);
+    const lit = await page.evaluate(`getComputedStyle(document.querySelector("#system [data-core]")).backdropFilter`);
+    assert(/brightness/.test(lit), `core not lit on hover (${lit})`);
     await click("#system [data-core]");
     assert(await page.waitFor(cardOpen("me"), 5000), "me card did not open");
     const r = await page.evaluate(`(() => { const d = document.querySelector("dialog[open]");
@@ -368,7 +371,7 @@ try {
   await check("24 the Milky Way swirls slowly and the labels stay upright; reduced motion holds it still", async () => {
     await page.navigate(BASE + "/");
     await page.evaluate(`document.querySelector("#system").scrollIntoView({ behavior: "instant" })`);
-    const anim = await page.evaluate(`(() => { const s = getComputedStyle(document.querySelector("#system .gal-swirl")); const u = getComputedStyle(document.querySelector("#system [data-core]").parentElement);
+    const anim = await page.evaluate(`(() => { const s = getComputedStyle(document.querySelector("#system .gal-swirl")); const u = getComputedStyle(document.querySelector('#system [data-planet="vcu"]').parentElement);
       return { s: s.animationName, sd: parseFloat(s.animationDuration), u: u.animationName, ud: parseFloat(u.animationDuration) }; })()`);
     assert(anim.s === "gal-swirl" && anim.u === "gal-upright" && anim.sd === anim.ud && anim.sd >= 180, JSON.stringify(anim));
     const a = await page.evaluate(`document.getAnimations().find((x) => x.animationName === "gal-swirl")?.currentTime ?? -1`);

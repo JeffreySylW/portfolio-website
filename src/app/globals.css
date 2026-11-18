@@ -332,38 +332,50 @@ body {
 @keyframes gal-upright {
   to { rotate: -360deg; }
 }
-.gal-core-slot {
-  min-width: 36px;
+/* the core: an outline over the galaxy's yellow bar (measured from the image: centred, 20% long, tilted 41 deg);
+   it turns with the swirl. Hover or focus lights up the yellow beneath it. */
+.gal-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 21%;
+  height: 8.5%;
+  transform: translate(-50%, -50%) rotate(-41deg);
+  border-radius: 50%;
+  outline: 2px dashed var(--lavender);
+  outline-offset: 2px;
+  color: var(--starlight);
+  text-decoration: none;
+  transition: backdrop-filter 0.15s steps(2), outline-color 0.15s steps(2);
 }
-/* a 44 px tap target even when the photo is small */
+/* a 44 px tap target on small screens */
 .gal-core::before {
   content: "";
   position: absolute;
-  inset: min(0px, calc(50% - 22px));
-}
-.gal-core {
-  position: absolute;
-  inset: 0;
-  display: block;
-  border-radius: 50%;
-  color: var(--starlight);
-  text-decoration: none;
-  box-shadow: 0 0 0 2px var(--lavender), 0 0 0 5px var(--void);
-}
-.gal-core .phase-body img,
-.gal-core .phase-wrap::before,
-.gal-core .phase-wrap::after {
-  border-radius: 50%;
+  inset: min(0px, calc(50% - 22px)) 0;
 }
 .gal-core:hover,
 .gal-core:focus-visible {
-  box-shadow: 0 0 0 2px var(--starlight), 0 0 0 5px var(--violet);
+  outline: 2px solid var(--starlight);
+  backdrop-filter: brightness(1.45) saturate(1.8);
 }
 .gal-core-label {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 12px);
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) rotate(41deg);
   white-space: nowrap;
   font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+}
+.gal-core:hover .gal-core-label,
+.gal-core:focus-visible .gal-core-label {
+  opacity: 1;
+}
+.gal-core-chip {
+  display: block;
+  border-radius: 50%;
+  outline: 2px dashed var(--lavender);
+  outline-offset: -8px;
 }
