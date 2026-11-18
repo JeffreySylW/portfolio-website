@@ -68,8 +68,8 @@ test("monthIndex counts months", () => {
   assert.equal(monthIndex("2026-08") - monthIndex("2022-08"), 48);
 });
 
-test("one planet per experience: VCU, its TA and ASPIRE moons, Sports Analytics, NASA and Bob", () => {
-  assert.deepEqual(PLANETS.map((p) => p.id), ["vcu", "ta", "aspire", "sports-analytics", "nasa", "bob"]);
+test("five planets, as Jeff asked (2026-11-17): VCU, its TA and ASPIRE moons, NASA and Bob; no Sports Analytics", () => {
+  assert.deepEqual(PLANETS.map((p) => p.id), ["vcu", "ta", "aspire", "nasa", "bob"]);
   for (const p of PLANETS) {
     assert.ok(WORK.some((w) => w.id === p.workId), `${p.id} links to a work row`);
     assert.ok(p.label && p.world && p.size > 20, `${p.id} fields`);
@@ -113,14 +113,14 @@ test("every planet's span matches the dates printed in the work list", () => {
 test("layout: oldest first, each planet at its start, its trail to its end (ongoing runs to now)", () => {
   const now = new Date(Date.UTC(2026, 10, 17));
   const L = systemLayout(planetSpans(), now);
-  assert.deepEqual(L.bodies.map((b) => b.id), ["vcu", "ta", "aspire", "sports-analytics", "nasa", "bob"]);
+  assert.deepEqual(L.bodies.map((b) => b.id), ["vcu", "ta", "aspire", "nasa", "bob"]);
   const by = Object.fromEntries(L.bodies.map((b) => [b.id, b]));
   assert.equal(by.vcu.x0, 0);
   assert.equal(by.bob.x1, 1, "Bob runs to now");
   for (const b of L.bodies) assert.ok(b.x0 >= 0 && b.x1 <= 1 && b.x0 < b.x1, `${b.id} ${b.x0}..${b.x1}`);
   assert.equal(by.ta.x0, by.aspire.x0, "TA and ASPIRE started together");
   assert.ok(by.aspire.x1 < by.ta.x1);
-  assert.ok(by["nasa"].x0 > by["sports-analytics"].x0 && by["bob"].x0 > by["nasa"].x0);
+  assert.ok(by["nasa"].x0 > by["aspire"].x0 && by["bob"].x0 > by["nasa"].x0);
   // labels go on the side with room
   assert.equal(by.vcu.labelSide, "right");
   assert.equal(by.bob.labelSide, "left");

@@ -3,7 +3,7 @@
 //    scripts/assets/planets/<id>-4096.webp (front decals face the Earth's view latitude).
 // 2. Every planet gets public/textures/planets/<id>-tex.webp (1024x512, for the live repaint in the browser)
 //    and <id>.webp (painted by terminatorPaint.ts for the default sun, at twice its desktop size).
-// Outside artwork: Neptune from Solar System Scope (CC BY 4.0), the VCU lockup and the NASA insignia; see public/textures/CREDITS.md.
+// Outside artwork: the VCU lockup and the NASA insignia; see public/textures/CREDITS.md.
 import sharp from "sharp";
 import { mkdirSync, existsSync } from "node:fs";
 import { paintGlobe, textureStats } from "../src/lib/terminatorPaint.ts";
@@ -236,7 +236,6 @@ if (!process.argv.includes("--skip-masters") || !existsSync(`${SRC}/nasa-4096.we
   masters.bob = await saveMaster("bob", await bob());
   masters.nasa = await saveMaster("nasa", await nasa());
 } else for (const id of ["vcu", "ta", "aspire", "bob", "nasa"]) masters[id] = `${SRC}/${id}-4096.webp`;
-masters["sports-analytics"] = `${SRC}/neptune-2048.jpg`;
 
 for (const p of PLANETS) {
   const src = masters[p.id];

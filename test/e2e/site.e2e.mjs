@@ -183,14 +183,14 @@ try {
   };
   const whooshes = `Number(document.querySelector("#system").dataset.whooshes || 0)`;
 
-  await check("14 system map: six worlds oldest first, each placed by date and linking to its work row", async () => {
+  await check("14 system map: five worlds oldest first, each placed by date and linking to its work row", async () => {
     await page.navigate(BASE + "/");
     const r = await page.evaluate(`[...document.querySelectorAll("#system [data-planet]")].map((a) => ({
       id: a.dataset.planet, href: a.getAttribute("href"), x: a.getBoundingClientRect().x, img: a.querySelector("img")?.getAttribute("src") }))`);
-    assert(r.map((p) => p.id).join() === "vcu,ta,aspire,sports-analytics,nasa,bob", r.map((p) => p.id).join());
+    assert(r.map((p) => p.id).join() === "vcu,ta,aspire,nasa,bob", r.map((p) => p.id).join());
     const by = Object.fromEntries(r.map((p) => [p.id, p]));
     assert(by.vcu.href === "#work-vcu" && by.ta.href === "#work-vcu" && by.nasa.href === "#work-nasa" && by.bob.href === "#work-bob", "hrefs");
-    assert(by.vcu.x < by["sports-analytics"].x && by["sports-analytics"].x < by.nasa.x && by.nasa.x < by.bob.x, "placed by start date");
+    assert(by.vcu.x < by.aspire.x && by.aspire.x < by.nasa.x && by.nasa.x < by.bob.x, "placed by start date");
     assert(Math.abs(by.ta.x - by.aspire.x) < 30, "TA and ASPIRE start together");
     assert(r.every((p) => /^\/textures\/planets\/[\w-]+\.webp$/.test(p.img)), "baked images");
     const ticks = await page.evaluate(`[...document.querySelectorAll("#system [data-tick]")].map((t) => t.textContent).join()`);

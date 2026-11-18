@@ -36,13 +36,11 @@ test("high-resolution masters are baked at 4096x2048 for the made worlds", async
   }
 });
 
-test("the credits name every outside texture and record the NASA insignia's restriction", () => {
+test("the credits name the outside artwork, record the NASA insignia's restriction", () => {
   const credits = readFileSync("public/textures/CREDITS.md", "utf8");
-  assert.match(credits, /Solar System Scope/);
-  assert.match(credits, /CC BY 4\.0/);
-  assert.match(credits, /Neptune/);
   assert.match(credits, /VCU/);
   assert.match(credits, /14 CFR 1221/);
   assert.ok(existsSync("scripts/assets/planets/nasa-logo.svg"));
-  assert.ok(!existsSync("scripts/assets/planets/moon-4096.jpg"), "the unused Moon map is gone");
+  for (const f of ["scripts/assets/planets/moon-4096.jpg", "scripts/assets/planets/neptune-2048.jpg", `${DIR}/sports-analytics.webp`, `${DIR}/sports-analytics-tex.webp`])
+    assert.ok(!existsSync(f), `unused ${f} is gone`);
 });
