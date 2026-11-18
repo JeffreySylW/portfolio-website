@@ -203,7 +203,12 @@ export function SystemMap() {
       </ol>
       <div aria-hidden="true" className="sys-axis">
         {layout.ticks.map((t) => (
-          <span key={t.label} data-tick className="px-label text-[12px] text-lavender" style={{ "--x": t.x } as Vars}>
+          <span
+            key={t.label}
+            data-tick
+            className={`px-label text-[12px] text-lavender ${t.label !== "Now" && t.x > 0.78 ? "max-md:hidden" : ""}`}
+            style={{ "--x": t.x } as Vars}
+          >
             {t.label}
           </span>
         ))}
