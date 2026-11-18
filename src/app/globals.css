@@ -280,3 +280,43 @@ body {
   16% { opacity: 0; }
   22% { opacity: 0.8; transform: translateX(7%); clip-path: inset(52% 0 20% 0); }
 }
+
+/* ---- Big Bang intro (src/lib/bigBang.ts). Hidden unless the inline script arms it; never catches clicks;
+   the failsafe hides it after 4.5 s even if the scripts never run. ------------------------------------------- */
+.bang-veil {
+  display: none;
+}
+.bang-veil[data-play] {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--void);
+  pointer-events: none;
+  animation: bang-failsafe 0s linear 4.5s forwards;
+}
+@keyframes bang-failsafe {
+  to { visibility: hidden; }
+}
+.bang-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.bang-skip {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 12px;
+  color: var(--starlight);
+  background: var(--void);
+  box-shadow: 0 0 0 2px var(--violet);
+  pointer-events: auto;
+  cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bang-veil { display: none !important; }
+}

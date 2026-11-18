@@ -41,6 +41,58 @@ try {
   };
   await page.setViewport(1280, 800);
 
+  // ---- the Big Bang intro (first visit in a tab) ----------------------------------------------------------------
+  const veil = `(() => { const v = document.querySelector("#bang"); return v ? { play: v.dataset.play || "", done: v.dataset.bang || "",
+    shown: getComputedStyle(v).display !== "none" && getComputedStyle(v).visibility !== "hidden", hidden: v.getAttribute("aria-hidden") } : null; })()`;
+  const freshTab = async () => { await page.navigate(BASE + "/404-blank"); await page.evaluate("sessionStorage.clear()"); };
+
+  await check("0a first visit: the Big Bang plays over the page, the Earth paints underneath, then it clears by itself", async () => {
+    await page.navigate(BASE + "/");
+    const v0 = await page.evaluate(veil);
+    assert(v0 && v0.play === "1" && v0.shown && v0.hidden === "true", `veil not armed ${JSON.stringify(v0)}`);
+    const img = await page.evaluate(`(() => { const i = document.querySelector("[data-earth] img"); const cs = getComputedStyle(i);
+      return { op: cs.opacity, vis: cs.visibility, disp: cs.display }; })()`);
+    assert(img.op === "1" && img.vis === "visible" && img.disp !== "none", `Earth hidden under the veil ${JSON.stringify(img)}`);
+    assert(await page.waitFor(`document.querySelector("#bang").dataset.bang === "done"`, 4000), "intro never finished");
+    const v1 = await page.evaluate(veil);
+    assert(!v1.shown, "veil still showing");
+    assert((await page.evaluate(`sessionStorage.getItem("jw-bang-seen")`)) === "1", "not remembered");
+  });
+
+  await check("0b same tab again: no intro", async () => {
+    await page.navigate(BASE + "/");
+    const v = await page.evaluate(veil);
+    assert(!v.play && !v.shown, JSON.stringify(v));
+  });
+
+  await check("0c Escape ends the intro at once", async () => {
+    await freshTab();
+    await page.navigate(BASE + "/");
+    assert(await page.waitFor(`document.querySelector("#bang").dataset.play === "1" && !!document.querySelector(".bang-canvas").width`, 3000), "did not start");
+    await page.pressEscape();
+    assert(await page.waitFor(`!document.querySelector("#bang").dataset.play`, 300), "Escape did not end it");
+  });
+
+  await check("0d a click during the intro reaches the page (and ends the intro)", async () => {
+    await freshTab();
+    await page.navigate(BASE + "/");
+    assert(await page.waitFor(`document.querySelector("#bang").dataset.play === "1"`, 3000), "did not start");
+    const p = await page.evaluate(`(() => { const r = document.querySelector('a.px-btn[href="#work"]').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })()`);
+    await page.clickAt(p.x, p.y);
+    assert(await page.waitFor(`location.hash === "#work"`, 2000), "click did not reach the link");
+    assert(await page.waitFor(`!document.querySelector("#bang").dataset.play`, 500), "intro kept playing");
+  });
+
+  await check("0e reduced motion: no intro at all", async () => {
+    await freshTab();
+    await page.setReducedMotion(true);
+    await page.navigate(BASE + "/");
+    const v = await page.evaluate(veil);
+    const seen = await page.evaluate(`sessionStorage.getItem("jw-bang-seen")`);
+    await page.setReducedMotion(false);
+    assert(!v.play && !v.shown && seen === null, JSON.stringify({ v, seen }));
+  });
+
   await check("1 hero: name, intro and the baked Earth (high fetch priority) paint without waiting for scripts", async () => {
     await page.navigate(BASE + "/");
     assert((await page.evaluate(`document.querySelector("h1")?.textContent`)) === "JeffreyWeaver", "h1");
@@ -151,6 +203,7 @@ try {
   });
 
   await check("12 no JavaScript: hero, Earth, work list and contact still read", async () => {
+    await page.evaluate("sessionStorage.clear()"); // a first visit: the intro would play if scripts ran
     await page.send("Emulation.setScriptExecutionDisabled", { value: true });
     await page.navigate(BASE + "/");
     await sleep(800);
@@ -158,7 +211,9 @@ try {
     // reading the DOM through CDP works even with page scripts off
     const r = await page.evaluate(`({ h1: document.querySelector("h1")?.textContent, img: !!document.querySelector("[data-earth] img"),
       rows: document.querySelectorAll("#work li[id^=work-]").length, contact: !!document.querySelector('#contact a[href^="mailto:"]') })`);
+    const bang = await page.evaluate(`getComputedStyle(document.querySelector("#bang")).display`);
     assert(r.h1 === "JeffreyWeaver" && r.img && r.rows === 4 && r.contact, JSON.stringify(r));
+    assert(bang === "none", `intro veil shows without JavaScript (${bang})`);
   });
 
   await check("13 light page: no WebGL, scripts under 250 KB transferred", async () => {

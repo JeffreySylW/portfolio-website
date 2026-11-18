@@ -1,3 +1,4 @@
+import { BigBang } from "@/components/site/BigBang";
 import { Hero } from "@/components/site/Hero";
 import { SystemMap } from "@/components/site/SystemMap";
 import { WorkLedger, Skills } from "@/components/site/WorkLedger";
@@ -7,6 +8,7 @@ import { DeepViews } from "@/components/site/DeepViews";
 export default function Home() {
   return (
     <>
+      <BigBang />
       <main>
         <Hero />
         <SystemMap />
