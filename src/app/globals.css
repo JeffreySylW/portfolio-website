@@ -281,7 +281,7 @@ body {
   22% { opacity: 0.8; transform: translateX(7%); clip-path: inset(52% 0 20% 0); }
 }
 
-/* ---- Big Bang intro (src/lib/bigBang.ts). Hidden unless the inline script arms it; never catches clicks;
+/* ---- Big Bang intro (src/lib/bigBang.ts): starts on white. Hidden unless the inline script arms it; never catches clicks;
    the failsafe hides it after 4.5 s even if the scripts never run. ------------------------------------------- */
 .bang-veil {
   display: none;
@@ -291,7 +291,7 @@ body {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: var(--void);
+  background: var(--starlight);
   pointer-events: none;
   animation: bang-failsafe 0s linear 4.5s forwards;
 }

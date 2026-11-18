@@ -1,23 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { FAILSAFE_MS, INTRO_MS, bayer, introPhase, makeCloud } from "@/lib/bigBang";
+import { FAILSAFE_MS, INTRO_MS, inkRadius, introPhase, makeStars, BANG_COLORS } from "@/lib/bigBang";
 
-/** Canvas pixels per screen pixel: a quarter-resolution canvas, scaled up, keeps the glow soft and cheap. */
-const SCALE = 4;
-
-function glowSprite(color: string): HTMLCanvasElement {
-  const s = document.createElement("canvas");
-  s.width = s.height = 64;
-  const g = s.getContext("2d")!;
-  const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-  grad.addColorStop(0, color);
-  grad.addColorStop(0.35, color + "99");
-  grad.addColorStop(1, color + "00");
-  g.fillStyle = grad;
-  g.fillRect(0, 0, 64, 64);
-  return s;
-}
+const WHITE = "#f2f0ff";
+const VOID = "#07061a";
 
 export function BigBangPlayer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -43,78 +30,128 @@ export function BigBangPlayer() {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return finish();
-    const cw = Math.ceil(window.innerWidth / SCALE);
-    const ch = Math.ceil(window.innerHeight / SCALE);
-    canvas.width = cw;
-    canvas.height = ch;
+    // full resolution, every display frame: this part is smooth, not pixel-stepped like the rest of the site
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
 
-    // the burst starts at the hero Earth's centre (kept on screen)
+    // the drop lands on the hero Earth's centre (kept on screen, with room to fall)
     const r = document.querySelector("[data-earth]")?.getBoundingClientRect();
-    const ox = Math.min(cw, Math.max(0, r ? (r.left + r.width / 2) / SCALE : cw * 0.3));
-    const oy = Math.min(ch, Math.max(0, r ? (r.top + r.height / 2) / SCALE : ch * 0.5));
-    const reach = Math.hypot(Math.max(ox, cw - ox), Math.max(oy, ch - oy));
-
-    const { puffs, galaxies } = makeCloud();
-    const sprites = new Map<string, HTMLCanvasElement>();
-    const sprite = (c: string) => sprites.get(c) ?? sprites.set(c, glowSprite(c)).get(c)!;
-
-    // the veil: void-coloured pixels, each with a Bayer threshold in 8x8 screen-pixel cells
-    const veilImg = ctx.createImageData(cw, ch);
-    const thresholds = new Float32Array(cw * ch);
-    for (let y = 0; y < ch; y++)
-      for (let x = 0; x < cw; x++) {
-        const i = y * cw + x;
-        thresholds[i] = bayer(x >> 1, y >> 1);
-        veilImg.data[i * 4] = 7;
-        veilImg.data[i * 4 + 1] = 6;
-        veilImg.data[i * 4 + 2] = 26;
-      }
-    let lastVeil = -1;
+    const ox = Math.min(w * 0.9, Math.max(w * 0.1, r ? r.left + r.width / 2 : w * 0.3));
+    const oy = Math.min(h * 0.85, Math.max(h * 0.3, r ? r.top + r.height / 2 : h * 0.5));
+    const reach = Math.hypot(Math.max(ox, w - ox), Math.max(oy, h - oy));
+    const dropR = Math.min(22, Math.max(9, Math.min(w, h) * 0.022));
+    const impactMs = INTRO_MS * 0.25;
+    const stars = makeStars();
+    const byColor = BANG_COLORS.map((c) => ({ c, list: stars.filter((s) => s.color === c) }));
 
     const frame = () => {
       const t = performance.now() - t0;
       if (t >= INTRO_MS) return finish();
       const p = introPhase(t);
+      const secs = t / 1000;
 
-      if (p.veil !== lastVeil) {
-        const d = veilImg.data;
-        for (let i = 0; i < thresholds.length; i++) d[i * 4 + 3] = thresholds[i] < p.veil ? 255 : 0;
-        lastVeil = p.veil;
-      }
-      ctx.putImageData(veilImg, 0, 0);
-      ctx.globalCompositeOperation = "lighter";
-
-      // glowing gas, rushing out from the point
-      for (const q of puffs) {
-        const a = p.gas * q.alpha;
-        if (a <= 0.01) continue;
-        const d = p.radius * reach * q.dist;
-        const s = reach * q.size * (0.35 + 0.65 * p.radius);
-        ctx.globalAlpha = a;
-        ctx.drawImage(sprite(q.color), ox + Math.cos(q.angle) * d - s, oy + Math.sin(q.angle) * d - s, s * 2, s * 2);
-      }
-      // galaxies condensing inside it: a hard bright pixel in a small halo
-      for (const g of galaxies) {
-        const a = p.galaxies * g.alpha * Math.min(1, Math.max(0, (p.radius - g.delay) * 4));
-        if (a <= 0.01) continue;
-        const d = p.radius * reach * g.dist;
-        const x = ox + Math.cos(g.angle) * d, y = oy + Math.sin(g.angle) * d;
-        const s = Math.max(1.5, reach * g.size * 2);
-        ctx.globalAlpha = a * 0.7;
-        ctx.drawImage(sprite(g.color), x - s, y - s, s * 2, s * 2);
-        ctx.globalAlpha = a;
-        ctx.fillStyle = g.color;
-        ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
-      }
-      // the white-hot point and its flash
-      if (p.flash > 0.01) {
-        const s = reach * (0.02 + 0.6 * p.flash);
-        ctx.globalAlpha = Math.min(1, p.flash * 1.4);
-        ctx.drawImage(sprite("#f2f0ff"), ox - s, oy - s, s * 2, s * 2);
-        ctx.drawImage(sprite("#f2f0ff"), ox - s / 3, oy - s / 3, (s * 2) / 3, (s * 2) / 3);
-      }
-      ctx.globalAlpha = 1;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = 1;
+
+      // the white ground, and the ink flooding out over it
+      if (p.ink < 1) {
+        ctx.fillStyle = WHITE;
+        ctx.fillRect(0, 0, w, h);
+      }
+      if (p.ink > 0) {
+        ctx.fillStyle = VOID;
+        if (p.ink >= 1) ctx.fillRect(0, 0, w, h);
+        else {
+          const R = dropR + p.ink * reach * 1.1;
+          const wobble = 1 - p.ink * 0.75;
+          ctx.beginPath();
+          for (let i = 0; i <= 120; i++) {
+            const a = (i / 120) * Math.PI * 2;
+            const rr = inkRadius(R, a, wobble, secs);
+            if (i) ctx.lineTo(ox + Math.cos(a) * rr, oy + Math.sin(a) * rr);
+            else ctx.moveTo(ox + Math.cos(a) * rr, oy + Math.sin(a) * rr);
+          }
+          ctx.fill();
+        }
+      }
+
+      // the falling drop: round at rest, drawn out as it speeds up, a short squash as it lands
+      if (t < impactMs + 90) {
+        const y = -dropR * 3 + (oy + dropR * 3) * p.drop;
+        const land = Math.max(0, (t - impactMs) / 90);
+        const rx = dropR * (1 - 0.1 * p.drop) * (1 + 0.7 * land);
+        const ry = dropR * (1 - 0.55 * land);
+        const tail = dropR * (0.6 + 1.6 * p.drop) * (1 - land);
+        const cy = y - ry;
+        // a teardrop: round body, a tail that grows with speed
+        ctx.fillStyle = VOID;
+        ctx.beginPath();
+        ctx.moveTo(ox, cy - ry - tail);
+        ctx.bezierCurveTo(ox + rx * 0.35, cy - ry - tail * 0.45, ox + rx, cy - ry * 0.55, ox + rx, cy);
+        ctx.arc(ox, cy, rx, 0, Math.PI, false);
+        ctx.bezierCurveTo(ox - rx, cy - ry * 0.55, ox - rx * 0.35, cy - ry - tail * 0.45, ox, cy - ry - tail);
+        ctx.fill();
+      }
+
+      // the flash on impact: a soft bloom and a thin ring racing out
+      if (p.flash > 0.01) {
+        const k = Math.min(1, (t - impactMs) / (INTRO_MS * 0.25));
+        const bloom = reach * (0.04 + 0.16 * p.flash);
+        const g = ctx.createRadialGradient(ox, oy, 0, ox, oy, bloom);
+        g.addColorStop(0, `rgba(255,255,255,${p.flash})`);
+        g.addColorStop(0.18, `rgba(242,240,255,${p.flash * 0.9})`);
+        g.addColorStop(0.5, `rgba(169,164,255,${p.flash * 0.25})`);
+        g.addColorStop(1, "rgba(91,84,214,0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(ox - bloom, oy - bloom, bloom * 2, bloom * 2);
+        ctx.globalAlpha = p.flash;
+        ctx.strokeStyle = "#a9a4ff";
+        ctx.lineWidth = 1.5 + 2 * p.flash;
+        ctx.beginPath();
+        ctx.arc(ox, oy, reach * 0.75 * (1 - (1 - k) ** 2), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+
+      // the page opens from the centre with a soft edge
+      if (p.open > 0) {
+        const R = p.open * reach * 1.25 + 1;
+        const feather = Math.min(0.9, (0.18 * R + 40) / R);
+        const g = ctx.createRadialGradient(ox, oy, 0, ox, oy, R);
+        g.addColorStop(0, "rgba(0,0,0,1)");
+        g.addColorStop(1 - feather, "rgba(0,0,0,1)");
+        g.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+        ctx.globalCompositeOperation = "source-over";
+      }
+
+      // the stars, streaking outward and slowing, on top of everything until they fade
+      if (p.starAlpha > 0.01) {
+        const streak = (1 - p.stars) ** 2 * reach * 0.16;
+        ctx.globalAlpha = p.starAlpha;
+        ctx.lineCap = "round";
+        for (const { c, list } of byColor) {
+          ctx.strokeStyle = c;
+          for (const s of list) {
+            const d = p.stars * reach * s.dist;
+            const d0 = Math.max(0, d - streak * s.dist - 0.5);
+            const cx = Math.cos(s.angle), cy = Math.sin(s.angle);
+            ctx.lineWidth = s.size;
+            ctx.beginPath();
+            ctx.moveTo(ox + cx * d0, oy + cy * d0);
+            ctx.lineTo(ox + cx * d, oy + cy * d);
+            ctx.stroke();
+          }
+        }
+        ctx.globalAlpha = 1;
+      }
+
       raf = requestAnimationFrame(frame);
     };
 

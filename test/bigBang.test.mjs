@@ -8,8 +8,8 @@ import {
   SEEN_KEY,
   introScript,
   introPhase,
-  makeCloud,
-  bayer,
+  makeStars,
+  inkRadius,
   BANG_COLORS,
 } from "../src/lib/bigBang.ts";
 
@@ -58,47 +58,59 @@ test("blocked storage: no intro and no error (never risk a veil that cannot be r
   assert.equal(runIntroScript({ storageThrows: true }).veil.dataset.play, undefined);
 });
 
-test("phases: a bright point, a flash, the gas grows, the veil dissolves and is gone at the end", () => {
+test("phases: a black drop falls onto white, lands, ink floods out, stars burst, and the page opens from the centre", () => {
   const at = (t) => introPhase(t);
-  assert.equal(at(0).veil, 1);
-  assert.ok(at(0).flash < at(INTRO_MS * 0.15).flash, "the flash builds");
-  assert.ok(at(INTRO_MS * 0.15).flash > 0.8, "a real flash");
-  assert.ok(at(INTRO_MS * 0.6).flash < 0.2, "the flash is over before the reveal");
-  let lastR = -1, lastV = 2;
-  for (let t = 0; t <= INTRO_MS; t += 50) {
+  const impact = INTRO_MS * 0.25;
+  assert.equal(at(0).drop, 0);
+  assert.ok(at(impact - 1).drop > 0.95, "the drop has landed by the impact");
+  assert.equal(at(impact).ink, 0, "no ink before it lands");
+  assert.ok(at(impact - 50).flash === 0 && at(impact + 120).flash > 0.5, "the flash comes with the impact");
+  assert.ok(at(INTRO_MS * 0.5).ink > 0.95, "ink covers the screen by mid-way");
+  assert.ok(at(INTRO_MS * 0.4).stars > 0, "stars are bursting while the ink spreads");
+  let last = { drop: -1, ink: -1, stars: -1, open: -1, veil: 2 };
+  for (let t = 0; t <= INTRO_MS; t += 16) {
     const p = at(t);
-    assert.ok(p.radius >= lastR, `gas shrinks at ${t}`);
-    assert.ok(p.veil <= lastV, `veil grows back at ${t}`);
-    for (const k of ["flash", "radius", "veil", "gas", "galaxies"]) assert.ok(p[k] >= 0 && p[k] <= 1, `${k} ${p[k]} at ${t}`);
-    lastR = p.radius;
-    lastV = p.veil;
+    for (const k of ["drop", "ink", "flash", "stars", "starAlpha", "open", "veil"]) assert.ok(p[k] >= 0 && p[k] <= 1, `${k} ${p[k]} at ${t}`);
+    for (const k of ["drop", "ink", "stars", "open"]) assert.ok(p[k] >= last[k], `${k} goes back at ${t}`);
+    assert.ok(p.veil <= last.veil, `veil grows back at ${t}`);
+    assert.ok(Math.abs(p.veil - (1 - p.open)) < 1e-9, "veil is what is not yet open");
+    last = p;
   }
+  assert.ok(at(INTRO_MS * 0.4).veil === 1, "the page stays hidden until the burst is under way");
   assert.equal(at(INTRO_MS).veil, 0);
   assert.equal(at(INTRO_MS + 500).veil, 0);
-  assert.ok(at(INTRO_MS * 0.4).veil > 0.9, "the page stays hidden while the burst plays");
 });
 
-test("the cloud is the same every visit, in the site's palette, spread all round the burst", () => {
-  const a = makeCloud(7), b = makeCloud(7);
-  assert.deepEqual(a, b);
-  assert.ok(a.puffs.length >= 40 && a.galaxies.length >= 30);
-  const palette = new Set(BANG_COLORS);
-  for (const p of [...a.puffs, ...a.galaxies]) assert.ok(palette.has(p.color), p.color);
-  for (const c of BANG_COLORS) assert.ok(["#07061a", "#15123d", "#2b2a7a", "#5b54d6", "#a9a4ff", "#f2f0ff"].includes(c), c);
-  const quadrants = new Set(a.puffs.map((p) => `${Math.cos(p.angle) > 0}${Math.sin(p.angle) > 0}`));
-  assert.equal(quadrants.size, 4);
-  for (const p of a.puffs) assert.ok(p.dist > 0 && p.dist <= 1 && p.size > 0, JSON.stringify(p));
-});
-
-test("bayer thresholds cover 0..1 evenly, so the veil dissolves pixel by pixel", () => {
-  const seen = new Set();
-  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
-    const v = bayer(x, y);
-    assert.ok(v > 0 && v < 1, `${v}`);
-    seen.add(v);
+test("smooth, not stepped: no phase jumps more than a little between two 120 Hz frames", () => {
+  for (let t = 0; t < INTRO_MS - 9; t += 4) {
+    const a = introPhase(t), b = introPhase(t + 1000 / 120);
+    for (const k of ["drop", "ink", "stars", "open"]) assert.ok(Math.abs(b[k] - a[k]) < 0.06, `${k} jumps at ${t}`);
   }
-  assert.equal(seen.size, 64);
-  assert.equal(bayer(9, 3), bayer(1, 3), "tiles");
+});
+
+test("the ink's edge wobbles like a liquid but stays close to a circle", () => {
+  let min = Infinity, max = 0;
+  for (let i = 0; i < 360; i++) {
+    const r = inkRadius(100, (i * Math.PI) / 180, 0.6);
+    min = Math.min(min, r);
+    max = Math.max(max, r);
+  }
+  assert.ok(max - min > 2, "edge is perfectly round");
+  assert.ok(min > 85 && max < 115, `${min}..${max}`);
+});
+
+test("the stars are the same every visit, in the site's palette, spread all round the burst", () => {
+  const a = makeStars(7), b = makeStars(7);
+  assert.deepEqual(a, b);
+  assert.ok(a.length >= 300, `${a.length} stars`);
+  const palette = new Set(BANG_COLORS);
+  for (const c of BANG_COLORS) assert.ok(["#07061a", "#15123d", "#2b2a7a", "#5b54d6", "#a9a4ff", "#f2f0ff"].includes(c), c);
+  for (const s of a) {
+    assert.ok(palette.has(s.color), s.color);
+    assert.ok(s.dist > 0 && s.dist <= 1.2 && s.size > 0, JSON.stringify(s));
+  }
+  const quadrants = new Set(a.map((s) => `${Math.cos(s.angle) > 0}${Math.sin(s.angle) > 0}`));
+  assert.equal(quadrants.size, 4);
 });
 
 test("the veil is aria-hidden, hidden unless armed, cleared by reduced motion, and never needs scripts to go away", () => {
@@ -108,6 +120,7 @@ test("the veil is aria-hidden, hidden unless armed, cleared by reduced motion, a
   assert.match(veil, /id="bang"/);
   assert.match(css, /\.bang-veil\s*\{[^}]*display:\s*none/);
   assert.match(css, /\.bang-veil\[data-play\]\s*\{[^}]*display:\s*block/);
+  assert.match(css, /\.bang-veil\[data-play\]\s*\{[^}]*background:\s*var\(--starlight\)/, "starts on white");
   assert.match(css, /\.bang-veil\[data-play\]\s*\{[^}]*pointer-events:\s*none/);
   assert.match(css, new RegExp(`bang-failsafe\\s+0s\\s+linear\\s+${FAILSAFE_MS / 1000}s\\s+forwards`));
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.bang-veil\s*\{\s*display:\s*none\s*!important/);
