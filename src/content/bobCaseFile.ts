@@ -2,8 +2,8 @@
 // A later, deeper design write-up = add entries here, not new components.
 
 export const BOB_SITE_URL = "https://bobthetechguy.com";
-// Flip to true once Bob's SSL certificate is fixed; removes the warning note.
-export const BOB_SITE_SSL_OK = false;
+// Certificate verified valid 2026-11-09 and 2026-11-17; false would show the warning note.
+export const BOB_SITE_SSL_OK = true;
 
 export const CARD = {
   label: "CLIENT WORK // BOB THE TECH GUY · CHESTERFIELD, VA",

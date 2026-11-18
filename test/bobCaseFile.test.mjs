@@ -48,3 +48,7 @@ test("live link is Bob's site and the SSL flag is a boolean", () => {
   assert.strictEqual(B.BOB_SITE_URL, "https://bobthetechguy.com");
   assert.strictEqual(typeof B.BOB_SITE_SSL_OK, "boolean");
 });
+
+test("Bob's certificate is fixed (verified 2026-11-09 and 2026-11-17), so no SSL warning shows", () => {
+  assert.strictEqual(B.BOB_SITE_SSL_OK, true);
+});

@@ -132,3 +132,9 @@ test("when the page loads, no planet or moon looks like it is touching the sun f
     assert.ok(apart >= needed, `${b.id} sits ${apart.toFixed(1)}° from the sun on screen, needs ${needed.toFixed(1)}°`);
   }
 });
+
+test("languages list C, matching the resume (not C/C++)", () => {
+  const langs = S.BODIES.find((b) => b.id === "skills-languages");
+  assert.ok(langs.tools.includes("C"));
+  assert.ok(!JSON.stringify(langs).includes("C/C++"));
+});
