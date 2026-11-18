@@ -5,31 +5,27 @@ import vm from "node:vm";
 import {
   INTRO_MS,
   FAILSAFE_MS,
-  SEEN_KEY,
+  IMPACT_MS,
   introScript,
   introPhase,
   makeStars,
-  inkRadius,
+  burstShape,
   BANG_COLORS,
 } from "../src/lib/bigBang.ts";
 
 // run the inline <script> the way the browser would, against a stub page
-function runIntroScript({ reduced = false, seen = false, storageThrows = false } = {}) {
-  const store = new Map(seen ? [[SEEN_KEY, "1"]] : []);
+function runIntroScript({ reduced = false, storageThrows = false } = {}) {
   const veil = { dataset: {} };
-  const sessionStorage = {
-    getItem: (k) => { if (storageThrows) throw new Error("blocked"); return store.has(k) ? store.get(k) : null; },
-    setItem: (k, v) => { if (storageThrows) throw new Error("blocked"); store.set(k, String(v)); },
-  };
+  const boom = () => { throw new Error("storage should not be touched"); };
   const ctx = {
     document: { getElementById: (id) => (id === "bang" ? veil : null) },
     matchMedia: (q) => ({ matches: reduced && q.includes("reduce") }),
-    sessionStorage,
+    sessionStorage: storageThrows ? { getItem: boom, setItem: boom } : { getItem: () => "1", setItem: () => {} },
     performance: { now: () => 123.4 },
   };
   ctx.window = ctx;
   vm.runInNewContext(introScript, ctx);
-  return { veil, store };
+  return veil;
 }
 
 test("the intro lasts about 2-3 s and a CSS failsafe clears the veil after it", () => {
@@ -37,66 +33,72 @@ test("the intro lasts about 2-3 s and a CSS failsafe clears the veil after it", 
   assert.ok(FAILSAFE_MS > INTRO_MS + 1000 && FAILSAFE_MS <= 5000, `failsafe ${FAILSAFE_MS} ms`);
 });
 
-test("first visit in a tab: the inline script arms the veil and marks the tab as seen", () => {
-  const { veil, store } = runIntroScript();
-  assert.equal(veil.dataset.play, "1");
-  assert.equal(veil.dataset.t0, "123.4");
-  assert.equal(store.get(SEEN_KEY), "1");
+test("every load arms the veil, even after an earlier visit, and storage is never needed", () => {
+  const v = runIntroScript();
+  assert.equal(v.dataset.play, "1");
+  assert.equal(v.dataset.t0, "123.4");
+  assert.equal(runIntroScript({ storageThrows: true }).dataset.play, "1");
 });
 
-test("already seen in this tab: no intro", () => {
-  assert.equal(runIntroScript({ seen: true }).veil.dataset.play, undefined);
+test("reduced motion: no intro", () => {
+  assert.equal(runIntroScript({ reduced: true }).dataset.play, undefined);
 });
 
-test("reduced motion: no intro, and the tab is not marked", () => {
-  const { veil, store } = runIntroScript({ reduced: true });
-  assert.equal(veil.dataset.play, undefined);
-  assert.equal(store.size, 0);
-});
-
-test("blocked storage: no intro and no error (never risk a veil that cannot be remembered)", () => {
-  assert.equal(runIntroScript({ storageThrows: true }).veil.dataset.play, undefined);
-});
-
-test("phases: a black drop falls onto white, lands, ink floods out, stars burst, and the page opens from the centre", () => {
+test("the drop falls, lands at the impact and the impact frames flip black and white", () => {
   const at = (t) => introPhase(t);
-  const impact = INTRO_MS * 0.25;
   assert.equal(at(0).drop, 0);
-  assert.ok(at(impact - 1).drop > 0.95, "the drop has landed by the impact");
-  assert.equal(at(impact).ink, 0, "no ink before it lands");
-  assert.ok(at(impact - 50).flash === 0 && at(impact + 120).flash > 0.5, "the flash comes with the impact");
-  assert.ok(at(INTRO_MS * 0.5).ink > 0.95, "ink covers the screen by mid-way");
-  assert.ok(at(INTRO_MS * 0.4).stars > 0, "stars are bursting while the ink spreads");
-  let last = { drop: -1, ink: -1, stars: -1, open: -1, veil: 2 };
+  assert.ok(at(IMPACT_MS - 1).drop > 0.99, "landed at the impact");
+  assert.ok(IMPACT_MS > INTRO_MS * 0.2 && IMPACT_MS < INTRO_MS * 0.4, `impact at ${IMPACT_MS}`);
+  assert.equal(at(IMPACT_MS - 20).invert, false, "not inverted before the impact");
+  assert.equal(at(IMPACT_MS + 10).invert, true, "first impact frame is inverted");
+  assert.equal(at(IMPACT_MS + 100).invert, false, "then flips back");
+  assert.equal(at(IMPACT_MS + 180).invert, true, "then inverts again");
+  assert.equal(at(IMPACT_MS + 400).invert, false, "and settles");
+  assert.ok(at(IMPACT_MS + 200).glitch > 0, "glitch slices during the second inversion");
+  assert.equal(at(IMPACT_MS - 20).glitch, 0);
+  assert.equal(at(IMPACT_MS + 600).glitch, 0);
+});
+
+test("JW flashes with the impact frames, and only then", () => {
+  const at = (t) => introPhase(t);
+  assert.equal(at(IMPACT_MS - 1).jw, 0);
+  assert.ok(at(IMPACT_MS + 10).jw > 0.9);
+  assert.ok(at(IMPACT_MS + 200).jw > 0.9);
+  assert.equal(at(IMPACT_MS + 400).jw, 0);
+  for (let t = 0; t <= INTRO_MS; t += 10) assert.ok(at(t).jw >= 0 && at(t).jw <= 1);
+});
+
+test("the burst explodes outward and the site opens from the centre; the page is hidden until then", () => {
+  const at = (t) => introPhase(t);
+  let last = { drop: -1, burst: -1, stars: -1, open: -1, veil: 2 };
   for (let t = 0; t <= INTRO_MS; t += 16) {
     const p = at(t);
-    for (const k of ["drop", "ink", "flash", "stars", "starAlpha", "open", "veil"]) assert.ok(p[k] >= 0 && p[k] <= 1, `${k} ${p[k]} at ${t}`);
-    for (const k of ["drop", "ink", "stars", "open"]) assert.ok(p[k] >= last[k], `${k} goes back at ${t}`);
-    assert.ok(p.veil <= last.veil, `veil grows back at ${t}`);
-    assert.ok(Math.abs(p.veil - (1 - p.open)) < 1e-9, "veil is what is not yet open");
+    for (const k of ["drop", "burst", "glitch", "stars", "starAlpha", "open", "veil"]) assert.ok(p[k] >= 0 && p[k] <= 1, `${k} ${p[k]} at ${t}`);
+    for (const k of ["drop", "burst", "stars", "open"]) assert.ok(p[k] >= last[k], `${k} goes back at ${t}`);
+    assert.ok(Math.abs(p.veil - (1 - p.open)) < 1e-9);
     last = p;
   }
-  assert.ok(at(INTRO_MS * 0.4).veil === 1, "the page stays hidden until the burst is under way");
+  assert.equal(at(IMPACT_MS - 1).burst, 0);
+  assert.ok(at(IMPACT_MS + 300).burst > 0.9, "the burst fills the screen during the impact frames");
+  assert.equal(at(IMPACT_MS + 300).veil, 1, "the site stays hidden through the impact frames");
   assert.equal(at(INTRO_MS).veil, 0);
   assert.equal(at(INTRO_MS + 500).veil, 0);
 });
 
-test("smooth, not stepped: no phase jumps more than a little between two 120 Hz frames", () => {
+test("smooth outside the impact frames: no jump bigger than a little between two 120 Hz frames", () => {
   for (let t = 0; t < INTRO_MS - 9; t += 4) {
     const a = introPhase(t), b = introPhase(t + 1000 / 120);
-    for (const k of ["drop", "ink", "stars", "open"]) assert.ok(Math.abs(b[k] - a[k]) < 0.06, `${k} jumps at ${t}`);
+    for (const k of ["drop", "stars", "open"]) assert.ok(Math.abs(b[k] - a[k]) < 0.06, `${k} jumps at ${t}`);
   }
 });
 
-test("the ink's edge wobbles like a liquid but stays close to a circle", () => {
-  let min = Infinity, max = 0;
-  for (let i = 0; i < 360; i++) {
-    const r = inkRadius(100, (i * Math.PI) / 180, 0.6);
-    min = Math.min(min, r);
-    max = Math.max(max, r);
-  }
-  assert.ok(max - min > 2, "edge is perfectly round");
-  assert.ok(min > 85 && max < 115, `${min}..${max}`);
+test("the burst is a jagged, spiky impact shape, the same every time", () => {
+  const a = burstShape(5), b = burstShape(5);
+  assert.deepEqual(a, b);
+  assert.ok(a.length >= 32);
+  const min = Math.min(...a), max = Math.max(...a);
+  assert.ok(max / min > 1.6, `spikes ${min}..${max}`);
+  assert.ok(max <= 1 && min > 0);
 });
 
 test("the stars are the same every visit, in the site's palette, spread all round the burst", () => {

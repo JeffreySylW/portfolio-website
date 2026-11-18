@@ -41,12 +41,12 @@ try {
   };
   await page.setViewport(1280, 800);
 
-  // ---- the Big Bang intro (first visit in a tab) ----------------------------------------------------------------
+  // ---- the Big Bang intro (every load) --------------------------------------------------------------------------
   const veil = `(() => { const v = document.querySelector("#bang"); return v ? { play: v.dataset.play || "", done: v.dataset.bang || "",
     shown: getComputedStyle(v).display !== "none" && getComputedStyle(v).visibility !== "hidden", hidden: v.getAttribute("aria-hidden") } : null; })()`;
   const freshTab = async () => { await page.navigate(BASE + "/404-blank"); await page.evaluate("sessionStorage.clear()"); };
 
-  await check("0a first visit: the Big Bang plays over the page, the Earth paints underneath, then it clears by itself", async () => {
+  await check("0a the Big Bang plays over the page, the Earth paints underneath, then it clears by itself", async () => {
     await page.navigate(BASE + "/");
     const v0 = await page.evaluate(veil);
     assert(v0 && v0.play === "1" && v0.shown && v0.hidden === "true", `veil not armed ${JSON.stringify(v0)}`);
@@ -56,13 +56,12 @@ try {
     assert(await page.waitFor(`document.querySelector("#bang").dataset.bang === "done"`, 4000), "intro never finished");
     const v1 = await page.evaluate(veil);
     assert(!v1.shown, "veil still showing");
-    assert((await page.evaluate(`sessionStorage.getItem("jw-bang-seen")`)) === "1", "not remembered");
   });
 
-  await check("0b same tab again: no intro", async () => {
-    await page.navigate(BASE + "/");
-    const v = await page.evaluate(veil);
-    assert(!v.play && !v.shown, JSON.stringify(v));
+  await check("0b a refresh plays it again", async () => {
+    await page.evaluate("location.reload()");
+    assert(await page.waitFor(`document.querySelector("#bang")?.dataset.play === "1"`, 3000), "did not play on refresh");
+    assert(await page.waitFor(`document.querySelector("#bang").dataset.bang === "done"`, 4000), "never finished");
   });
 
   await check("0c Escape ends the intro at once", async () => {
@@ -88,9 +87,8 @@ try {
     await page.setReducedMotion(true);
     await page.navigate(BASE + "/");
     const v = await page.evaluate(veil);
-    const seen = await page.evaluate(`sessionStorage.getItem("jw-bang-seen")`);
     await page.setReducedMotion(false);
-    assert(!v.play && !v.shown && seen === null, JSON.stringify({ v, seen }));
+    assert(!v.play && !v.shown, JSON.stringify(v));
   });
 
   await check("1 hero: name, intro and the baked Earth (high fetch priority) paint without waiting for scripts", async () => {
@@ -203,7 +201,7 @@ try {
   });
 
   await check("12 no JavaScript: hero, Earth, work list and contact still read", async () => {
-    await page.evaluate("sessionStorage.clear()"); // a first visit: the intro would play if scripts ran
+    // the intro would play on this load if scripts ran
     await page.send("Emulation.setScriptExecutionDisabled", { value: true });
     await page.navigate(BASE + "/");
     await sleep(800);
