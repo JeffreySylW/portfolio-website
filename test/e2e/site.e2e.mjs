@@ -183,18 +183,20 @@ try {
   };
   const whooshes = `Number(document.querySelector("#system").dataset.whooshes || 0)`;
 
-  await check("14 system map: five worlds oldest first, each placed by date and linking to its work row", async () => {
+  await check("14 galaxy: five worlds, oldest nearest the core, each linking to its work row, credit shown", async () => {
     await page.navigate(BASE + "/");
-    const r = await page.evaluate(`[...document.querySelectorAll("#system [data-planet]")].map((a) => ({
-      id: a.dataset.planet, href: a.getAttribute("href"), x: a.getBoundingClientRect().x, img: a.querySelector("img")?.getAttribute("src") }))`);
+    const r = await page.evaluate(`(() => { const g = document.querySelector("#system [data-galaxy]").getBoundingClientRect();
+      const cx = g.x + g.width * 0.5, cy = g.y + g.height * 0.5;
+      return [...document.querySelectorAll("#system [data-planet]")].map((a) => { const b = a.getBoundingClientRect();
+        return { id: a.dataset.planet, href: a.getAttribute("href"), r: Math.hypot(b.x + b.width / 2 - cx, b.y + b.height / 2 - cy), img: a.querySelector("img")?.getAttribute("src") }; }); })()`);
     assert(r.map((p) => p.id).join() === "vcu,ta,aspire,nasa,bob", r.map((p) => p.id).join());
     const by = Object.fromEntries(r.map((p) => [p.id, p]));
     assert(by.vcu.href === "#work-vcu" && by.ta.href === "#work-vcu" && by.nasa.href === "#work-nasa" && by.bob.href === "#work-bob", "hrefs");
-    assert(by.vcu.x < by.aspire.x && by.aspire.x < by.nasa.x && by.nasa.x < by.bob.x, "placed by start date");
-    assert(Math.abs(by.ta.x - by.aspire.x) < 30, "TA and ASPIRE start together");
+    for (let i = 1; i < r.length; i++) assert(r[i].r > r[i - 1].r, `radius order ${r.map((p) => Math.round(p.r))}`);
     assert(r.every((p) => /^\/textures\/planets\/[\w-]+\.webp$/.test(p.img)), "baked images");
-    const ticks = await page.evaluate(`[...document.querySelectorAll("#system [data-tick]")].map((t) => t.textContent).join()`);
-    assert(ticks.endsWith("Now") && ticks.startsWith("2023"), ticks);
+    const g = await page.evaluate(`(() => { const i = document.querySelector("#system [data-galaxy] img"); return { src: i.currentSrc || i.src, alt: i.alt }; })()`);
+    assert(/milkyway-\d+\.webp/.test(g.src) || g.src === "", `galaxy image ${g.src}`);
+    assert(await page.evaluate(`document.querySelector("#system").textContent.includes("NASA/JPL-Caltech/ESO/R. Hurt")`), "credit");
   });
 
   await check("15 the planets repaint for the real sun once the map is in view", async () => {

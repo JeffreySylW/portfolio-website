@@ -44,3 +44,20 @@ test("the credits name the outside artwork, record the NASA insignia's restricti
   for (const f of ["scripts/assets/planets/moon-4096.jpg", "scripts/assets/planets/neptune-2048.jpg", `${DIR}/sports-analytics.webp`, `${DIR}/sports-analytics-tex.webp`])
     assert.ok(!existsSync(f), `unused ${f} is gone`);
 });
+
+test("the Milky Way is baked square at 1600 and 900 px, small enough to lazy-load", async () => {
+  for (const [w, budget] of [[1600, 260], [900, 110]]) {
+    const f = `public/textures/galaxy/milkyway-${w}.webp`;
+    const m = await sharp(f).metadata();
+    assert.equal(m.width, w); assert.equal(m.height, w);
+    assert.ok(kb(f) < budget, `${f} ${kb(f).toFixed(0)} KB`);
+  }
+});
+
+test("the Milky Way's CC BY 4.0 credit is in CREDITS.md and on the page", () => {
+  const credits = readFileSync("public/textures/CREDITS.md", "utf8");
+  assert.match(credits, /eso1339g/);
+  assert.match(credits, /R\. Hurt/);
+  assert.match(credits, /CC BY 4\.0/);
+  assert.match(readFileSync("src/components/site/SystemMap.tsx", "utf8"), /NASA\/JPL-Caltech\/ESO\/R\. Hurt/);
+});

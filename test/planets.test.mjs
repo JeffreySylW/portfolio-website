@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { paintGlobe, PALETTE, textureStats } from "../src/lib/terminatorPaint.ts";
 import { PLANETS, planetSpans } from "../src/content/planets.ts";
 import { WORK } from "../src/content/work.ts";
-import { monthIndex, systemLayout, planetSun, planetBlockCss, spinLongitude, shimmerStep } from "../src/lib/systemMap.ts";
+import { monthIndex, galaxyLayout, armPath, GALAXY, planetSun, planetBlockCss, spinLongitude, shimmerStep } from "../src/lib/systemMap.ts";
 import { EARTH_VIEW } from "../src/lib/earthView.ts";
 import { WHOOSH, whooshGain, whooshFrequency } from "../src/lib/whoosh.ts";
 
@@ -110,30 +110,36 @@ test("every planet's span matches the dates printed in the work list", () => {
   assert.equal(spans.aspire.dates, "Aug 2024 – May 2025");
 });
 
-test("layout: oldest first, each planet at its start, its trail to its end (ongoing runs to now)", () => {
-  const now = new Date(Date.UTC(2026, 10, 17));
-  const L = systemLayout(planetSpans(), now);
-  assert.deepEqual(L.bodies.map((b) => b.id), ["vcu", "ta", "aspire", "nasa", "bob"]);
-  const by = Object.fromEntries(L.bodies.map((b) => [b.id, b]));
-  assert.equal(by.vcu.x0, 0);
-  assert.equal(by.bob.x1, 1, "Bob runs to now");
-  for (const b of L.bodies) assert.ok(b.x0 >= 0 && b.x1 <= 1 && b.x0 < b.x1, `${b.id} ${b.x0}..${b.x1}`);
-  assert.equal(by.ta.x0, by.aspire.x0, "TA and ASPIRE started together");
-  assert.ok(by.aspire.x1 < by.ta.x1);
-  assert.ok(by["nasa"].x0 > by["aspire"].x0 && by["bob"].x0 > by["nasa"].x0);
-  // labels go on the side with room
-  assert.equal(by.vcu.labelSide, "right");
-  assert.equal(by.bob.labelSide, "left");
+test("galaxy layout: oldest near the core, each later world further out along the arm", () => {
+  const L = galaxyLayout(planetSpans());
+  assert.deepEqual(L.map((b) => b.id), ["vcu", "ta", "aspire", "nasa", "bob"]);
+  const r = L.map((b) => Math.hypot(b.x - GALAXY.center[0], b.y - GALAXY.center[1]));
+  for (let i = 1; i < r.length; i++) assert.ok(r[i] > r[i - 1], `radius ${r}`);
+  assert.ok(r[0] < 0.16, "VCU sits near the core");
+  for (const b of L) assert.ok(b.x > 0.04 && b.x < 0.96 && b.y > 0.04 && b.y < 0.96, `${b.id} inside the image`);
 });
 
-test("layout ticks: one per January in range, then Now at the end", () => {
-  const L = systemLayout(planetSpans(), new Date(Date.UTC(2026, 10, 17)));
-  assert.deepEqual(L.ticks.map((t) => t.label), ["2023", "2024", "2025", "2026", "Now"]);
-  const t = L.ticks;
-  for (let i = 1; i < t.length; i++) assert.ok(t[i].x > t[i - 1].x);
-  assert.equal(t.at(-1).x, 1);
-  // Jan 2023 is 5 of the 51 months after Aug 2022
-  assert.ok(Math.abs(t[0].x - 5 / 51) < 1e-9, `${t[0].x}`);
+test("galaxy layout: no two worlds overlap (sizes as fractions of the 960 px galaxy)", () => {
+  const L = galaxyLayout(planetSpans());
+  const size = Object.fromEntries(PLANETS.map((p) => [p.id, p.size / GALAXY.designPx]));
+  for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) {
+    const d = Math.hypot(L[i].x - L[j].x, L[i].y - L[j].y);
+    assert.ok(d > (size[L[i].id] + size[L[j].id]) / 2 + 0.02, `${L[i].id}/${L[j].id} ${d.toFixed(3)}`);
+  }
+});
+
+test("galaxy layout: labels go on the outer side of each world", () => {
+  for (const b of galaxyLayout(planetSpans())) assert.equal(b.labelSide, b.x < GALAXY.center[0] ? "left" : "right", b.id);
+});
+
+test("armPath runs from inside the core out past the newest world, as SVG points in 0..100", () => {
+  const pts = armPath(40);
+  assert.ok(pts.length === 40);
+  for (const [x, y] of pts) assert.ok(x >= 0 && x <= 100 && y >= 0 && y <= 100);
+  const rad = ([x, y]) => Math.hypot(x / 100 - GALAXY.center[0], y / 100 - GALAXY.center[1]);
+  const L = galaxyLayout(planetSpans());
+  assert.ok(rad(pts[0]) < Math.hypot(L[0].x - GALAXY.center[0], L[0].y - GALAXY.center[1]));
+  assert.ok(rad(pts.at(-1)) >= Math.hypot(L.at(-1).x - GALAXY.center[0], L.at(-1).y - GALAXY.center[1]) - 1e-9);
 });
 
 // sun position in a view's screen frame: x right, y up, z towards the viewer

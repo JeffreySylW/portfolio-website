@@ -167,56 +167,31 @@ body {
   @starting-style { .deep-dialog[open] { opacity: 0; } }
 }
 
-/* ---- System map: one line of time, a planet where each experience started ---------------------------------- */
-.sys {
-  --k: 0.6; /* planet scale on phones */
-  --pad: calc(70px * var(--k));
-}
-@media (min-width: 768px) {
-  .sys { --k: 1; }
-}
-.sys-track {
-  list-style: none;
-  margin-left: 0;
-  margin-right: 0;
-  padding: 0 var(--pad);
-}
-.sys-lane {
-  padding: 6px 0;
-}
-.sys-mlabel {
-  margin-left: calc(-1 * var(--pad));
-}
-.sys-line {
-  position: relative;
-  height: calc(max(44px, var(--s) * 1px * var(--k)) + 10px);
-}
-.sys-trail {
+/* ---- System map: the experience worlds inside the Milky Way, along one arm by date --------------------------- */
+.gal-body {
   position: absolute;
-  top: 50%;
-  height: 4px;
-  margin-top: -2px;
-  left: calc(var(--x0) * 100%);
-  width: calc((var(--x1) - var(--x0)) * 100%);
+  left: calc(var(--x) * 100%);
+  top: calc(var(--y) * 100%);
+  width: calc(var(--s) / 960 * 100%);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
 }
 .sys-planet {
   position: absolute;
-  top: 50%;
-  left: calc(var(--x0) * 100%);
-  width: max(44px, var(--s) * 1px * var(--k));
-  height: max(44px, var(--s) * 1px * var(--k));
-  transform: translate(-50%, -50%);
+  inset: 0;
   display: block;
   color: var(--starlight);
   text-decoration: none;
 }
+/* small worlds still get a 44 px tap target */
+.sys-planet::before {
+  content: "";
+  position: absolute;
+  inset: min(0px, calc(50% - 22px));
+}
 .phase-wrap {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: calc(var(--s) * 1px * var(--k));
-  height: calc(var(--s) * 1px * var(--k));
-  transform: translate(-50%, -50%);
+  inset: 0;
 }
 .phase-body,
 .phase-body img,
@@ -250,7 +225,7 @@ body {
     display: block;
     position: absolute;
     top: 50%;
-    left: calc(50% + var(--s) * 0.5px + 14px);
+    left: calc(100% + 12px);
     transform: translateY(-50%);
     white-space: nowrap;
     font-size: 12px;
@@ -258,25 +233,9 @@ body {
   }
   .sys-label-left {
     left: auto;
-    right: calc(50% + var(--s) * 0.5px + 14px);
+    right: calc(100% + 12px);
     text-align: right;
   }
-}
-.sys-axis {
-  position: relative;
-  height: 30px;
-  margin: 14px var(--pad) 0;
-  border-top: 2px solid var(--indigo);
-}
-.sys-axis span {
-  position: absolute;
-  top: 8px;
-  left: calc(var(--x) * 100%);
-  transform: translateX(-50%);
-}
-.sys-axis span:last-child {
-  transform: translateX(-100%);
-  color: var(--starlight);
 }
 
 /* Hover or keyboard focus: the planet phases in and out, in hard steps (nothing moves under reduced motion). */

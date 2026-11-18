@@ -1,6 +1,5 @@
-// The system map: one line of time, each planet placed where its experience started, with a trail to
-// where it ended. Positions are fractions of the axis (0 = the first start, 1 = now) so CSS can lay
-// them out at any width.
+// The system map: the experience worlds inside the Milky Way, along one spiral arm by date, plus the
+// lighting and motion helpers shared by the bake script and the browser.
 import { EARTH_VIEW } from "./earthView.ts";
 
 export const monthIndex = (ym: string): number => {
@@ -13,37 +12,55 @@ export interface SpanLike {
   end?: string;
 }
 
-export interface BodyLayout {
+/** The Milky Way image the planets sit in. Positions are fractions of its width/height (y down). */
+export const GALAXY = {
+  /** Where the core is in the image (measured from the bright bar). */
+  center: [0.5, 0.5] as const,
+  /** The galaxy's width on a desktop screen; planet sizes are relative to it. */
+  designPx: 960,
+  /** The arm: radius and angle (degrees, clockwise from +x) at f = 0 (oldest) and the spread to f = 1 (newest). */
+  r0: 0.115,
+  dr: 0.31,
+  a0: 200,
+  da: 260,
+};
+
+const armPoint = (f: number): [number, number] => {
+  const r = GALAXY.r0 + GALAXY.dr * f;
+  const a = ((GALAXY.a0 + GALAXY.da * f) * Math.PI) / 180;
+  return [GALAXY.center[0] + r * Math.cos(a), GALAXY.center[1] + r * Math.sin(a)];
+};
+
+export interface GalaxyBody {
   id: string;
-  /** Start and end along the axis, 0..1. */
-  x0: number;
-  x1: number;
-  /** Which side of the planet its label goes, so it never runs off the axis. */
+  x: number;
+  y: number;
+  /** Labels go on the outer side, away from the core. */
   labelSide: "left" | "right";
 }
 
-export interface SystemLayout {
-  bodies: BodyLayout[];
-  ticks: { label: string; x: number }[];
+/**
+ * Places each world along one spiral arm by start date: the oldest near the core, the newest on the rim.
+ * Evenly spaced by order (TA and the capstone began the same month, so months alone would stack them).
+ */
+export function galaxyLayout<K extends string>(spans: Record<K, SpanLike>): GalaxyBody[] {
+  const ids = (Object.keys(spans) as K[])
+    .map((id, order) => ({ id, order, s: monthIndex(spans[id].start) }))
+    .sort((a, b) => a.s - b.s || a.order - b.order);
+  const n = Math.max(1, ids.length - 1);
+  return ids.map(({ id }, k) => {
+    const [x, y] = armPoint(k / n);
+    return { id, x, y, labelSide: x < GALAXY.center[0] ? "left" : "right" };
+  });
 }
 
-export function systemLayout<K extends string>(spans: Record<K, SpanLike>, now: Date): SystemLayout {
-  const ids = Object.keys(spans) as K[];
-  const nowM = now.getUTCFullYear() * 12 + now.getUTCMonth();
-  const from = Math.min(...ids.map((id) => monthIndex(spans[id].start)));
-  const len = Math.max(1, nowM - from);
-  const at = (m: number) => Math.min(1, Math.max(0, (m - from) / len));
-  const bodies = ids
-    .map((id, order) => ({ id, order, s: monthIndex(spans[id].start), e: spans[id].end ? monthIndex(spans[id].end!) : nowM }))
-    .sort((a, b) => a.s - b.s || a.order - b.order)
-    .map(({ id, s, e }) => {
-      const x0 = at(s);
-      return { id, x0, x1: at(e), labelSide: (x0 > 0.62 ? "left" : "right") as BodyLayout["labelSide"] };
-    });
-  const ticks: SystemLayout["ticks"] = [];
-  for (let y = Math.floor(from / 12) + 1; y * 12 < nowM; y++) ticks.push({ label: String(y), x: at(y * 12) });
-  ticks.push({ label: "Now", x: 1 });
-  return { bodies, ticks };
+/** The arm as `count` points in 0..100 (for an SVG viewBox), from inside the core to the newest world. */
+export function armPath(count: number): [number, number][] {
+  const from = -0.35;
+  return Array.from({ length: count }, (_, i) => {
+    const [x, y] = armPoint(from + ((1 - from) * i) / (count - 1));
+    return [x * 100, y * 100];
+  });
 }
 
 /** How far the light on a planet comes round towards the viewer: 0 = half lit, 1 = full. Gibbous, so the HD side always shows. */
