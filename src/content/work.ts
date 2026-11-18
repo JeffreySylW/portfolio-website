@@ -60,6 +60,17 @@ export interface WorkEntry {
 
 export const WORK: WorkEntry[] = [
   {
+    id: "sheinkopf",
+    kind: "job",
+    org: "Rob Sheinkopf, Author",
+    role: "Web Development Micro-Intern, Parker Dewey",
+    dates: "Nov 2026 – present",
+    start: "2026-11",
+    summary:
+      "Micro-internship for author Rob Sheinkopf ahead of his two 2027 book releases. Reviewed his WordPress author site and wrote up a prioritized list of fixes, from the homepage and menu to the reviews pages and image alt text. In progress: a homepage welcome with his upcoming book covers, and a simpler monthly upkeep routine.",
+    tools: ["Site auditing", "Web accessibility"],
+  },
+  {
     id: "bob",
     kind: "job",
     org: "Bob The Tech Guy",

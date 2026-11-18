@@ -25,11 +25,14 @@ test("the 'me' card says what Jeff asked for, with his photos", () => {
 test("the VCU, TA and ASPIRE cards repeat the work list word for word (no new claims)", () => {
   const vcu = WORK.find((w) => w.id === "vcu");
   const byName = (n) => vcu.highlights.find((h) => h.name === n);
-  assert.deepEqual(Object.keys(EXPERIENCE_CARDS).sort(), ["aspire", "ta", "vcu"]);
+  assert.deepEqual(Object.keys(EXPERIENCE_CARDS).sort(), ["aspire", "sheinkopf", "ta", "vcu"]);
   assert.equal(EXPERIENCE_CARDS.vcu.title, vcu.org);
   assert.equal(EXPERIENCE_CARDS.vcu.role, vcu.role);
   assert.equal(EXPERIENCE_CARDS.vcu.dates, vcu.dates);
   assert.equal(EXPERIENCE_CARDS.vcu.summary, vcu.summary);
+  const rob = WORK.find((w) => w.id === "sheinkopf");
+  for (const k of ["role", "dates", "summary", "tools"]) assert.deepEqual(EXPERIENCE_CARDS.sheinkopf[k], rob[k], `sheinkopf ${k}`);
+  assert.equal(EXPERIENCE_CARDS.sheinkopf.title, rob.org);
   for (const [id, name] of [["ta", "Computer Science Teaching Assistant"], ["aspire", "DoD ASPIRE Capstone"]]) {
     const h = byName(name);
     assert.equal(EXPERIENCE_CARDS[id].title, h.name);
@@ -43,7 +46,7 @@ test("every planet opens a card, and the core opens the 'me' card", () => {
   for (const p of PLANETS) assert.ok(isDeepId(p.id), `${p.id} has no card`);
   assert.ok(isDeepId("me"));
   assert.ok(!isDeepId("work") && !isDeepId("contact") && !isDeepId(""));
-  assert.deepEqual([...DEEP_IDS].sort(), ["aspire", "bob", "me", "nasa", "ta", "vcu"]);
+  assert.deepEqual([...DEEP_IDS].sort(), ["aspire", "bob", "me", "nasa", "sheinkopf", "ta", "vcu"]);
   const map = readFileSync("src/components/site/SystemMap.tsx", "utf8");
   assert.match(map, /href=\{`#\$\{p\.id\}`\}/, "planets link to their card");
   assert.match(map, /href="#me"/, "the core links to the me card");

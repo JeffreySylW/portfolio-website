@@ -1,5 +1,5 @@
 // Pop-up cards opened from the Milky Way: the "me" card at the core, and one card per planet.
-// NASA and Bob keep their own deep views; VCU, TA and ASPIRE repeat the work list word for word.
+// NASA and Bob keep their own deep views; VCU, TA, ASPIRE and Sheinkopf repeat the work list word for word.
 import { WORK } from "./work.ts";
 
 export interface Photo {
@@ -38,13 +38,20 @@ const fromHighlight = (name: string): ExperienceCard => {
   return { title: h.name, role: h.role, dates: h.dates, summary: h.summary, workId: "vcu" };
 };
 
+const fromRow = (id: string): ExperienceCard => {
+  const w = WORK.find((r) => r.id === id)!;
+  return { title: w.org, role: w.role, dates: w.dates, summary: w.summary, tools: w.tools, workId: w.id };
+};
+
 export const EXPERIENCE_CARDS = {
   vcu: { title: vcu.org, role: vcu.role, dates: vcu.dates, summary: vcu.summary, tools: vcu.tools, workId: "vcu" },
   ta: fromHighlight("Computer Science Teaching Assistant"),
   aspire: fromHighlight("DoD ASPIRE Capstone"),
+  sheinkopf: fromRow("sheinkopf"),
 } satisfies Record<string, ExperienceCard>;
 
 export type CardId = keyof typeof EXPERIENCE_CARDS;
-export const DEEP_IDS = ["nasa", "bob", "me", "vcu", "ta", "aspire"] as const;
+export const isCardId = (h: string): h is CardId => h in EXPERIENCE_CARDS;
+export const DEEP_IDS = ["nasa", "bob", "me", "vcu", "ta", "aspire", "sheinkopf"] as const;
 export type DeepId = (typeof DEEP_IDS)[number];
 export const isDeepId = (h: string): h is DeepId => (DEEP_IDS as readonly string[]).includes(h);

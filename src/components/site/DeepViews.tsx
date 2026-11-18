@@ -3,14 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NasaDeepDive } from "../NasaDeepDive";
 import { BobCaseFile } from "../BobCaseFile";
-import { DEEP_IDS, isDeepId as isDeep, type DeepId as Deep } from "@/content/cards";
+import { DEEP_IDS, isCardId, isDeepId as isDeep, type DeepId as Deep } from "@/content/cards";
 import { ExperienceCard, MeCard } from "./InfoCard";
 
 const OPENERS = DEEP_IDS.map((id) => `a[href="#${id}"]`).join(", ");
 
 /**
  * Opens a card when the address ends in one of DEEP_IDS: #nasa (NASA card), #bob (case file), #me (the
- * core of the Milky Way) or #vcu / #ta / #aspire (any link to those works, and so does a shared URL). Closing clears the hash and
+ * core of the Milky Way) or #vcu / #ta / #aspire / #sheinkopf (any link to those works, and so does a shared URL). Closing clears the hash and
  * hands focus back to the link that opened it (returnFocusTo).
  */
 export function DeepViews() {
@@ -52,7 +52,7 @@ export function DeepViews() {
       {open === "nasa" && <NasaDeepDive onClose={close} returnFocusTo={returnFocusTo} />}
       <BobCaseFile open={open === "bob"} onClose={close} returnFocusTo={returnFocusTo} />
       {open === "me" && <MeCard onClose={close} returnFocusTo={returnFocusTo} />}
-      {(open === "vcu" || open === "ta" || open === "aspire") && <ExperienceCard key={open} id={open} onClose={close} returnFocusTo={returnFocusTo} />}
+      {open && isCardId(open) && <ExperienceCard key={open} id={open} onClose={close} returnFocusTo={returnFocusTo} />}
     </>
   );
 }

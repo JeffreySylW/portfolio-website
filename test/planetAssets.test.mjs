@@ -30,7 +30,7 @@ test("each planet has a 1024x512 texture for the live repaint, under 220 KB", as
 });
 
 test("high-resolution masters are baked at 4096x2048 for the made worlds", async () => {
-  for (const id of ["vcu", "ta", "aspire", "bob", "nasa"]) {
+  for (const id of ["vcu", "ta", "aspire", "bob", "nasa", "sheinkopf"]) {
     const m = await sharp(`scripts/assets/planets/${id}-4096.webp`).metadata();
     assert.equal(m.width, 4096); assert.equal(m.height, 2048);
   }

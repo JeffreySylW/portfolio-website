@@ -210,7 +210,7 @@ try {
     const r = await page.evaluate(`({ h1: document.querySelector("h1")?.textContent, img: !!document.querySelector("[data-earth] img"),
       rows: document.querySelectorAll("#work li[id^=work-]").length, contact: !!document.querySelector('#contact a[href^="mailto:"]') })`);
     const bang = await page.evaluate(`getComputedStyle(document.querySelector("#bang")).display`);
-    assert(r.h1 === "JeffreyWeaver" && r.img && r.rows === 4 && r.contact, JSON.stringify(r));
+    assert(r.h1 === "JeffreyWeaver" && r.img && r.rows === 5 && r.contact, JSON.stringify(r));
     assert(bang === "none", `intro veil shows without JavaScript (${bang})`);
   });
 
@@ -236,13 +236,13 @@ try {
   };
   const whooshes = `Number(document.querySelector("#system").dataset.whooshes || 0)`;
 
-  await check("14 galaxy: five worlds, oldest nearest the core, each opening its own card, credit shown", async () => {
+  await check("14 galaxy: six worlds, oldest nearest the core, each opening its own card, credit shown", async () => {
     await page.navigate(BASE + "/");
     const r = await page.evaluate(`(() => { const g = document.querySelector("#system [data-galaxy]").getBoundingClientRect();
       const cx = g.x + g.width * 0.5, cy = g.y + g.height * 0.5;
       return [...document.querySelectorAll("#system [data-planet]")].map((a) => { const b = a.getBoundingClientRect();
         return { id: a.dataset.planet, href: a.getAttribute("href"), r: Math.hypot(b.x + b.width / 2 - cx, b.y + b.height / 2 - cy), img: a.querySelector("img")?.getAttribute("src") }; }); })()`);
-    assert(r.map((p) => p.id).join() === "vcu,ta,aspire,nasa,bob", r.map((p) => p.id).join());
+    assert(r.map((p) => p.id).join() === "vcu,ta,aspire,nasa,bob,sheinkopf", r.map((p) => p.id).join());
     assert(r.every((p) => p.href === `#${p.id}`), `hrefs ${r.map((p) => p.href)}`);
     for (let i = 1; i < r.length; i++) assert(r[i].r > r[i - 1].r, `radius order ${r.map((p) => Math.round(p.r))}`);
     assert(r.every((p) => /^\/textures\/planets\/[\w-]+\.webp$/.test(p.img)), "baked images");
@@ -326,7 +326,7 @@ try {
 
   await check("21 clicking a planet opens its card (VCU, TA, ASPIRE new; NASA the NASA card); Escape closes and refocuses it", async () => {
     await page.navigate(BASE + "/");
-    for (const [id, title] of [["vcu", "Virginia Commonwealth University"], ["ta", "Computer Science Teaching Assistant"], ["aspire", "DoD ASPIRE Capstone"]]) {
+    for (const [id, title] of [["vcu", "Virginia Commonwealth University"], ["ta", "Computer Science Teaching Assistant"], ["aspire", "DoD ASPIRE Capstone"], ["sheinkopf", "Rob Sheinkopf, Author"]]) {
       await click(planet(id));
       assert(await page.waitFor(cardOpen(id), 5000), `${id} card did not open`);
       const t = await page.evaluate(`document.querySelector("#${id}-title").textContent`);

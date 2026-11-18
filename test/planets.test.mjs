@@ -68,12 +68,18 @@ test("monthIndex counts months", () => {
   assert.equal(monthIndex("2026-08") - monthIndex("2022-08"), 48);
 });
 
-test("five planets, as Jeff asked (2026-11-17): VCU, its TA and ASPIRE moons, NASA and Bob; no Sports Analytics", () => {
-  assert.deepEqual(PLANETS.map((p) => p.id), ["vcu", "ta", "aspire", "nasa", "bob"]);
+test("six planets: VCU, its TA and ASPIRE moons, NASA, Bob (2026-11-17) and Rob Sheinkopf (2026-11-18); no Sports Analytics", () => {
+  assert.deepEqual(PLANETS.map((p) => p.id), ["vcu", "ta", "aspire", "nasa", "bob", "sheinkopf"]);
   for (const p of PLANETS) {
     assert.ok(WORK.some((w) => w.id === p.workId), `${p.id} links to a work row`);
     assert.ok(p.label && p.world && p.size > 20, `${p.id} fields`);
   }
+});
+
+test("Sheinkopf's world is a stitched baseball (Jeff's choice, 2026-11-18: both of Rob's books are about baseball)", () => {
+  const s = PLANETS.find((p) => p.id === "sheinkopf");
+  assert.match(s.world, /baseball/);
+  assert.equal(s.workId, "sheinkopf");
 });
 
 test("NASA's world carries the NASA insignia (Jeff's choice, 2026-11-17)", () => {
@@ -112,7 +118,7 @@ test("every planet's span matches the dates printed in the work list", () => {
 
 test("galaxy layout: oldest near the core, each later world further out along the arm", () => {
   const L = galaxyLayout(planetSpans());
-  assert.deepEqual(L.map((b) => b.id), ["vcu", "ta", "aspire", "nasa", "bob"]);
+  assert.deepEqual(L.map((b) => b.id), ["vcu", "ta", "aspire", "nasa", "bob", "sheinkopf"]);
   const r = L.map((b) => Math.hypot(b.x - GALAXY.center[0], b.y - GALAXY.center[1]));
   for (let i = 1; i < r.length; i++) assert.ok(r[i] > r[i - 1], `radius ${r}`);
   assert.ok(r[0] < 0.16, "VCU sits near the core");

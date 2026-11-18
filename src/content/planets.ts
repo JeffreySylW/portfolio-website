@@ -2,7 +2,7 @@
 // map can never disagree with the dates printed there.
 import { WORK } from "./work.ts";
 
-export type PlanetId = "vcu" | "ta" | "aspire" | "nasa" | "bob";
+export type PlanetId = "vcu" | "ta" | "aspire" | "nasa" | "bob" | "sheinkopf";
 
 export interface Planet {
   id: PlanetId;
@@ -27,6 +27,7 @@ export const PLANETS: Planet[] = [
   { id: "aspire", workId: "vcu", highlight: "DoD ASPIRE Capstone", label: "DoD ASPIRE capstone", world: "a LiDAR world of scan lines, a point cloud and pedestrian detection boxes", size: 48, face: 0, spin: 90 },
   { id: "nasa", workId: "nasa", label: "NASA Langley", world: "a NASA-blue world carrying the NASA insignia", size: 100, face: 0, spin: 110 },
   { id: "bob", workId: "bob", label: "Bob The Tech Guy", world: "a circuit-board world", size: 120, face: 0, spin: -130 },
+  { id: "sheinkopf", workId: "sheinkopf", label: "Rob Sheinkopf, Author", world: "a stitched baseball world", size: 72, face: 0, spin: 100 },
 ];
 
 export interface Span {

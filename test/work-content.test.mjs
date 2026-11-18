@@ -12,7 +12,7 @@ test("profile copy is present and says software engineer", () => {
 
 test("work ledger is newest first and every row has the required fields", () => {
   const ids = W.WORK.map((w) => w.id);
-  assert.deepEqual(ids, ["bob", "nasa", "vcu", "sports-analytics"]);
+  assert.deepEqual(ids, ["sheinkopf", "bob", "nasa", "vcu", "sports-analytics"]);
   for (const w of W.WORK) {
     assert.ok(w.org && w.role && w.dates && w.summary, `${w.id} copy`);
     assert.ok(Array.isArray(w.tools) && w.tools.length > 0, `${w.id} tools`);
@@ -35,6 +35,20 @@ test("Bob row opens the case file and sits in Richmond", () => {
   assert.equal(bob.deep, "bob");
   assert.equal(bob.place, "richmond");
   assert.equal(bob.dates, "Aug 2026 – present");
+});
+
+test("Sheinkopf row: the title Jeff picked, ongoing, and only work already done (2026-11-18)", () => {
+  const s = W.WORK.find((w) => w.id === "sheinkopf");
+  assert.equal(s.kind, "job");
+  assert.equal(s.org, "Rob Sheinkopf, Author");
+  assert.equal(s.role, "Web Development Micro-Intern, Parker Dewey");
+  assert.equal(s.dates, "Nov 2026 – present");
+  assert.equal(s.start, "2026-11");
+  assert.equal(s.end, undefined);
+  assert.match(s.summary, /in progress/i, "says the work is still in progress");
+  // the deliverables are not done yet: no claim that they shipped
+  assert.doesNotMatch(s.summary, /(built|launched|shipped|redesigned|delivered|rebuilt)/i);
+  assert.doesNotMatch(JSON.stringify(s), /venmo|bluehost|password|login/i, "nothing private about Rob's site");
 });
 
 test("VCU row carries the TA and ASPIRE highlights with their dates", () => {

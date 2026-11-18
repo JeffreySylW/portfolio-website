@@ -1,5 +1,5 @@
-// Bakes the system-map planets. Usage: NODE_OPTIONS=--experimental-strip-types node scripts/make-planets.mjs
-// 1. Made worlds (VCU, TA, ASPIRE, NASA, Bob) are drawn as 4096x2048 equirectangular masters in
+// Bakes the system-map planets. Usage: NODE_OPTIONS=--experimental-strip-types node scripts/make-planets.mjs [--only <id>] [--skip-masters]
+// 1. Made worlds (VCU, TA, ASPIRE, NASA, Bob, Sheinkopf) are drawn as 4096x2048 equirectangular masters in
 //    scripts/assets/planets/<id>-4096.webp (front decals face the Earth's view latitude).
 // 2. Every planet gets public/textures/planets/<id>-tex.webp (1024x512, for the live repaint in the browser)
 //    and <id>.webp (painted by terminatorPaint.ts for the default sun, at twice its desktop size).
@@ -221,6 +221,46 @@ async function ta() {
   return grain(await raw(svg(p)), 0.22, 23);
 }
 
+// ---- Rob Sheinkopf: a stitched baseball (his books are about baseball) -------------------------------------------
+// The seam is the classic closed curve on the unit sphere: a cos t + b cos 3t, a sin t - b sin 3t, 2 sqrt(ab) sin 2t, a + b = 1.
+async function baseball() {
+  const a = 0.68, b = 1 - a, c = 2 * Math.sqrt(a * b);
+  const P = (t) => [a * Math.cos(t) + b * Math.cos(3 * t), a * Math.sin(t) - b * Math.sin(3 * t), c * Math.sin(2 * t)];
+  const dP = (t) => [-a * Math.sin(t) - 3 * b * Math.sin(3 * t), a * Math.cos(t) - 3 * b * Math.cos(3 * t), 2 * c * Math.cos(2 * t)];
+  const norm = (v) => { const l = Math.hypot(...v); return v.map((x) => x / l); };
+  const cross = (u, v) => [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+  const add = (p, ...terms) => norm(terms.reduce((acc, [k, v]) => acc.map((x, i) => x + k * v[i]), p));
+  const px = (v) => [((Math.atan2(v[1], v[0]) / Math.PI + 1) / 2) * W, ((Math.PI / 2 - Math.asin(Math.max(-1, Math.min(1, v[2])))) / Math.PI) * H];
+  const frameAt = (t) => { const p = P(t), T = norm(dP(t)); return { p, T, N: norm(cross(p, T)) }; };
+  const seg = (u, v, attrs) => {
+    const [x1, y1] = px(u), [x2, y2] = px(v);
+    return Math.abs(x2 - x1) > W / 2 ? "" : `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" ${attrs}/>`;
+  };
+  const r = rng(31);
+  const parts = [`<rect width="${W}" height="${H}" fill="#ece5d3"/>`];
+  // worn leather: soft blotches
+  for (let i = 0; i < 140; i++) parts.push(`<ellipse cx="${(r() * W).toFixed(0)}" cy="${(r() * H).toFixed(0)}" rx="${(80 + r() * 260).toFixed(0)}" ry="${(30 + r() * 90).toFixed(0)}" fill="${r() < 0.5 ? "#d9cfb8" : "#f7f2e6"}" fill-opacity="0.35"/>`);
+  // the seam: two pressed grooves either side of the stitching
+  const STEPS = 2400;
+  for (const side of [-1, 1]) for (let i = 0; i < STEPS; i++) {
+    const t0 = (i / STEPS) * 2 * Math.PI, t1 = ((i + 1) / STEPS) * 2 * Math.PI;
+    const f0 = frameAt(t0), f1 = frameAt(t1);
+    parts.push(seg(add(f0.p, [side * 0.03, f0.N]), add(f1.p, [side * 0.03, f1.N]), `stroke="#b9ab8c" stroke-width="7" stroke-linecap="round"`));
+  }
+  // red stitches in a chevron along the seam
+  const STITCHES = 88;
+  for (let i = 0; i < STITCHES; i++) {
+    const { p, T, N } = frameAt((i / STITCHES) * 2 * Math.PI);
+    for (const side of [-1, 1]) {
+      const outer = add(p, [side * 0.075, N], [0.022, T]);
+      const inner = add(p, [side * 0.012, N], [-0.01, T]);
+      parts.push(seg(outer, inner, `stroke="#7a1414" stroke-width="16" stroke-linecap="round"`));
+      parts.push(seg(outer, inner, `stroke="#c62828" stroke-width="10" stroke-linecap="round"`));
+    }
+  }
+  return grain(await raw(svg(parts)), 0.12, 31);
+}
+
 async function saveMaster(id, img) {
   const f = `${SRC}/${id}-4096.webp`;
   await sharp(img.data, { raw: { width: img.w, height: img.h, channels: 4 } }).removeAlpha().webp({ quality: 86, effort: 5 }).toFile(f);
@@ -228,16 +268,23 @@ async function saveMaster(id, img) {
   return f;
 }
 
+// --only <id>: bake just that planet and leave the others' files untouched
+const onlyAt = process.argv.indexOf("--only");
+const only = onlyAt > 0 ? process.argv[onlyAt + 1] : null;
+const makers = {
+  vcu, ta, bob, nasa, sheinkopf: baseball,
+  aspire: async () => aspireBoxes(await aspire()),
+};
 const masters = {};
-if (!process.argv.includes("--skip-masters") || !existsSync(`${SRC}/nasa-4096.webp`)) {
-  masters.vcu = await saveMaster("vcu", await vcu());
-  masters.ta = await saveMaster("ta", await ta());
-  masters.aspire = await saveMaster("aspire", await aspireBoxes(await aspire()));
-  masters.bob = await saveMaster("bob", await bob());
-  masters.nasa = await saveMaster("nasa", await nasa());
-} else for (const id of ["vcu", "ta", "aspire", "bob", "nasa"]) masters[id] = `${SRC}/${id}-4096.webp`;
+const skip = process.argv.includes("--skip-masters");
+for (const id of Object.keys(makers)) {
+  if (only && id !== only) continue;
+  const f = `${SRC}/${id}-4096.webp`;
+  masters[id] = skip && existsSync(f) ? f : await saveMaster(id, await makers[id]());
+}
 
 for (const p of PLANETS) {
+  if (only && p.id !== only) continue;
   const src = masters[p.id];
   // texture for the browser's live repaint
   await sharp(src).resize(1024, 512, { kernel: "lanczos3" }).webp({ quality: 82, effort: 6 }).toFile(`${OUT}/${p.id}-tex.webp`);
