@@ -15,12 +15,6 @@ test("people who ask for reduced transparency get solid cards", () => {
   assert.match(css, /@media \(prefers-reduced-transparency: reduce\)\s*\{\s*\.card-glass\s*\{[^}]*background-color:\s*var\(--card-tint[^}]*backdrop-filter:\s*none/s);
 });
 
-test("the NASA dialog backdrop lets the planet through", () => {
-  const m = css.match(/\.deep-dialog::backdrop\s*\{\s*background:\s*rgb\(3 5 11 \/ ([0-9.]+)\)/);
-  assert.ok(m, "backdrop rule missing");
-  assert.ok(Number(m[1]) <= 0.4, `backdrop alpha ${m[1]} hides the planet`);
-});
-
 test("the three cards use .card-glass instead of a near-solid colour", () => {
   for (const f of ["src/components/space/NasaDeepDive.tsx", "src/components/space/StoryPanel.tsx", "src/components/BobCaseFile.tsx"]) {
     const src = readFileSync(f, "utf8");
@@ -29,9 +23,8 @@ test("the three cards use .card-glass instead of a near-solid colour", () => {
   }
 });
 
-test("a backdrop-filter on the dialog would trap its fixed photo viewer, so the dialog blurs via ::backdrop instead", () => {
+test("a backdrop-filter on the dialog would trap its fixed photo viewer, so the dialog never gets one", () => {
   assert.match(css, /\.deep-dialog\.card-glass\s*\{[^}]*backdrop-filter:\s*none/s);
-  assert.match(css, /\.deep-dialog::backdrop\s*\{[^}]*backdrop-filter:\s*blur\(var\(--card-blur\)\)/s);
 });
 
 test("browsers without color-mix still get a translucent card, not a transparent one", () => {

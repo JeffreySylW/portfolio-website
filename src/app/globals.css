@@ -1,58 +1,139 @@
 @import "tailwindcss";
 
+/* Flat indigo steps (src/lib/tokens.ts mirrors these; tests check contrast). No gradients anywhere. */
 :root {
-  --paper: #03050b;
-  --ink: #e6edf7;
-  --ink-soft: #9fb3d4;
-  --line: #1d2740;
-  --signal: #6ec6ff;
-  --grid-line: color-mix(in srgb, var(--ink) 6%, transparent);
-
-  --console-bg: #05070a;
-  --console-panel: #0d1117;
-  --console-grid: #131a22;
-  --console-text: #c9d1d9;
-  --console-amber: #ffb454;
-
-  --pcb-bg: #050d08;
-  --pcb-panel: #0a1810;
-  --pcb-trace: #173524;
-  --pcb-green: #6ee08a;
-  --pcb-text: #cfe6d5;
-  --pcb-gold: #c9a24a;
-  --pcb-silk: #d9e4dc;
+  --void: #07061a;
+  --deep: #15123d;
+  --indigo: #2b2a7a;
+  --violet: #5b54d6;
+  --lavender: #a9a4ff;
+  --starlight: #f2f0ff;
+  --mist: #d9d6ff;
 }
 
 @theme inline {
-  --color-paper: var(--paper);
-  --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-line: var(--line);
-  --color-signal: var(--signal);
+  --color-void: var(--void);
+  --color-deep: var(--deep);
+  --color-indigo: var(--indigo);
+  --color-violet: var(--violet);
+  --color-lavender: var(--lavender);
+  --color-starlight: var(--starlight);
+  --color-mist: var(--mist);
 
-  --color-console-bg: var(--console-bg);
-  --color-console-panel: var(--console-panel);
-  --color-console-grid: var(--console-grid);
-  --color-console-text: var(--console-text);
-  --color-console-amber: var(--console-amber);
-
-  --color-pcb-bg: var(--pcb-bg);
-  --color-pcb-panel: var(--pcb-panel);
-  --color-pcb-trace: var(--pcb-trace);
-  --color-pcb-green: var(--pcb-green);
-  --color-pcb-text: var(--pcb-text);
-  --color-pcb-gold: var(--pcb-gold);
-  --color-pcb-silk: var(--pcb-silk);
+  /* older names still used inside the NASA card and Bob case file, mapped onto the new palette */
+  --color-paper: var(--void);
+  --color-ink: var(--starlight);
+  --color-ink-soft: var(--lavender);
+  --color-line: var(--indigo);
+  --color-signal: var(--lavender);
+  --color-console-bg: var(--void);
+  --color-console-panel: var(--deep);
+  --color-console-grid: var(--indigo);
+  --color-console-text: var(--mist);
+  --color-console-amber: var(--lavender);
+  --color-pcb-bg: var(--void);
+  --color-pcb-panel: var(--deep);
+  --color-pcb-trace: var(--indigo);
+  --color-pcb-green: var(--lavender);
+  --color-pcb-text: var(--mist);
+  --color-pcb-gold: var(--lavender);
+  --color-pcb-silk: var(--starlight);
 
   --font-display: var(--font-display);
-  --font-mono: var(--font-mono);
-  --font-serif: var(--font-serif);
+  --font-body: var(--font-body);
+  --font-pixel: var(--font-pixel);
+  --font-mono: var(--font-body);
+  --font-serif: var(--font-body);
 }
 
 html {
   scroll-behavior: smooth;
-  /* the case file locks page scroll; keep the scrollbar's space so the paused canvas behind it is not resized (and blanked) */
+  /* dialogs lock page scroll; keep the scrollbar's space so the page does not jump */
   scrollbar-gutter: stable;
+  background: var(--void);
+}
+
+body {
+  background: var(--void);
+  color: var(--starlight);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--lavender);
+  color: var(--void);
+}
+
+:focus-visible {
+  outline: 3px dashed var(--starlight);
+  outline-offset: 4px;
+}
+
+/* Small labels in the pixel face. Never for paragraphs. */
+.px-label {
+  font-family: var(--font-pixel), monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Square button with notched pixel corners and a stepped shadow. */
+.px-btn {
+  --px-c: var(--lavender);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin: 4px;
+  padding: 10px 20px;
+  background: var(--px-c);
+  color: var(--void);
+  font-family: var(--font-pixel), monospace;
+  font-size: 14px;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow:
+    0 -4px 0 0 var(--px-c),
+    0 4px 0 0 var(--px-c),
+    -4px 0 0 0 var(--px-c),
+    4px 0 0 0 var(--px-c),
+    8px 8px 0 0 var(--indigo);
+}
+.px-btn:hover {
+  --px-c: var(--starlight);
+}
+.px-btn:focus-visible {
+  outline-offset: 10px;
+}
+
+/* 2px pixel outline with notched corners, for panels and dialogs. */
+.px-frame {
+  background: var(--void);
+  box-shadow:
+    0 -2px 0 0 var(--violet),
+    0 2px 0 0 var(--violet),
+    -2px 0 0 0 var(--violet),
+    2px 0 0 0 var(--violet);
+}
+
+/* Pixel stars: a still tile, plus a sparse tile of big sparkles that blinks in two steps. */
+.stars {
+  background-image: url("/textures/stars.png");
+  background-size: 960px 600px;
+  image-rendering: pixelated;
+}
+.stars-twinkle {
+  background-image: url("/textures/stars-twinkle.png");
+  background-size: 960px 600px;
+  image-rendering: pixelated;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stars-twinkle {
+    animation: twinkle 3.2s steps(2, jump-none) infinite alternate;
+  }
+}
+@keyframes twinkle {
+  from { opacity: 1; }
+  to { opacity: 0.25; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -70,114 +151,14 @@ html {
   }
 }
 
-:root {
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-}
+/* ---- NASA card and Bob case file (restyled in ticket 8) ---- */
 
-/* Final, visible state is the default; hiding and motion apply only when motion is allowed. */
-.tl-dot {
-  background-color: #7dd3fc;
-  box-shadow: 0 0 10px 3px rgb(125 211 252 / 0.6);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .reveal {
-    transition:
-      opacity 800ms var(--ease-out-expo),
-      transform 800ms var(--ease-out-expo);
-    transition-delay: calc(min(var(--i, 0), 6) * 70ms);
-  }
-  .reveal:not([data-in]) {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  .tl-dot {
-    transition:
-      background-color 600ms var(--ease-out-expo),
-      box-shadow 600ms var(--ease-out-expo),
-      transform 600ms var(--ease-out-expo);
-  }
-  .tl-dot:not([data-active]) {
-    background-color: #475569;
-    box-shadow: none;
-    transform: scale(0.8);
-  }
-}
+.deep-dialog::backdrop { background: rgb(7 6 26 / 0.8); }
 
-/* The line draws down with scroll where scroll-driven animations exist; otherwise it is simply full. */
-@keyframes tl-draw {
-  from { transform: scaleY(0); }
-  to { transform: scaleY(1); }
-}
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .tl-line {
-      transform-origin: top;
-      animation: tl-draw linear both;
-      animation-timeline: view();
-      animation-range: cover 20% cover 75%;
-    }
-  }
-}
-
-::selection {
-  background: var(--signal);
-  color: var(--paper);
-}
-
-.bg-grid-paper {
-  background-image:
-    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-  background-size: 40px 40px;
-  mask-image: linear-gradient(to bottom, black, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, black, transparent);
-}
-
-@keyframes pixel-twinkle {
-  0%,
-  100% {
-    opacity: var(--star-min, 0.15);
-  }
-  50% {
-    opacity: var(--star-max, 1);
-  }
-}
-
-@keyframes pcb-pulse {
-  from { stroke-dashoffset: 1; opacity: 1; }
-  to { stroke-dashoffset: 0; opacity: 0.35; }
-}
-@keyframes pcb-crawl {
-  from { offset-distance: 0%; opacity: 1; }
-  90% { opacity: 1; }
-  to { offset-distance: 100%; opacity: 0; }
-}
-@keyframes pcb-fix {
-  from { opacity: 0; transform: scale(0.4); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-/* Circuit art: a faint texture on phones (it would sit behind the text);
-   from 640px up it fades under the text column and is full strength in the corner. */
-.pcb-mask {
-  mask-image: linear-gradient(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.22));
-  -webkit-mask-image: linear-gradient(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.22));
-}
-@media (min-width: 640px) {
-  .pcb-mask {
-    mask-image: linear-gradient(to right, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.28) 48%, #000 82%);
-    -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.28) 48%, #000 82%);
-  }
-}
-
-/* Native dialog fade for the planet deep dives (skipped under reduced motion). */
-.deep-dialog::backdrop { background: rgb(3 5 11 / 0.35); backdrop-filter: blur(var(--card-blur)); }
-
-/* See-through cards: the planet being followed shows behind them. Tune --card-alpha / --card-blur here. */
 :root { --card-alpha: 0.74; --card-blur: 3px; }
 .card-glass {
-  background-color: rgb(7 11 22 / 0.74); /* browsers without color-mix */
-  background-color: color-mix(in srgb, var(--card-tint, #070b16) calc(var(--card-alpha) * 100%), transparent);
+  background-color: rgb(7 6 26 / 0.74); /* browsers without color-mix */
+  background-color: color-mix(in srgb, var(--card-tint, #07061a) calc(var(--card-alpha) * 100%), transparent);
   -webkit-backdrop-filter: blur(var(--card-blur));
   backdrop-filter: blur(var(--card-blur));
 }
@@ -188,7 +169,7 @@ html {
 }
 @media (prefers-reduced-transparency: reduce) {
   .card-glass {
-    background-color: var(--card-tint, #070b16);
+    background-color: var(--card-tint, #07061a);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
