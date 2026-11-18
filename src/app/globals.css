@@ -115,6 +115,15 @@ body {
     2px 0 0 0 var(--violet);
 }
 
+/* Text set over the starfield: a void backing behind each line hides stars between words without boxing the block. */
+.text-on-sky {
+  background: var(--void);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0.05em 0.2em;
+  margin: 0 -0.2em;
+}
+
 /* Pixel stars: a still tile, plus a sparse tile of big sparkles that blinks in two steps. */
 .stars {
   background-image: url("/textures/stars.png");

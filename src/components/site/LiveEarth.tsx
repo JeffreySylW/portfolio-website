@@ -78,12 +78,12 @@ export function SunReadout() {
     <p className="px-label flex flex-wrap gap-x-5 gap-y-1 text-[12px] text-lavender" data-readout={r ? "live" : "static"}>
       {r ? (
         <>
-          <span className="text-starlight">Live sunlight</span>
-          <span>Sun overhead at {r.overhead}</span>
-          <span>Richmond: {r.richmond === "day" ? "daytime" : "night"}</span>
+          <span className="text-on-sky text-starlight">Live sunlight</span>
+          <span className="text-on-sky">Sun overhead at {r.overhead}</span>
+          <span className="text-on-sky">Richmond: {r.richmond === "day" ? "daytime" : "night"}</span>
         </>
       ) : (
-        <span>Sunlight drawn for a November afternoon</span>
+        <span className="text-on-sky">Sunlight drawn for a November afternoon</span>
       )}
     </p>
   );

@@ -91,19 +91,23 @@ export function Hero() {
 
       <div className="relative z-10 px-5 pb-28 pt-[112vw] md:absolute md:right-[6vw] md:top-1/2 md:w-[min(520px,40vw)] md:-translate-y-1/2 md:p-0">
         <p className="px-label text-[12px] text-lavender">
-          {PROFILE.role} · {PROFILE.location}
+          <span className="text-on-sky">
+            {PROFILE.role} · {PROFILE.location}
+          </span>
         </p>
         <h1 className="mt-5 font-display text-[clamp(72px,10vw,156px)] font-extrabold uppercase leading-[0.84] tracking-[-0.01em]">
           Jeffrey
           <br />
           Weaver
         </h1>
-        <p className="mt-6 max-w-[26rem] text-[17px] leading-[1.55] text-mist md:text-[19px]">{PROFILE.intro}</p>
+        <p className="mt-6 max-w-[26rem] text-[17px] leading-[1.55] text-mist md:text-[19px]">
+          <span className="text-on-sky">{PROFILE.intro}</span>
+        </p>
         <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4">
           <a href="#work" className="px-btn">
             See the work
           </a>
-          <a href={PROFILE.resumeHref} className="py-3 text-[16px] text-starlight underline underline-offset-4 hover:text-lavender">
+          <a href={PROFILE.resumeHref} className="text-on-sky py-3 text-[16px] text-starlight underline underline-offset-4 hover:text-lavender">
             Resume (PDF)
           </a>
         </div>
