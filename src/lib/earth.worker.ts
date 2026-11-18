@@ -14,6 +14,8 @@ export interface EarthJob {
   sun: { lat: number; lon: number };
   /** Use the texture's own night ramp (every body but the Earth). */
   ownNight?: boolean;
+  /** Night dither offset (the shimmer). */
+  ditherShift?: number;
 }
 
 const textures = new Map<string, Promise<Texture & { night: { mean: number; spread: number } }>>();

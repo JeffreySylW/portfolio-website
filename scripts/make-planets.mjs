@@ -1,9 +1,9 @@
 // Bakes the system-map planets. Usage: NODE_OPTIONS=--experimental-strip-types node scripts/make-planets.mjs
-// 1. Made worlds (VCU, TA, ASPIRE, Bob) are drawn as 4096x2048 equirectangular masters in
+// 1. Made worlds (VCU, TA, ASPIRE, NASA, Bob) are drawn as 4096x2048 equirectangular masters in
 //    scripts/assets/planets/<id>-4096.webp (front decals face the Earth's view latitude).
 // 2. Every planet gets public/textures/planets/<id>-tex.webp (1024x512, for the live repaint in the browser)
 //    and <id>.webp (painted by terminatorPaint.ts for the default sun, at twice its desktop size).
-// Outside textures: the Moon and Neptune from Solar System Scope (CC BY 4.0), see public/textures/CREDITS.md.
+// Outside artwork: Neptune from Solar System Scope (CC BY 4.0), the VCU lockup and the NASA insignia; see public/textures/CREDITS.md.
 import sharp from "sharp";
 import { mkdirSync, existsSync } from "node:fs";
 import { paintGlobe, textureStats } from "../src/lib/terminatorPaint.ts";
@@ -96,6 +96,32 @@ async function vcu() {
   const lockup = await raw(`${SRC}/vcu-lockup.png`);
   const key = (rr, g, b) => Math.min(1, Math.max(0, (Math.max(rr, g, b) - 8) / 24)); // drop the lockup's black ground
   return decalOnto(base, lockup, { centerPx: [600, 316], pxPerRadius: 613, key });
+}
+
+// ---- NASA: insignia blue with stars and panel seams, the NASA insignia on the face ---------------------------
+// The insignia's use is restricted by NASA (14 CFR 1221); Jeff chose to use it (see public/textures/CREDITS.md).
+async function nasa() {
+  const base = { data: Buffer.alloc(W * H * 4), w: W, h: H };
+  const seam = (deg) => { const m = ((deg % 30) + 30) % 30; return Math.min(m, 30 - m); };
+  for (let py = 0; py < H; py++) {
+    const lat = 90 - ((py + 0.5) / H) * 180;
+    for (let px = 0; px < W; px++) {
+      const lon = ((px + 0.5) / W) * 360 - 180;
+      let c = [11, 61, 145]; // #0b3d91, the insignia's blue
+      const star = hash2(Math.round(lon * 9), Math.round(lat * 9));
+      if (star > 0.9965) c = [255, 255, 255];
+      else if (star > 0.993) c = [150, 175, 225];
+      else if (seam(lon) < 0.18 || seam(lat) < 0.18) c = c.map((v) => v * 0.78);
+      const i = (py * W + px) * 4;
+      base.data[i] = c[0]; base.data[i + 1] = c[1]; base.data[i + 2] = c[2]; base.data[i + 3] = 255;
+    }
+  }
+  grain(base, 0.12, 5);
+  const S = 20; // SVG user units -> pixels
+  const logo = await raw(`${SRC}/nasa-logo.svg`, { density: 72 * S });
+  if (logo.w !== 110 * S) throw new Error(`NASA SVG rendered ${logo.w}px wide, expected ${110 * S}`);
+  // the insignia's disc (centre 50.049, 45; radius 40.14) covers 85% of the planet's radius
+  return decalOnto(base, logo, { centerPx: [50.049 * S, 45 * S], pxPerRadius: (40.14 * S) / 0.85 });
 }
 
 // ---- Bob: a circuit board in the case file's colours ----------------------------------------------------------
@@ -203,13 +229,13 @@ async function saveMaster(id, img) {
 }
 
 const masters = {};
-if (!process.argv.includes("--skip-masters") || !existsSync(`${SRC}/bob-4096.webp`)) {
+if (!process.argv.includes("--skip-masters") || !existsSync(`${SRC}/nasa-4096.webp`)) {
   masters.vcu = await saveMaster("vcu", await vcu());
   masters.ta = await saveMaster("ta", await ta());
   masters.aspire = await saveMaster("aspire", await aspireBoxes(await aspire()));
   masters.bob = await saveMaster("bob", await bob());
-} else for (const id of ["vcu", "ta", "aspire", "bob"]) masters[id] = `${SRC}/${id}-4096.webp`;
-masters.nasa = `${SRC}/moon-4096.jpg`;
+  masters.nasa = await saveMaster("nasa", await nasa());
+} else for (const id of ["vcu", "ta", "aspire", "bob", "nasa"]) masters[id] = `${SRC}/${id}-4096.webp`;
 masters["sports-analytics"] = `${SRC}/neptune-2048.jpg`;
 
 for (const p of PLANETS) {

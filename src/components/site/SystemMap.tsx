@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { PLANETS, planetSpans, type Planet } from "@/content/planets";
 import { EARTH_VIEW } from "@/lib/earthView";
-import { planetBlockCss, planetSun, systemLayout } from "@/lib/systemMap";
+import { planetBlockCss, planetSun, shimmerStep, spinLongitude, systemLayout } from "@/lib/systemMap";
 import { subsolarPoint } from "@/lib/sun";
 import { playWhoosh } from "@/lib/whoosh";
 
@@ -78,55 +78,85 @@ function useWhoosh() {
   return { on, toggle, play, count };
 }
 
-/** Repaints every planet for the real sun once the map comes near the screen. */
+const FRAME_MS = 125; // about 8 frames a second: smooth enough for a slow turn, stepped like the pixel art
+const SUN_MS = 60 * 1000;
+
+/**
+ * Paints every planet for the real sun once the map comes near the screen, then keeps them turning
+ * (and the night dither shimmering) while the map is on screen and the tab is visible. Under reduced
+ * motion each planet is painted once, still, and refreshed for the sun every 10 minutes.
+ */
 function useLivePlanets(section: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
     const el = section.current;
     if (!el || typeof Worker === "undefined" || typeof OffscreenCanvas === "undefined" || typeof IntersectionObserver === "undefined") return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
     let worker: Worker | null = null;
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    let visible = false;
+    let sun = subsolarPoint(new Date());
+    let sunAt = performance.now();
+    let lastStill = 0;
+    const t0 = performance.now();
+    const busy = new Set<string>();
 
-    const paint = () => {
-      if (!worker) return;
-      const sun = subsolarPoint(new Date());
-      for (const c of el.querySelectorAll<HTMLCanvasElement>("canvas[data-live]")) {
-        const p = BY_ID[c.dataset.id!];
-        const css = c.getBoundingClientRect().width;
-        if (!p || !css) continue;
-        const size = Math.min(p.size * 3, Math.round(css * (window.devicePixelRatio || 1)));
-        worker.postMessage({
-          id: p.id,
-          textureUrl: `/textures/planets/${p.id}-tex.webp`,
-          size,
-          pad: Math.round(size * EARTH_VIEW.padRatio),
-          block: Math.max(2, Math.round((planetBlockCss(p.size) * size) / css)),
-          lon0: p.face,
-          lat0: EARTH_VIEW.lat0,
-          sun: planetSun(sun, p.face),
-          ownNight: true,
-        });
-      }
-      timer = setTimeout(() => { if (document.visibilityState === "visible") paint(); }, REPAINT_MS);
+    const post = (c: HTMLCanvasElement, t: number) => {
+      const p = BY_ID[c.dataset.id!];
+      const css = c.getBoundingClientRect().width;
+      if (!worker || !p || !css || busy.has(p.id)) return;
+      const size = Math.min(p.size * 3, Math.round(css * (window.devicePixelRatio || 1)));
+      const lon0 = spinLongitude(p.face, p.spin, t);
+      busy.add(p.id);
+      worker.postMessage({
+        id: p.id,
+        textureUrl: `/textures/planets/${p.id}-tex.webp`,
+        size,
+        pad: Math.round(size * EARTH_VIEW.padRatio),
+        block: Math.max(2, Math.round((planetBlockCss(p.size) * size) / css)),
+        lon0,
+        lat0: EARTH_VIEW.lat0,
+        sun: planetSun(sun, lon0),
+        ownNight: true,
+        ditherShift: shimmerStep(t),
+      });
+    };
+
+    const tick = () => {
+      if (!worker || !visible || document.visibilityState !== "visible") return;
+      const now = performance.now();
+      if (now - sunAt > SUN_MS) { sun = subsolarPoint(new Date()); sunAt = now; }
+      const still = reduce.matches;
+      if (still && lastStill && now - lastStill < REPAINT_MS) return;
+      if (still) lastStill = now;
+      const t = still ? 0 : (now - t0) / 1000;
+      for (const c of el.querySelectorAll<HTMLCanvasElement>("canvas[data-live]")) post(c, t);
+    };
+
+    const start = () => {
+      worker = new Worker(new URL("../../lib/earth.worker.ts", import.meta.url), { type: "module" });
+      worker.onmessage = (e: MessageEvent<{ id?: string; bitmap?: ImageBitmap }>) => {
+        if (e.data.id) busy.delete(e.data.id);
+        const c = e.data.id && el.querySelector<HTMLCanvasElement>(`canvas[data-id="${e.data.id}"]`);
+        if (!c || !e.data.bitmap) return; // keep the baked image
+        if (c.width !== e.data.bitmap.width) { c.width = e.data.bitmap.width; c.height = e.data.bitmap.height; }
+        c.getContext("bitmaprenderer")?.transferFromImageBitmap(e.data.bitmap);
+        c.dataset.live = "ready";
+        c.dataset.frames = String(Number(c.dataset.frames || 0) + 1);
+      };
     };
 
     const io = new IntersectionObserver((entries) => {
-      if (!entries.some((e) => e.isIntersecting) || worker) return;
-      io.disconnect();
-      worker = new Worker(new URL("../../lib/earth.worker.ts", import.meta.url), { type: "module" });
-      worker.onmessage = (e: MessageEvent<{ id?: string; bitmap?: ImageBitmap }>) => {
-        const c = e.data.id && el.querySelector<HTMLCanvasElement>(`canvas[data-id="${e.data.id}"]`);
-        if (!c || !e.data.bitmap) return; // keep the baked image
-        c.width = e.data.bitmap.width;
-        c.height = e.data.bitmap.height;
-        c.getContext("bitmaprenderer")?.transferFromImageBitmap(e.data.bitmap);
-        c.dataset.live = "ready";
-      };
-      paint();
-    }, { rootMargin: "300px 0px" });
+      visible = entries.some((e) => e.isIntersecting);
+      if (visible && !worker) start();
+      if (visible) tick();
+    }, { rootMargin: "200px 0px" });
     io.observe(el);
+    const timer = setInterval(tick, FRAME_MS);
+    const onMotion = () => { lastStill = 0; tick(); };
+    reduce.addEventListener("change", onMotion);
     return () => {
       io.disconnect();
-      clearTimeout(timer);
+      clearInterval(timer);
+      reduce.removeEventListener("change", onMotion);
       worker?.terminate();
     };
   }, [section]);

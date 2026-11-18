@@ -84,3 +84,14 @@ export function planetSun(sun: { lat: number; lon: number }, face: number): { la
 export function planetBlockCss(css: number): number {
   return Math.min(EARTH_VIEW.blockCss, Math.max(3, css / 40));
 }
+
+/** The longitude facing the viewer `t` seconds in, for a planet turning once every `spin` seconds (sign = direction). */
+export function spinLongitude(face: number, spin: number, t: number): number {
+  const lon = face + (360 * t) / spin;
+  return ((((lon + 180) % 360) + 360) % 360) - 180;
+}
+
+/** Dither offset for the night-side shimmer: steps through four positions, one every quarter second. */
+export function shimmerStep(t: number): number {
+  return Math.floor(t * 4 + 1e-9) % 4;
+}

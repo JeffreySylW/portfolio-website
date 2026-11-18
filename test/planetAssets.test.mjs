@@ -30,18 +30,19 @@ test("each planet has a 1024x512 texture for the live repaint, under 220 KB", as
 });
 
 test("high-resolution masters are baked at 4096x2048 for the made worlds", async () => {
-  for (const id of ["vcu", "ta", "aspire", "bob"]) {
+  for (const id of ["vcu", "ta", "aspire", "bob", "nasa"]) {
     const m = await sharp(`scripts/assets/planets/${id}-4096.webp`).metadata();
     assert.equal(m.width, 4096); assert.equal(m.height, 2048);
   }
 });
 
-test("no NASA insignia ships, and the credits name every outside texture", () => {
-  assert.ok(!existsSync(`${DIR}/nasa-insignia.webp`) && !existsSync("scripts/assets/nasa-logo.svg"));
+test("the credits name every outside texture and record the NASA insignia's restriction", () => {
   const credits = readFileSync("public/textures/CREDITS.md", "utf8");
   assert.match(credits, /Solar System Scope/);
   assert.match(credits, /CC BY 4\.0/);
-  assert.match(credits, /Moon/);
   assert.match(credits, /Neptune/);
   assert.match(credits, /VCU/);
+  assert.match(credits, /14 CFR 1221/);
+  assert.ok(existsSync("scripts/assets/planets/nasa-logo.svg"));
+  assert.ok(!existsSync("scripts/assets/planets/moon-4096.jpg"), "the unused Moon map is gone");
 });

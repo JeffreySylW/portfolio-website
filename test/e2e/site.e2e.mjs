@@ -202,6 +202,25 @@ try {
     assert(await page.waitFor(`[...document.querySelectorAll("#system canvas[data-live]")].every((c) => c.dataset.live === "ready")`, 20000), "planets never repainted");
   });
 
+  const frames = `[...document.querySelectorAll("#system canvas[data-live]")].map((c) => Number(c.dataset.frames || 0))`;
+  await check("15b the planets spin: new frames keep arriving while the map is in view", async () => {
+    const a = await page.evaluate(frames);
+    await sleep(1500);
+    const b = await page.evaluate(frames);
+    assert(b.every((n, i) => n >= a[i] + 4), `frames ${a} -> ${b}`);
+    return `${b[0] - a[0]} frames in 1.5 s`;
+  });
+
+  await check("15c off screen the spinning stops", async () => {
+    await page.evaluate(`window.scrollTo(0, document.body.scrollHeight)`);
+    await sleep(500);
+    const a = await page.evaluate(frames);
+    await sleep(1200);
+    const b = await page.evaluate(frames);
+    assert(b.every((n, i) => n <= a[i] + 1), `still painting ${a} -> ${b}`);
+    await page.evaluate(`document.querySelector("#system").scrollIntoView({ block: "center", behavior: "instant" })`);
+  });
+
   await check("16 hovering a planet runs the glitch and, after any click on the page, the whoosh", async () => {
     await page.clickAt(5, 400); // a user gesture unlocks audio
     const before = await page.evaluate(whooshes);
@@ -239,8 +258,13 @@ try {
     await hoverAt(planet("nasa"));
     await sleep(120);
     const anim = await page.evaluate(`getComputedStyle(document.querySelector('${planet("nasa")} [data-phase]')).animationName`);
+    await page.waitFor(`[...document.querySelectorAll("#system canvas[data-live]")].every((c) => c.dataset.live === "ready")`, 10000);
+    const a = await page.evaluate(frames);
+    await sleep(1200);
+    const b = await page.evaluate(frames);
     await page.setReducedMotion(false);
     assert(anim === "none", `animation ${anim}`);
+    assert(b.every((n, i) => n === a[i] && n >= 1), `planets still spin under reduced motion ${a} -> ${b}`);
   });
 
   for (const w of [390, 320]) {

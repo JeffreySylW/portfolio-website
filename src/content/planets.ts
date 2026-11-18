@@ -15,17 +15,19 @@ export interface Planet {
   world: string;
   /** Diameter on a desktop screen, CSS px (phones scale it down). */
   size: number;
-  /** Longitude turned towards the viewer. */
+  /** Longitude turned towards the viewer at the start. */
   face: number;
+  /** Seconds per turn; the sign is the direction. */
+  spin: number;
 }
 
 export const PLANETS: Planet[] = [
-  { id: "vcu", workId: "vcu", label: "VCU · B.S. Computer Science", world: "a black world carrying the VCU seal and wordmark", size: 140, face: 0 },
-  { id: "ta", workId: "vcu", highlight: "Computer Science Teaching Assistant", label: "Teaching assistant", world: "a chalkboard world written over with code", size: 52, face: 0 },
-  { id: "aspire", workId: "vcu", highlight: "DoD ASPIRE Capstone", label: "DoD ASPIRE capstone", world: "a LiDAR world of scan lines, a point cloud and pedestrian detection boxes", size: 48, face: 0 },
-  { id: "sports-analytics", workId: "sports-analytics", label: "Sports analytics", world: "Neptune", size: 80, face: 40 },
-  { id: "nasa", workId: "nasa", label: "NASA Langley", world: "the Moon (Langley's Lunar Landing Research Facility trained the Apollo crews)", size: 100, face: 10 },
-  { id: "bob", workId: "bob", label: "Bob The Tech Guy", world: "a circuit-board world", size: 120, face: 0 },
+  { id: "vcu", workId: "vcu", label: "VCU · B.S. Computer Science", world: "a black world carrying the VCU seal and wordmark", size: 140, face: 0, spin: 120 },
+  { id: "ta", workId: "vcu", highlight: "Computer Science Teaching Assistant", label: "Teaching assistant", world: "a chalkboard world written over with code", size: 52, face: 0, spin: -75 },
+  { id: "aspire", workId: "vcu", highlight: "DoD ASPIRE Capstone", label: "DoD ASPIRE capstone", world: "a LiDAR world of scan lines, a point cloud and pedestrian detection boxes", size: 48, face: 0, spin: 90 },
+  { id: "sports-analytics", workId: "sports-analytics", label: "Sports analytics", world: "Neptune", size: 80, face: 40, spin: -100 },
+  { id: "nasa", workId: "nasa", label: "NASA Langley", world: "a NASA-blue world carrying the NASA insignia", size: 100, face: 0, spin: 110 },
+  { id: "bob", workId: "bob", label: "Bob The Tech Guy", world: "a circuit-board world", size: 120, face: 0, spin: -130 },
 ];
 
 export interface Span {

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { paintGlobe, PALETTE, textureStats } from "../src/lib/terminatorPaint.ts";
 import { PLANETS, planetSpans } from "../src/content/planets.ts";
 import { WORK } from "../src/content/work.ts";
-import { monthIndex, systemLayout, planetSun, planetBlockCss } from "../src/lib/systemMap.ts";
+import { monthIndex, systemLayout, planetSun, planetBlockCss, spinLongitude, shimmerStep } from "../src/lib/systemMap.ts";
 import { EARTH_VIEW } from "../src/lib/earthView.ts";
 import { WHOOSH, whooshGain, whooshFrequency } from "../src/lib/whoosh.ts";
 
@@ -42,6 +42,25 @@ test("with a night ramp a grey body's night side keeps its light and dark ground
   assert.ok(avg(dark) < 3, "the night is mostly deep/indigo, not solid violet");
 });
 
+test("ditherShift moves the night pixels without changing the palette or the overall shade", () => {
+  const texture = greyTexture();
+  const o = { texture, size, pad: 8, lon0: 0, lat0: 0, sun: { lat: 0, lon: 180 }, block: 8, night: textureStats(texture) };
+  const a = paintGlobe(o), b = paintGlobe({ ...o, ditherShift: 1 });
+  let changed = 0, sa = 0, sb = 0, n = 0;
+  for (let y = 20; y < 140; y += 4) for (let x = 20; x < 140; x += 4) {
+    const pa = stepAt(a, x, y), pb = stepAt(b, x, y);
+    if (pa < 0 || pb < 0) continue;
+    if (pa !== pb) changed++;
+    sa += pa; sb += pb; n++;
+  }
+  assert.ok(changed > n * 0.05, `only ${changed} of ${n} night pixels moved`);
+  assert.ok(Math.abs(sa / n - sb / n) < 0.15, `shade drifted ${sa / n} -> ${sb / n}`);
+});
+
+test("shimmerStep cycles the dither through four positions, a step every quarter second", () => {
+  assert.deepEqual([0, 0.26, 0.51, 0.76, 1.01].map(shimmerStep), [0, 1, 2, 3, 0]);
+});
+
 // ---- the system map -------------------------------------------------------------------------------------------
 
 test("monthIndex counts months", () => {
@@ -57,10 +76,22 @@ test("one planet per experience: VCU, its TA and ASPIRE moons, Sports Analytics,
   }
 });
 
-test("NASA's world is the Moon, never the insignia", () => {
+test("NASA's world carries the NASA insignia (Jeff's choice, 2026-11-17)", () => {
   const nasa = PLANETS.find((p) => p.id === "nasa");
-  assert.match(nasa.world, /Moon/);
-  assert.ok(!/insignia|logo|meatball/i.test(JSON.stringify(PLANETS)));
+  assert.match(nasa.world, /NASA insignia/);
+});
+
+test("every planet spins slowly, about a turn a minute or two, in mixed directions", () => {
+  for (const p of PLANETS) assert.ok(Math.abs(p.spin) >= 60 && Math.abs(p.spin) <= 180, `${p.id} spin ${p.spin}`);
+  assert.ok(PLANETS.some((p) => p.spin > 0) && PLANETS.some((p) => p.spin < 0), "mixed directions");
+});
+
+test("spinLongitude turns the face by the spin rate and wraps", () => {
+  assert.equal(spinLongitude(10, 120, 0), 10);
+  assert.ok(Math.abs(spinLongitude(10, 120, 30) - 100) < 1e-9, "a quarter turn in 30 s");
+  assert.ok(Math.abs(spinLongitude(10, -120, 30) - -80) < 1e-9, "negative spin turns the other way");
+  const w = spinLongitude(0, 60, 1000);
+  assert.ok(w >= -180 && w < 180, `${w}`);
 });
 
 const MONTH = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };

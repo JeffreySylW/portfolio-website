@@ -42,6 +42,8 @@ export interface PaintOptions {
    * mean and spread (see textureStats). Without it the Earth's land/ocean ramp is used.
    */
   night?: { mean: number; spread: number };
+  /** Moves the 4x4 dither pattern by this many blocks (animating it makes the night side shimmer). */
+  ditherShift?: number;
 }
 
 const lumOf = (r: number, g: number, b: number) => (0.3 * r + 0.55 * g + 0.15 * b) / 255;
@@ -98,13 +100,14 @@ export function paintGlobe(o: PaintOptions): Uint8ClampedArray<ArrayBuffer> {
 
   // One night colour and one lighting value per block.
   const nb = Math.ceil(size / block);
+  const sh = ((Math.round(o.ditherShift ?? 0) % 4) + 4) % 4;
   const blockLight = new Float32Array(nb * nb).fill(NaN);
   const blockStep = new Int8Array(nb * nb).fill(-1);
   for (let by = 0; by < nb; by++) for (let bx = 0; bx < nb; bx++) {
     const x = bx * block + block / 2 - C, y = C - (by * block + block / 2);
     const h = inv(x, y);
     if (!h) continue;
-    const t = BAYER[(by % 4) * 4 + (bx % 4)];
+    const t = BAYER[((by + sh) % 4) * 4 + ((bx + sh) % 4)];
     sample(texture, h[0], h[1], col);
     const lum = lumOf(col[0], col[1], col[2]);
     let lvl: number;
@@ -127,7 +130,7 @@ export function paintGlobe(o: PaintOptions): Uint8ClampedArray<ArrayBuffer> {
     // dithered band across the terminator: below the threshold the block is pixel art
     if (blockStep[bi] >= 0) {
       const band = (blockLight[bi] + 0.05) / 0.17;
-      if (band < BAYER[(by % 4) * 4 + (bx % 4)]) {
+      if (band < BAYER[((by + sh) % 4) * 4 + ((bx + sh) % 4)]) {
         const p = PALETTE[blockStep[bi]];
         out[i] = p[0]; out[i + 1] = p[1]; out[i + 2] = p[2]; out[i + 3] = 255;
         continue;
