@@ -105,12 +105,34 @@ test("layout ticks: one per January in range, then Now at the end", () => {
   assert.ok(Math.abs(t[0].x - 5 / 51) < 1e-9, `${t[0].x}`);
 });
 
-test("planetSun keeps the Earth's light direction on screen whatever face a planet shows", () => {
-  const sun = { lat: -19, lon: -147 };
-  assert.deepEqual(planetSun(sun, EARTH_VIEW.lon0), sun);
-  const s = planetSun(sun, EARTH_VIEW.lon0 + 100);
-  assert.equal(s.lat, sun.lat);
-  assert.ok(Math.abs(((s.lon - sun.lon + 540) % 360) - 180 - 100) < 1e-9);
+// sun position in a view's screen frame: x right, y up, z towards the viewer
+const D2R = Math.PI / 180;
+function screen(sun, lon0, lat0) {
+  const v = [Math.cos(sun.lat * D2R) * Math.cos(sun.lon * D2R), Math.cos(sun.lat * D2R) * Math.sin(sun.lon * D2R), Math.sin(sun.lat * D2R)];
+  const [l, p] = [lon0 * D2R, lat0 * D2R];
+  const e = [-Math.sin(l), Math.cos(l), 0];
+  const n = [-Math.sin(p) * Math.cos(l), -Math.sin(p) * Math.sin(l), Math.cos(p)];
+  const f = [Math.cos(p) * Math.cos(l), Math.cos(p) * Math.sin(l), Math.sin(p)];
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  return { x: dot(v, e), y: dot(v, n), z: dot(v, f) };
+}
+
+test("planetSun: light comes from the same side of the screen as on the Earth, and planets stay mostly lit", () => {
+  for (const sun of [{ lat: -19, lon: -147 }, { lat: 23, lon: 120 }, { lat: 5, lon: -62 }, { lat: -10, lon: 10 }]) {
+    const earth = screen(sun, EARTH_VIEW.lon0, EARTH_VIEW.lat0);
+    for (const face of [0, 10, 40, -120]) {
+      const s = screen(planetSun(sun, face), face, EARTH_VIEW.lat0);
+      const diff = Math.abs(Math.atan2(s.y, s.x) - Math.atan2(earth.y, earth.x));
+      assert.ok(Math.min(diff, 2 * Math.PI - diff) < 1e-6, `${JSON.stringify(sun)} face ${face}: direction`);
+      assert.ok(s.z > 0.2 && s.z < 0.6, `gibbous phase, z=${s.z}`);
+    }
+  }
+});
+
+test("planetSun: with the sun straight behind or in front of the Earth, light falls from the left", () => {
+  const behind = { lat: -EARTH_VIEW.lat0, lon: EARTH_VIEW.lon0 + 180 };
+  const s = screen(planetSun(behind, 0), 0, EARTH_VIEW.lat0);
+  assert.ok(s.x < -0.8, `x=${s.x}`);
 });
 
 test("small bodies get finer night pixels, big ones the Earth's 7 px", () => {

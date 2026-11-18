@@ -166,3 +166,158 @@ body {
   .deep-dialog { transition: opacity 0.2s steps(3), display 0.2s allow-discrete; opacity: 1; }
   @starting-style { .deep-dialog[open] { opacity: 0; } }
 }
+
+/* ---- System map: one line of time, a planet where each experience started ---------------------------------- */
+.sys {
+  --k: 0.6; /* planet scale on phones */
+  --pad: calc(70px * var(--k));
+}
+@media (min-width: 768px) {
+  .sys { --k: 1; }
+}
+.sys-track {
+  list-style: none;
+  margin-left: 0;
+  margin-right: 0;
+  padding: 0 var(--pad);
+}
+.sys-lane {
+  padding: 6px 0;
+}
+.sys-mlabel {
+  margin-left: calc(-1 * var(--pad));
+}
+.sys-line {
+  position: relative;
+  height: calc(max(44px, var(--s) * 1px * var(--k)) + 10px);
+}
+.sys-trail {
+  position: absolute;
+  top: 50%;
+  height: 4px;
+  margin-top: -2px;
+  left: calc(var(--x0) * 100%);
+  width: calc((var(--x1) - var(--x0)) * 100%);
+}
+.sys-planet {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--x0) * 100%);
+  width: max(44px, var(--s) * 1px * var(--k));
+  height: max(44px, var(--s) * 1px * var(--k));
+  transform: translate(-50%, -50%);
+  display: block;
+  color: var(--starlight);
+  text-decoration: none;
+}
+.phase-wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--s) * 1px * var(--k));
+  height: calc(var(--s) * 1px * var(--k));
+  transform: translate(-50%, -50%);
+}
+.phase-body,
+.phase-body img,
+.phase-body canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.phase-body canvas[data-live="waiting"] {
+  opacity: 0;
+}
+.phase-wrap::before,
+.phase-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--ghost) center / 100% 100% no-repeat;
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+}
+.phase-wrap::before { filter: sepia(1) saturate(6) hue-rotate(205deg); }
+.phase-wrap::after { filter: sepia(1) saturate(5) hue-rotate(245deg) brightness(1.3); }
+.sys-label {
+  display: none;
+}
+@media (min-width: 768px) {
+  .sys-label {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: calc(50% + var(--s) * 0.5px + 14px);
+    transform: translateY(-50%);
+    white-space: nowrap;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .sys-label-left {
+    left: auto;
+    right: calc(50% + var(--s) * 0.5px + 14px);
+    text-align: right;
+  }
+}
+.sys-axis {
+  position: relative;
+  height: 30px;
+  margin: 14px var(--pad) 0;
+  border-top: 2px solid var(--indigo);
+}
+.sys-axis span {
+  position: absolute;
+  top: 8px;
+  left: calc(var(--x) * 100%);
+  transform: translateX(-50%);
+}
+.sys-axis span:last-child {
+  transform: translateX(-100%);
+  color: var(--starlight);
+}
+
+/* Hover or keyboard focus: the planet phases in and out, in hard steps (nothing moves under reduced motion). */
+@media (prefers-reduced-motion: no-preference) {
+  .phase:hover .phase-body,
+  .phase:focus-visible .phase-body {
+    animation: phase-core 2.2s steps(1, end) infinite;
+  }
+  .phase:hover .phase-wrap::before,
+  .phase:focus-visible .phase-wrap::before {
+    animation: phase-ghost-a 2.2s steps(1, end) infinite;
+  }
+  .phase:hover .phase-wrap::after,
+  .phase:focus-visible .phase-wrap::after {
+    animation: phase-ghost-b 2.2s steps(1, end) infinite;
+  }
+}
+@keyframes phase-core {
+  0%, 30%, 100% { transform: none; clip-path: inset(0); opacity: 1; filter: none; }
+  3% { transform: translateX(-7%); clip-path: inset(12% 0 58% 0); }
+  6% { transform: translateX(6%) skewX(-10deg); clip-path: inset(46% 0 18% 0); opacity: 0.6; }
+  9% { transform: none; clip-path: inset(0); opacity: 0.2; }
+  12% { transform: translateX(-4%); clip-path: inset(0 0 70% 0); opacity: 0.9; filter: brightness(1.7); }
+  15% { transform: translateX(9%); clip-path: inset(62% 0 6% 0); opacity: 0.5; filter: none; }
+  18% { transform: none; clip-path: inset(0); opacity: 1; }
+  22% { opacity: 0.3; }
+  25% { transform: translateX(-3%) skewX(8deg); clip-path: inset(30% 0 40% 0); opacity: 1; }
+}
+@keyframes phase-ghost-a {
+  0%, 20%, 100% { opacity: 0; transform: none; clip-path: inset(0); }
+  3% { opacity: 0.85; transform: translateX(-13%); clip-path: inset(8% 0 52% 0); }
+  6% { opacity: 0.6; transform: translateX(-6%); clip-path: inset(40% 0 28% 0); }
+  9% { opacity: 0.9; transform: translateX(-3%); clip-path: inset(0); }
+  12% { opacity: 0; }
+  15% { opacity: 0.7; transform: translateX(-15%); clip-path: inset(60% 0 8% 0); }
+}
+@keyframes phase-ghost-b {
+  0%, 26%, 100% { opacity: 0; transform: none; clip-path: inset(0); }
+  4% { opacity: 0.7; transform: translateX(11%); clip-path: inset(30% 0 40% 0); }
+  9% { opacity: 0.9; transform: translateX(4%); clip-path: inset(0); }
+  13% { opacity: 0.6; transform: translateX(14%); clip-path: inset(0 0 66% 0); }
+  16% { opacity: 0; }
+  22% { opacity: 0.8; transform: translateX(7%); clip-path: inset(52% 0 20% 0); }
+}

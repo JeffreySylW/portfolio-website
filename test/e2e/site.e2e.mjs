@@ -170,6 +170,91 @@ try {
     assert(kb < 250, `${kb} KB of script`);
     return `${kb} KB`;
   });
+  // ---- the system map --------------------------------------------------------------------------------------------
+  const planet = (id) => `#system [data-planet="${id}"]`;
+  const hoverAt = async (sel) => {
+    const p = await page.evaluate(centerOf(sel));
+    assert(p, `${sel} not found`);
+    await sleep(150);
+    const q = await page.evaluate(centerOf(sel));
+    await page.send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 2, y: 2 });
+    await page.send("Input.dispatchMouseEvent", { type: "mouseMoved", x: q.x, y: q.y });
+    return q;
+  };
+  const whooshes = `Number(document.querySelector("#system").dataset.whooshes || 0)`;
+
+  await check("14 system map: six worlds oldest first, each placed by date and linking to its work row", async () => {
+    await page.navigate(BASE + "/");
+    const r = await page.evaluate(`[...document.querySelectorAll("#system [data-planet]")].map((a) => ({
+      id: a.dataset.planet, href: a.getAttribute("href"), x: a.getBoundingClientRect().x, img: a.querySelector("img")?.getAttribute("src") }))`);
+    assert(r.map((p) => p.id).join() === "vcu,ta,aspire,sports-analytics,nasa,bob", r.map((p) => p.id).join());
+    const by = Object.fromEntries(r.map((p) => [p.id, p]));
+    assert(by.vcu.href === "#work-vcu" && by.ta.href === "#work-vcu" && by.nasa.href === "#work-nasa" && by.bob.href === "#work-bob", "hrefs");
+    assert(by.vcu.x < by["sports-analytics"].x && by["sports-analytics"].x < by.nasa.x && by.nasa.x < by.bob.x, "placed by start date");
+    assert(Math.abs(by.ta.x - by.aspire.x) < 30, "TA and ASPIRE start together");
+    assert(r.every((p) => /^\/textures\/planets\/[\w-]+\.webp$/.test(p.img)), "baked images");
+    const ticks = await page.evaluate(`[...document.querySelectorAll("#system [data-tick]")].map((t) => t.textContent).join()`);
+    assert(ticks.endsWith("Now") && ticks.startsWith("2023"), ticks);
+  });
+
+  await check("15 the planets repaint for the real sun once the map is in view", async () => {
+    await page.evaluate(`document.querySelector("#system").scrollIntoView({ block: "center", behavior: "instant" })`);
+    assert(await page.waitFor(`[...document.querySelectorAll("#system canvas[data-live]")].every((c) => c.dataset.live === "ready")`, 20000), "planets never repainted");
+  });
+
+  await check("16 hovering a planet runs the glitch and, after any click on the page, the whoosh", async () => {
+    await page.clickAt(5, 400); // a user gesture unlocks audio
+    const before = await page.evaluate(whooshes);
+    await hoverAt(planet("nasa"));
+    await sleep(120);
+    const anim = await page.evaluate(`getComputedStyle(document.querySelector('${planet("nasa")} [data-phase]')).animationName`);
+    assert(anim === "phase-core", `animation ${anim}`);
+    assert(await page.waitFor(`${whooshes} > ${before}`, 2000), "no whoosh");
+  });
+
+  await check("17 the sound button turns the whoosh off and on, and says which", async () => {
+    const btn = `#system button[aria-pressed]`;
+    assert((await page.evaluate(`document.querySelector('${btn}').getAttribute("aria-pressed")`)) === "true", "starts on");
+    await click(btn);
+    assert((await page.evaluate(`document.querySelector('${btn}').getAttribute("aria-pressed")`)) === "false", "turned off");
+    const before = await page.evaluate(whooshes);
+    await hoverAt(planet("bob"));
+    await sleep(400);
+    assert((await page.evaluate(whooshes)) === before, "whoosh while off");
+    await click(btn);
+    assert((await page.evaluate(`document.querySelector('${btn}').getAttribute("aria-pressed")`)) === "true", "back on");
+  });
+
+  await check("18 keyboard focus on a planet shows the outline and phases it too", async () => {
+    await page.evaluate(`document.querySelector('${planet("vcu")}').focus({ focusVisible: true })`);
+    const s = await page.evaluate(`(() => { const a = document.activeElement; const cs = getComputedStyle(a);
+      return { id: a.dataset.planet, o: cs.outlineStyle, anim: getComputedStyle(a.querySelector("[data-phase]")).animationName }; })()`);
+    assert(s.id === "vcu" && s.o !== "none", JSON.stringify(s));
+    assert(s.anim === "phase-core", `focus animation ${s.anim}`);
+  });
+
+  await check("19 reduced motion: hovering a planet does not glitch", async () => {
+    await page.setReducedMotion(true);
+    await page.navigate(BASE + "/");
+    await hoverAt(planet("nasa"));
+    await sleep(120);
+    const anim = await page.evaluate(`getComputedStyle(document.querySelector('${planet("nasa")} [data-phase]')).animationName`);
+    await page.setReducedMotion(false);
+    assert(anim === "none", `animation ${anim}`);
+  });
+
+  for (const w of [390, 320]) {
+    await check(`20 ${w}px: the system map fits, with every planet on screen`, async () => {
+      await page.setViewport(w, 800);
+      await page.navigate(BASE + "/");
+      await page.evaluate(`document.querySelector("#system").scrollIntoView({ behavior: "instant" })`);
+      await sleep(200);
+      assert((await page.evaluate(overflow)) <= 0, "page overflows");
+      const off = await page.evaluate(`[...document.querySelectorAll("#system [data-planet]")].filter((a) => { const r = a.getBoundingClientRect(); return r.left < 0 || r.right > ${w}; }).map((a) => a.dataset.planet).join()`);
+      assert(!off, `off screen: ${off}`);
+    });
+  }
+  await page.setViewport(1280, 800);
 } finally {
   await shutdown(edge, page);
 }
