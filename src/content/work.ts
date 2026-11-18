@@ -31,6 +31,10 @@ export interface Highlight {
   name: string;
   role: string;
   dates: string;
+  /** YYYY-MM, matching `dates` (the system map places planets by these). */
+  start: string;
+  /** YYYY-MM; omitted while ongoing. */
+  end?: string;
   summary: string;
 }
 
@@ -40,8 +44,10 @@ export interface WorkEntry {
   org: string;
   role: string;
   dates: string;
-  /** YYYY-MM, used to keep jobs newest first. */
+  /** YYYY-MM, used to keep jobs newest first and to place the planet on the system map. */
   start: string;
+  /** YYYY-MM; omitted while ongoing ("present"). */
+  end?: string;
   summary: string;
   tools: string[];
   place?: PlaceId;
@@ -74,6 +80,7 @@ export const WORK: WorkEntry[] = [
     role: "Software Engineering Intern, Amentum",
     dates: "May 2025 – Aug 2025",
     start: "2025-05",
+    end: "2025-08",
     summary:
       "Built a MATLAB-based GUI to replace and extend a LabVIEW tool for real-time UDP data from wind-tunnel test sensors. It connects to the ARTIE server and displays 42 tags event-driven, through a dropdown on each of its 22 value slots.",
     tools: ["MATLAB", "Python", "UDP", "Git"],
@@ -88,6 +95,7 @@ export const WORK: WorkEntry[] = [
     role: "B.S. Computer Science, Software Engineering concentration, AI minor",
     dates: "Aug 2022 – May 2026",
     start: "2022-08",
+    end: "2026-05",
     summary: "Graduated Cum Laude. Dean's List for four semesters. NSBE member.",
     tools: ["Data Structures", "Software Analysis & Testing", "Operating Systems"],
     place: "richmond",
@@ -96,6 +104,8 @@ export const WORK: WorkEntry[] = [
         name: "Computer Science Teaching Assistant",
         role: "VCU College of Engineering",
         dates: "Aug 2024 – May 2026",
+        start: "2024-08",
+        end: "2026-05",
         summary:
           "TA for Introduction to Data Structures (CMSC 256, Java) and Computers and Programming (CMSC 210, Python). Ran office-hours debugging and grading, and mentored 150+ students; lab and test scores rose 20%.",
       },
@@ -103,6 +113,8 @@ export const WORK: WorkEntry[] = [
         name: "DoD ASPIRE Capstone",
         role: "LiDAR & Camera Sensor Data Fusion Researcher, U.S. Army",
         dates: "Aug 2024 – May 2025",
+        start: "2024-08",
+        end: "2025-05",
         summary:
           "Developed a multi-modal deep learning system for pedestrian detection, reaching 85% accuracy, with a custom preprocessing pipeline for fusing sensor inputs. Ran the project as two-week Agile sprints with daily stand-ups, hitting every milestone on schedule.",
       },
@@ -115,6 +127,7 @@ export const WORK: WorkEntry[] = [
     role: "Personal project",
     dates: "Aug 2024 – Dec 2025",
     start: "2024-08",
+    end: "2025-12",
     summary:
       "Full-stack sports analytics application with live odds comparison and player statistic tracking across multiple sports, built on a real-time data pipeline integrating the Sportradar and Odds APIs.",
     tools: ["Next.js", "React", "TypeScript", "Node.js", "Express", "PostgreSQL", "Prisma", "Redis"],

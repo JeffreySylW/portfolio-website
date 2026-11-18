@@ -37,6 +37,26 @@ export interface PaintOptions {
   sun: { lat: number; lon: number };
   /** Night-side pixel block size in output pixels. */
   block: number;
+  /**
+   * Night ramp for bodies other than the Earth: steps follow the luminance relative to the texture's own
+   * mean and spread (see textureStats). Without it the Earth's land/ocean ramp is used.
+   */
+  night?: { mean: number; spread: number };
+}
+
+const lumOf = (r: number, g: number, b: number) => (0.3 * r + 0.55 * g + 0.15 * b) / 255;
+
+/** Mean and spread (standard deviation, at least 0.04) of a texture's luminance, sampled. */
+export function textureStats(t: Texture): { mean: number; spread: number } {
+  const n = t.width * t.height;
+  const stride = Math.max(1, Math.floor(n / 50000));
+  let sum = 0, sq = 0, k = 0;
+  for (let i = 0; i < n; i += stride) {
+    const l = lumOf(t.data[i * 4], t.data[i * 4 + 1], t.data[i * 4 + 2]);
+    sum += l; sq += l * l; k++;
+  }
+  const mean = sum / k;
+  return { mean, spread: Math.max(0.04, Math.sqrt(Math.max(0, sq / k - mean * mean))) };
 }
 
 function sample(t: Texture, lon: number, lat: number, out: number[]) {
@@ -86,9 +106,14 @@ export function paintGlobe(o: PaintOptions): Uint8ClampedArray<ArrayBuffer> {
     if (!h) continue;
     const t = BAYER[(by % 4) * 4 + (bx % 4)];
     sample(texture, h[0], h[1], col);
-    const lum = (0.3 * col[0] + 0.55 * col[1] + 0.15 * col[2]) / 255;
-    const land = col[2] < col[1] * 1.05 + 10; // oceans are blue-dominant
-    const lvl = (land ? 1.15 + lum * 1.9 : 0.55 + lum * 0.7) + h[2] * 0.25;
+    const lum = lumOf(col[0], col[1], col[2]);
+    let lvl: number;
+    if (o.night) {
+      lvl = 1.45 + ((lum - o.night.mean) / o.night.spread) * 0.75 + h[2] * 0.2;
+    } else {
+      const land = col[2] < col[1] * 1.05 + 10; // oceans are blue-dominant
+      lvl = (land ? 1.15 + lum * 1.9 : 0.55 + lum * 0.7) + h[2] * 0.25;
+    }
     const lo = Math.floor(lvl);
     let step = Math.max(0, Math.min(4, lvl - lo > t ? lo + 1 : lo));
     if (Math.hypot(x, y) > R - block * 1.2) step = 3; // hard outline on the limb
