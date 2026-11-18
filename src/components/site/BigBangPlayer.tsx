@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { BANG_COLORS, FAILSAFE_MS, IMPACT_MS, INTRO_MS, burstShape, introPhase, makeStars } from "@/lib/bigBang";
+import { BANG_COLORS, FAILSAFE_MS, IMPACT_MS, INTRO_MS, JW_SCALE, introPhase, makeStars } from "@/lib/bigBang";
 
 const WHITE = "#f2f0ff";
 const VOID = "#07061a";
@@ -43,14 +43,11 @@ export function BigBangPlayer() {
     const cx = w / 2;
     const cy = h / 2;
     const reach = Math.hypot(cx, cy);
-    const dropR = Math.min(22, Math.max(9, Math.min(w, h) * 0.022));
+    const dropR = Math.min(13, Math.max(6, Math.min(w, h) * 0.013));
     const stars = makeStars();
     const byColor = BANG_COLORS.map((c) => ({ c, list: stars.filter((s) => s.color === c) }));
-    const shape = burstShape();
-    // manga-style impact lines: fixed angles and inner ends, so the frames read as one hit
-    const lines = Array.from({ length: 90 }, (_, i) => ({ a: (i / 90) * Math.PI * 2 + Math.sin(i * 12.9898) * 0.03, inner: 0.32 + 0.38 * Math.abs(Math.sin(i * 78.233)), wide: 0.004 + 0.01 * Math.abs(Math.sin(i * 3.7)) }));
     const display = getComputedStyle(document.querySelector("h1") ?? document.body).fontFamily;
-    const jwSize = Math.min(w, h) * 0.3;
+    const jwSize = Math.min(w, h) * JW_SCALE * 1.35; // font size for that cap height
 
     const glitchSlices = (amount: number) => {
       // shift a few horizontal bands sideways and lay thin purple bars over them
@@ -84,7 +81,8 @@ export function BigBangPlayer() {
         // white ground, one black teardrop falling down the middle; its tail grows with speed
         ctx.fillStyle = WHITE;
         ctx.fillRect(0, 0, w, h);
-        const y = -dropR * 4 + (cy + dropR * 4) * p.drop;
+        const y0 = dropR * 4; // starts just inside the top edge, so it is seen from the first frame
+        const y = y0 + (cy - y0) * p.drop;
         const rx = dropR * (1 - 0.1 * p.drop);
         const ry = dropR;
         const tail = dropR * (0.6 + 1.8 * p.drop);
@@ -96,46 +94,31 @@ export function BigBangPlayer() {
         ctx.arc(cx, by, rx, 0, Math.PI, false);
         ctx.bezierCurveTo(cx - rx, by - ry * 0.55, cx - rx * 0.35, by - ry - tail * 0.45, cx, by - ry - tail);
         ctx.fill();
-      } else if (d < 320) {
+      } else if (d < 260) {
         // impact frames: hard black and white, flipped on the inverted frames
         const fg = p.invert ? WHITE : VOID;
         const bg = p.invert ? VOID : WHITE;
         ctx.fillStyle = bg;
         ctx.fillRect(0, 0, w, h);
+        // the drop's splash: one small dot
         ctx.fillStyle = fg;
-        for (const l of lines) {
-          const r0 = reach * l.inner, r1 = reach * 1.05;
-          ctx.beginPath();
-          ctx.moveTo(cx + Math.cos(l.a) * r0, cy + Math.sin(l.a) * r0);
-          ctx.lineTo(cx + Math.cos(l.a - l.wide) * r1, cy + Math.sin(l.a - l.wide) * r1);
-          ctx.lineTo(cx + Math.cos(l.a + l.wide) * r1, cy + Math.sin(l.a + l.wide) * r1);
-          ctx.fill();
-        }
-        // the jagged burst exploding out of the landing point
-        const R = Math.max(dropR * 2, p.burst * reach * 1.3);
         ctx.beginPath();
-        shape.forEach((k, i) => {
-          const a = (i / shape.length) * Math.PI * 2 + d * 0.0006;
-          const x = cx + Math.cos(a) * R * k, y = cy + Math.sin(a) * R * k;
-          if (i) ctx.lineTo(x, y);
-          else ctx.moveTo(x, y);
-        });
-        ctx.closePath();
+        ctx.arc(cx, cy, dropR * (1 + Math.min(d, 120) / 120), 0, Math.PI * 2);
         ctx.fill();
 
         // JW, flashing in the purple glitch
         if (p.jw > 0.01) {
-          const off = 6 + 18 * p.glitch;
+          const off = 2 + 7 * p.glitch;
           ctx.font = `800 ${Math.round(jwSize)}px ${display}`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.globalAlpha = p.jw;
           ctx.fillStyle = VIOLET;
-          ctx.fillText("JW", cx - off, cy + off * 0.3);
+          ctx.fillText("JW", cx - off, cy + jwSize * 1.15 + off * 0.3);
           ctx.fillStyle = LAVENDER;
-          ctx.fillText("JW", cx + off, cy - off * 0.3);
-          ctx.fillStyle = bg;
-          ctx.fillText("JW", cx, cy);
+          ctx.fillText("JW", cx + off, cy + jwSize * 1.15 - off * 0.3);
+          ctx.fillStyle = fg;
+          ctx.fillText("JW", cx, cy + jwSize * 1.15);
           ctx.globalAlpha = 1;
         }
         if (p.glitch > 0) glitchSlices(p.glitch);
@@ -165,9 +148,20 @@ export function BigBangPlayer() {
         }
       }
 
-      // the stars, streaking outward and slowing, on top of everything until they fade
+      // the shockwave: a thin ring thrown out in a blink
+      if (p.shock > 0 && p.shock < 1) {
+        ctx.globalAlpha = 1 - p.shock;
+        ctx.strokeStyle = LAVENDER;
+        ctx.lineWidth = 1 + 3 * (1 - p.shock);
+        ctx.beginPath();
+        ctx.arc(cx, cy, p.shock * reach * 1.15, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+
+      // the stars, shot out violently, then slowing, on top of everything until they fade
       if (p.starAlpha > 0.01) {
-        const streak = (1 - p.stars) ** 2 * reach * 0.18;
+        const streak = (1 - p.stars) ** 1.5 * reach * 0.4;
         ctx.globalAlpha = p.starAlpha;
         ctx.lineCap = "round";
         for (const { c, list } of byColor) {

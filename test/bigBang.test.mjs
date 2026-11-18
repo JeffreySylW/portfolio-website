@@ -6,10 +6,10 @@ import {
   INTRO_MS,
   FAILSAFE_MS,
   IMPACT_MS,
+  JW_SCALE,
   introScript,
   introPhase,
   makeStars,
-  burstShape,
   BANG_COLORS,
 } from "../src/lib/bigBang.ts";
 
@@ -48,7 +48,8 @@ test("the drop falls, lands at the impact and the impact frames flip black and w
   const at = (t) => introPhase(t);
   assert.equal(at(0).drop, 0);
   assert.ok(at(IMPACT_MS - 1).drop > 0.99, "landed at the impact");
-  assert.ok(IMPACT_MS > INTRO_MS * 0.2 && IMPACT_MS < INTRO_MS * 0.4, `impact at ${IMPACT_MS}`);
+  assert.ok(IMPACT_MS >= 1100 && IMPACT_MS > INTRO_MS * 0.4, `a slow drop: impact at ${IMPACT_MS}`);
+  assert.ok(at(IMPACT_MS * 0.5).drop < 0.3, "it takes its time at first");
   assert.equal(at(IMPACT_MS - 20).invert, false, "not inverted before the impact");
   assert.equal(at(IMPACT_MS + 10).invert, true, "first impact frame is inverted");
   assert.equal(at(IMPACT_MS + 100).invert, false, "then flips back");
@@ -68,37 +69,35 @@ test("JW flashes with the impact frames, and only then", () => {
   for (let t = 0; t <= INTRO_MS; t += 10) assert.ok(at(t).jw >= 0 && at(t).jw <= 1);
 });
 
-test("the burst explodes outward and the site opens from the centre; the page is hidden until then", () => {
+test("then it explodes violently and fast, and the site opens straight after", () => {
   const at = (t) => introPhase(t);
-  let last = { drop: -1, burst: -1, stars: -1, open: -1, veil: 2 };
+  let last = { drop: -1, shock: -1, stars: -1, open: -1 };
   for (let t = 0; t <= INTRO_MS; t += 16) {
     const p = at(t);
-    for (const k of ["drop", "burst", "glitch", "stars", "starAlpha", "open", "veil"]) assert.ok(p[k] >= 0 && p[k] <= 1, `${k} ${p[k]} at ${t}`);
-    for (const k of ["drop", "burst", "stars", "open"]) assert.ok(p[k] >= last[k], `${k} goes back at ${t}`);
+    for (const k of ["drop", "shock", "glitch", "stars", "starAlpha", "open", "veil"]) assert.ok(p[k] >= 0 && p[k] <= 1, `${k} ${p[k]} at ${t}`);
+    for (const k of ["drop", "shock", "stars", "open"]) assert.ok(p[k] >= last[k], `${k} goes back at ${t}`);
     assert.ok(Math.abs(p.veil - (1 - p.open)) < 1e-9);
     last = p;
   }
-  assert.equal(at(IMPACT_MS - 1).burst, 0);
-  assert.ok(at(IMPACT_MS + 300).burst > 0.9, "the burst fills the screen during the impact frames");
-  assert.equal(at(IMPACT_MS + 300).veil, 1, "the site stays hidden through the impact frames");
+  assert.equal(at(IMPACT_MS - 1).stars, 0);
+  assert.equal(at(IMPACT_MS).veil, 1, "the site stays hidden until the hit");
+  assert.ok(at(IMPACT_MS + 350).stars > 0.7, "the stars shoot out fast");
+  assert.ok(at(IMPACT_MS + 350).shock > 0.8, "the shockwave is out in a blink");
+  assert.ok(at(IMPACT_MS + 700).open > 0.7, "the site is mostly open within 0.7 s of the hit");
+  assert.ok(INTRO_MS - IMPACT_MS <= 1200, "no lingering after the explosion");
   assert.equal(at(INTRO_MS).veil, 0);
   assert.equal(at(INTRO_MS + 500).veil, 0);
 });
 
-test("smooth outside the impact frames: no jump bigger than a little between two 120 Hz frames", () => {
-  for (let t = 0; t < INTRO_MS - 9; t += 4) {
+test("the slow drop is smooth: no jump bigger than a little between two 120 Hz frames", () => {
+  for (let t = 0; t < IMPACT_MS - 9; t += 4) {
     const a = introPhase(t), b = introPhase(t + 1000 / 120);
-    for (const k of ["drop", "stars", "open"]) assert.ok(Math.abs(b[k] - a[k]) < 0.06, `${k} jumps at ${t}`);
+    assert.ok(Math.abs(b.drop - a.drop) < 0.03, `drop jumps at ${t}`);
   }
 });
 
-test("the burst is a jagged, spiky impact shape, the same every time", () => {
-  const a = burstShape(5), b = burstShape(5);
-  assert.deepEqual(a, b);
-  assert.ok(a.length >= 32);
-  const min = Math.min(...a), max = Math.max(...a);
-  assert.ok(max / min > 1.6, `spikes ${min}..${max}`);
-  assert.ok(max <= 1 && min > 0);
+test("JW is small: a mark, not a headline", () => {
+  assert.ok(JW_SCALE > 0 && JW_SCALE <= 0.12, `JW at ${JW_SCALE} of the short side`);
 });
 
 test("the stars are the same every visit, in the site's palette, spread all round the burst", () => {

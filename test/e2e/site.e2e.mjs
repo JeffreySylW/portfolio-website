@@ -362,8 +362,8 @@ try {
   });
 
   await check("23 a shared /#me link opens the card on load", async () => {
-    await page.navigate(BASE + "/#me");
-    await page.evaluate("location.reload()");
+    // a different query string forces a real page load (a bare hash change would not reload)
+    await page.navigate(BASE + "/?shared=me#me");
     assert(await page.waitFor(cardOpen("me"), 8000), "not open from the link");
     await page.pressEscape();
   });

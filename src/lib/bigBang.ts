@@ -1,17 +1,19 @@
-// The opening "Big Bang", on every page load: a white screen, a single black drop falls down the middle and
-// lands; impact frames flip black and white with a purple glitch and a flash of "JW"; a jagged burst explodes
-// outward, the stars streak out and the site opens from the centre. Smooth (every display frame) except the
-// deliberately hard impact frames. Never under reduced motion.
+// The opening "Big Bang", on every page load, kept minimal: a white screen, one small black drop falls slowly
+// down the middle; on impact a couple of hard black/white frames and a small "JW" in the purple glitch; then
+// it explodes violently, stars shooting out fast, and the site opens straight after. Smooth (every display
+// frame) except the deliberately hard impact frames. Never under reduced motion.
 //
 // No-JS and LCP safety: the veil is hidden by CSS unless the inline script arms it; the page (and the hero
 // Earth image) always renders underneath; a CSS failsafe hides the veil even if the main bundle never runs.
 
-/** Length of the intro in ms. */
-export const INTRO_MS = 2600;
-/** When the drop lands. */
-export const IMPACT_MS = 780;
+/** When the drop lands (a slow fall). */
+export const IMPACT_MS = 1300;
+/** Length of the intro in ms: the explosion and opening take 1.1 s after the impact. */
+export const INTRO_MS = IMPACT_MS + 1100;
 /** The CSS failsafe hides the veil at this point whatever happens to the scripts. */
 export const FAILSAFE_MS = 4500;
+/** "JW" cap height as a share of the screen's short side. */
+export const JW_SCALE = 0.09;
 
 /** Star colours: the site's light indigo steps. */
 export const BANG_COLORS = ["#5b54d6", "#a9a4ff", "#f2f0ff"] as const;
@@ -29,6 +31,7 @@ const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const span = (t: number, a: number, b: number) => clamp01((t - a) / (b - a));
 const smooth = (k: number) => k * k * (3 - 2 * k);
 const outCubic = (k: number) => 1 - (1 - k) ** 3;
+const outQuint = (k: number) => 1 - (1 - k) ** 5;
 
 export type IntroPhase = {
   /** How far the drop has fallen, 0 (above the screen) .. 1 (landed in the middle). */
@@ -39,8 +42,8 @@ export type IntroPhase = {
   glitch: number;
   /** The "JW" flash, 0..1. */
   jw: number;
-  /** The jagged burst exploding out from the middle, 0..1 of the screen. */
-  burst: number;
+  /** The shockwave ring, 0..1 of the screen. */
+  shock: number;
   /** How far the stars have flown, 0..1. */
   stars: number;
   starAlpha: number;
@@ -54,21 +57,17 @@ export type IntroPhase = {
 export function introPhase(t: number): IntroPhase {
   const T = INTRO_MS;
   const d = t - IMPACT_MS;
+  // gravity: slow to start, quicker as it nears the middle
   const drop = span(t, 0, IMPACT_MS) ** 2;
-  const invert = (d >= 0 && d < 70) || (d >= 140 && d < 260);
-  const glitch = d >= 140 && d < 320 ? 1 - (d - 140) / 180 : 0;
-  const jw = d < 0 || d >= 320 ? 0 : d < 70 ? 1 : d < 140 ? 0.6 : d < 260 ? 1 : (320 - d) / 60;
-  const burst = t < IMPACT_MS ? 0 : outCubic(span(t, IMPACT_MS, IMPACT_MS + 280));
-  const stars = outCubic(span(t, IMPACT_MS + 260, T * 0.9));
-  const starAlpha = span(t, IMPACT_MS + 260, IMPACT_MS + 300) * (1 - smooth(span(t, T * 0.65, T)));
-  const open = t >= T ? 1 : smooth(span(t, IMPACT_MS + 320, T * 0.86));
-  return { drop, invert, glitch, jw, burst, stars, starAlpha, open, veil: 1 - open };
-}
-
-/** Radii (0..1) of the jagged impact shape, alternating long spikes and short notches. */
-export function burstShape(seed = 2600, n = 48): number[] {
-  const r = rng(seed);
-  return Array.from({ length: n }, (_, i) => (i % 2 === 0 ? 0.82 + 0.18 * r() : 0.34 + 0.26 * r()));
+  const invert = (d >= 0 && d < 60) || (d >= 140 && d < 220);
+  const glitch = d >= 140 && d < 260 ? 1 - (d - 140) / 120 : 0;
+  const jw = d < 0 || d >= 260 ? 0 : d < 60 ? 1 : d < 140 ? 0.55 : d < 220 ? 1 : (260 - d) / 40;
+  // the explosion: violent and fast
+  const shock = outQuint(span(t, IMPACT_MS + 120, IMPACT_MS + 470));
+  const stars = outQuint(span(t, IMPACT_MS + 120, IMPACT_MS + 900));
+  const starAlpha = span(t, IMPACT_MS + 120, IMPACT_MS + 140) * (1 - smooth(span(t, IMPACT_MS + 500, T)));
+  const open = t >= T ? 1 : outCubic(span(t, IMPACT_MS + 220, IMPACT_MS + 950));
+  return { drop, invert, glitch, jw, shock, stars, starAlpha, open, veil: 1 - open };
 }
 
 // small seeded PRNG (mulberry32), so the burst looks the same on every visit
