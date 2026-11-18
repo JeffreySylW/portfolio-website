@@ -238,15 +238,14 @@ try {
   };
   const whooshes = `Number(document.querySelector("#system").dataset.whooshes || 0)`;
 
-  await check("14 galaxy: five worlds, oldest nearest the core, each linking to its work row, credit shown", async () => {
+  await check("14 galaxy: five worlds, oldest nearest the core, each opening its own card, credit shown", async () => {
     await page.navigate(BASE + "/");
     const r = await page.evaluate(`(() => { const g = document.querySelector("#system [data-galaxy]").getBoundingClientRect();
       const cx = g.x + g.width * 0.5, cy = g.y + g.height * 0.5;
       return [...document.querySelectorAll("#system [data-planet]")].map((a) => { const b = a.getBoundingClientRect();
         return { id: a.dataset.planet, href: a.getAttribute("href"), r: Math.hypot(b.x + b.width / 2 - cx, b.y + b.height / 2 - cy), img: a.querySelector("img")?.getAttribute("src") }; }); })()`);
     assert(r.map((p) => p.id).join() === "vcu,ta,aspire,nasa,bob", r.map((p) => p.id).join());
-    const by = Object.fromEntries(r.map((p) => [p.id, p]));
-    assert(by.vcu.href === "#work-vcu" && by.ta.href === "#work-vcu" && by.nasa.href === "#work-nasa" && by.bob.href === "#work-bob", "hrefs");
+    assert(r.every((p) => p.href === `#${p.id}`), `hrefs ${r.map((p) => p.href)}`);
     for (let i = 1; i < r.length; i++) assert(r[i].r > r[i - 1].r, `radius order ${r.map((p) => Math.round(p.r))}`);
     assert(r.every((p) => /^\/textures\/planets\/[\w-]+\.webp$/.test(p.img)), "baked images");
     const g = await page.evaluate(`(() => { const i = document.querySelector("#system [data-galaxy] img"); return { src: i.currentSrc || i.src, alt: i.alt }; })()`);
@@ -322,6 +321,67 @@ try {
     await page.setReducedMotion(false);
     assert(anim === "none", `animation ${anim}`);
     assert(b.every((n, i) => n === a[i] && n >= 1), `planets still spin under reduced motion ${a} -> ${b}`);
+  });
+
+  // ---- cards from the Milky Way, Jeff at the core, the slow swirl --------------------------------------------------
+  const cardOpen = (id) => `!!document.querySelector("dialog[open] #${id}-title")`;
+
+  await check("21 clicking a planet opens its card (VCU, TA, ASPIRE new; NASA the NASA card); Escape closes and refocuses it", async () => {
+    await page.navigate(BASE + "/");
+    for (const [id, title] of [["vcu", "Virginia Commonwealth University"], ["ta", "Computer Science Teaching Assistant"], ["aspire", "DoD ASPIRE Capstone"]]) {
+      await click(planet(id));
+      assert(await page.waitFor(cardOpen(id), 5000), `${id} card did not open`);
+      const t = await page.evaluate(`document.querySelector("#${id}-title").textContent`);
+      assert(t === title, `${id} title ${t}`);
+      await page.pressEscape();
+      assert(await page.waitFor(`!document.querySelector("dialog[open]") && location.hash === ""`, 5000), `${id} did not close`);
+      const f = await page.evaluate(`document.activeElement?.dataset.planet`);
+      assert(f === id, `focus went to ${f}`);
+    }
+    await click(planet("nasa"));
+    assert(await page.waitFor(nasaOpen, 5000), "NASA card did not open from its planet");
+    await page.pressEscape();
+    await page.waitFor(`!document.querySelector("dialog[open]")`, 5000);
+  });
+
+  await check("22 the core: Jeff's photo glitches on hover and opens 'Hi, I'm Jeff' with his photos", async () => {
+    await hoverAt("#system [data-core]");
+    await sleep(120);
+    const anim = await page.evaluate(`getComputedStyle(document.querySelector("#system [data-core] [data-phase]")).animationName`);
+    assert(anim === "phase-core", `core animation ${anim}`);
+    await click("#system [data-core]");
+    assert(await page.waitFor(cardOpen("me"), 5000), "me card did not open");
+    const r = await page.evaluate(`(() => { const d = document.querySelector("dialog[open]");
+      return { t: d.querySelector("#me-title").textContent, text: d.textContent, imgs: d.querySelectorAll("img[alt]").length }; })()`);
+    assert(r.t === "Hi, I'm Jeff", r.t);
+    assert(/my portfolio website and my road as a software engineer/.test(r.text), "lead text");
+    assert(r.imgs === 3, `${r.imgs} photos`);
+    await page.pressEscape();
+    assert(await page.waitFor(`!document.querySelector("dialog[open]")`, 5000), "did not close");
+  });
+
+  await check("23 a shared /#me link opens the card on load", async () => {
+    await page.navigate(BASE + "/#me");
+    await page.evaluate("location.reload()");
+    assert(await page.waitFor(cardOpen("me"), 8000), "not open from the link");
+    await page.pressEscape();
+  });
+
+  await check("24 the Milky Way swirls slowly and the labels stay upright; reduced motion holds it still", async () => {
+    await page.navigate(BASE + "/");
+    await page.evaluate(`document.querySelector("#system").scrollIntoView({ behavior: "instant" })`);
+    const anim = await page.evaluate(`(() => { const s = getComputedStyle(document.querySelector("#system .gal-swirl")); const u = getComputedStyle(document.querySelector("#system [data-core]").parentElement);
+      return { s: s.animationName, sd: parseFloat(s.animationDuration), u: u.animationName, ud: parseFloat(u.animationDuration) }; })()`);
+    assert(anim.s === "gal-swirl" && anim.u === "gal-upright" && anim.sd === anim.ud && anim.sd >= 180, JSON.stringify(anim));
+    const a = await page.evaluate(`document.getAnimations().find((x) => x.animationName === "gal-swirl")?.currentTime ?? -1`);
+    await sleep(600);
+    const b = await page.evaluate(`document.getAnimations().find((x) => x.animationName === "gal-swirl")?.currentTime ?? -1`);
+    assert(a >= 0 && b > a, `swirl not running ${a} -> ${b}`);
+    await page.setReducedMotion(true);
+    await page.navigate(BASE + "/");
+    const still = await page.evaluate(`getComputedStyle(document.querySelector("#system .gal-swirl")).animationName`);
+    await page.setReducedMotion(false);
+    assert(still === "none", `reduced motion still swirls (${still})`);
   });
 
   for (const w of [390, 320]) {

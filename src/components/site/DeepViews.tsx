@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NasaDeepDive } from "../NasaDeepDive";
 import { BobCaseFile } from "../BobCaseFile";
+import { DEEP_IDS, isDeepId as isDeep, type DeepId as Deep } from "@/content/cards";
+import { ExperienceCard, MeCard } from "./InfoCard";
 
-type Deep = "nasa" | "bob";
-const isDeep = (h: string): h is Deep => h === "nasa" || h === "bob";
+const OPENERS = DEEP_IDS.map((id) => `a[href="#${id}"]`).join(", ");
 
 /**
- * Opens the NASA card or the Bob case file when the address ends in #nasa or #bob
- * (any link to those works, and so does a shared URL). Closing clears the hash and
+ * Opens a card when the address ends in one of DEEP_IDS: #nasa (NASA card), #bob (case file), #me (the
+ * core of the Milky Way) or #vcu / #ta / #aspire (any link to those works, and so does a shared URL). Closing clears the hash and
  * hands focus back to the link that opened it (returnFocusTo).
  */
 export function DeepViews() {
@@ -21,12 +22,12 @@ export function DeepViews() {
       const h = window.location.hash.slice(1);
       if (!isDeep(h)) return setState({ open: null, returnFocusTo: null });
       // opened from a shared link: focus goes to the matching link in the work list afterwards
-      const back = opener.current ?? document.querySelector<HTMLElement>(`#work-${h} a[href="#${h}"]`);
+      const back = opener.current ?? document.querySelector<HTMLElement>(`#work-${h} a[href="#${h}"], #system a[href="#${h}"]`);
       opener.current = null;
       setState({ open: h, returnFocusTo: back });
     };
     const remember = (e: MouseEvent | KeyboardEvent) => {
-      const a = (e.target as Element | null)?.closest?.('a[href="#nasa"], a[href="#bob"]');
+      const a = (e.target as Element | null)?.closest?.(OPENERS);
       if (a) opener.current = a as HTMLElement;
     };
     document.addEventListener("click", remember, true);
@@ -50,6 +51,8 @@ export function DeepViews() {
     <>
       {open === "nasa" && <NasaDeepDive onClose={close} returnFocusTo={returnFocusTo} />}
       <BobCaseFile open={open === "bob"} onClose={close} returnFocusTo={returnFocusTo} />
+      {open === "me" && <MeCard onClose={close} returnFocusTo={returnFocusTo} />}
+      {(open === "vcu" || open === "ta" || open === "aspire") && <ExperienceCard key={open} id={open} onClose={close} returnFocusTo={returnFocusTo} />}
     </>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { PLANETS, planetSpans, type Planet } from "@/content/planets";
+import { ME_CARD } from "@/content/cards";
 import { EARTH_VIEW } from "@/lib/earthView";
 import { armPath, galaxyLayout, planetBlockCss, planetSun, shimmerStep, spinLongitude } from "@/lib/systemMap";
 import { subsolarPoint } from "@/lib/sun";
@@ -192,6 +193,8 @@ export function SystemMap() {
 
         <figure className="m-0 mt-6 md:mt-0">
           <div data-galaxy className="gal relative mx-auto aspect-square w-full max-w-[960px]">
+            {/* the whole galaxy turns slowly; each world and the core turn back, so they stay upright */}
+            <div className="gal-swirl absolute inset-0">
             {/* eslint-disable-next-line @next/next/no-img-element -- exact pixels: the dithered glow must not be resampled by the optimiser */}
             <img
               src="/textures/galaxy/milkyway-1600.webp"
@@ -213,9 +216,9 @@ export function SystemMap() {
                 const span = SPANS[p.id];
                 const vars: Vars = { "--s": p.size, "--x": b.x, "--y": b.y, "--ghost": `url(/textures/planets/${p.id}.webp)` };
                 return (
-                  <li key={p.id} className="gal-body" style={vars}>
+                  <li key={p.id} className="gal-body gal-upright" style={vars}>
                     <a
-                      href={`#work-${p.workId}`}
+                      href={`#${p.id}`}
                       data-planet={p.id}
                       aria-label={`${p.label}, ${span.dates}`}
                       className="sys-planet phase"
@@ -239,6 +242,27 @@ export function SystemMap() {
                 );
               })}
             </ol>
+            <div className="gal-body gal-upright gal-core-slot" style={{ "--s": 64, "--x": 0.5, "--y": 0.5, "--ghost": `url(${ME_CARD.face.src})` } as Vars}>
+              <a
+                href="#me"
+                data-core
+                aria-label={`${ME_CARD.title}: about me`}
+                className="gal-core phase"
+                onPointerEnter={() => sound.play(0)}
+                onFocus={() => sound.play(0)}
+              >
+                <span className="phase-wrap">
+                  <span data-phase className="phase-body">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- small, already sized */}
+                    <img src={ME_CARD.face.src} alt="" width={ME_CARD.face.width} height={ME_CARD.face.height} loading="lazy" decoding="async" />
+                  </span>
+                </span>
+                <span aria-hidden="true" className="gal-core-label px-label">
+                  <span className="text-on-sky text-starlight">Hi, I&apos;m Jeff</span>
+                </span>
+              </a>
+            </div>
+            </div>
           </div>
           <figcaption className="px-label mt-3 text-center text-[12px] leading-[1.6] text-lavender md:text-right">
             Milky Way illustration: NASA/JPL-Caltech/ESO/R. Hurt,{" "}
@@ -250,11 +274,22 @@ export function SystemMap() {
       </div>
 
       <ul className="mt-6 border-b border-indigo md:hidden" aria-label="Experience in the galaxy">
+        <li className="border-t border-indigo">
+          <a href="#me" className="px-label flex min-h-[56px] items-center gap-4 py-2 text-[12px] leading-[1.6] text-starlight no-underline">
+            {/* eslint-disable-next-line @next/next/no-img-element -- tiny copy of the core photo */}
+            <img src={ME_CARD.face.src} alt="" width={40} height={40} loading="lazy" decoding="async" className="h-10 w-10 shrink-0 rounded-full" />
+            <span>
+              {ME_CARD.title}
+              <br />
+              <span className="text-lavender">About me</span>
+            </span>
+          </a>
+        </li>
         {LAYOUT.map((b) => {
           const p = BY_ID[b.id];
           return (
             <li key={p.id} className="border-t border-indigo">
-              <a href={`#work-${p.workId}`} className="px-label flex min-h-[56px] items-center gap-4 py-2 text-[12px] leading-[1.6] text-starlight no-underline">
+              <a href={`#${p.id}`} className="px-label flex min-h-[56px] items-center gap-4 py-2 text-[12px] leading-[1.6] text-starlight no-underline">
                 {/* eslint-disable-next-line @next/next/no-img-element -- tiny decorative copy of the baked planet */}
                 <img src={`/textures/planets/${p.id}.webp`} alt="" width={40} height={40} loading="lazy" decoding="async" className="h-10 w-10 shrink-0" />
                 <span>

@@ -320,3 +320,50 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .bang-veil { display: none !important; }
 }
+
+/* ---- Milky Way: a slow swirl, and Jeff at the core ----------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .gal-swirl { animation: gal-swirl 240s linear infinite; }
+  .gal-upright { animation: gal-upright 240s linear infinite; }
+}
+@keyframes gal-swirl {
+  to { rotate: 360deg; }
+}
+@keyframes gal-upright {
+  to { rotate: -360deg; }
+}
+.gal-core-slot {
+  min-width: 36px;
+}
+/* a 44 px tap target even when the photo is small */
+.gal-core::before {
+  content: "";
+  position: absolute;
+  inset: min(0px, calc(50% - 22px));
+}
+.gal-core {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border-radius: 50%;
+  color: var(--starlight);
+  text-decoration: none;
+  box-shadow: 0 0 0 2px var(--lavender), 0 0 0 5px var(--void);
+}
+.gal-core .phase-body img,
+.gal-core .phase-wrap::before,
+.gal-core .phase-wrap::after {
+  border-radius: 50%;
+}
+.gal-core:hover,
+.gal-core:focus-visible {
+  box-shadow: 0 0 0 2px var(--starlight), 0 0 0 5px var(--violet);
+}
+.gal-core-label {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 12px;
+}
