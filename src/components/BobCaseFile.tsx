@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { CircuitBoard } from "./CircuitBoard";
 import {
   CLIENT,
   COMMUNICATION,
@@ -18,7 +17,7 @@ import {
 
 function Label({ n, children }: { n: string; children: ReactNode }) {
   return (
-    <p className="mb-4 font-mono text-xs tracking-wider text-pcb-green">
+    <p className="px-label mb-4 text-[12px] text-lavender">
       {n} &middot; {children}
     </p>
   );
@@ -26,7 +25,7 @@ function Label({ n, children }: { n: string; children: ReactNode }) {
 
 function Shot({ w }: { w: (typeof WORK)[number] }) {
   return (
-    <figure className="mb-3 overflow-hidden rounded-sm border border-pcb-trace">
+    <figure className="mb-3 overflow-hidden border border-indigo">
       <Image
         src={w.src}
         alt={w.alt}
@@ -34,9 +33,9 @@ function Shot({ w }: { w: (typeof WORK)[number] }) {
         height={w.height}
         loading="lazy"
         sizes="(min-width: 768px) 360px, calc(100vw - 2rem)"
-        className={`h-auto bg-pcb-panel ${w.phone ? "mx-auto w-full max-w-[200px]" : "w-full"}`}
+        className={`h-auto bg-deep ${w.phone ? "mx-auto w-full max-w-[200px]" : "w-full"}`}
       />
-      <figcaption className="px-2.5 py-2 font-mono text-[10px] tracking-wider text-pcb-text/80">{w.caption}</figcaption>
+      <figcaption className="px-2.5 py-2 text-[13px] leading-snug text-mist">{w.caption}</figcaption>
     </figure>
   );
 }
@@ -44,8 +43,8 @@ function Shot({ w }: { w: (typeof WORK)[number] }) {
 function Side({ side, title, note }: { side: "before" | "after"; title: string; note: string }) {
   return (
     <div className="min-w-0">
-      <h3 className="mb-1 font-mono text-xs tracking-wider text-pcb-green">{title}</h3>
-      <p className="mb-3 font-mono text-[10px] tracking-wider text-pcb-text/80">{note}</p>
+      <h3 className="px-label mb-1 text-[12px] text-lavender">{title}</h3>
+      <p className="mb-3 text-[13px] text-mist">{note}</p>
       {WORK.filter((w) => w.side === side).map((w) => <Shot key={w.src} w={w} />)}
     </div>
   );
@@ -54,12 +53,10 @@ function Side({ side, title, note }: { side: "before" | "after"; title: string; 
 export function BobCaseFile({
   open,
   onClose,
-  originRect,
   returnFocusTo,
 }: {
   open: boolean;
   onClose: () => void;
-  originRect: DOMRect | null;
   returnFocusTo?: HTMLElement | null;
 }) {
   const [rendered, setRendered] = useState(open);
@@ -117,35 +114,10 @@ export function BobCaseFile({
 
   if (!rendered) return null;
 
-  const shape: CSSProperties =
-    entered || !originRect
-      ? { transform: "translate(0px, 0px) scale(1, 1)", borderRadius: 0 }
-      : (() => {
-          const sx = originRect.width / window.innerWidth;
-          const sy = originRect.height / window.innerHeight;
-          return {
-            transform: `translate(${originRect.left}px, ${originRect.top}px) scale(${sx}, ${sy})`,
-            borderRadius: `${8 / Math.max(sx, sy, 0.001)}px`,
-          };
-        })();
-
   return createPortal(
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Bob The Tech Guy case file" className="fixed inset-0 z-[100]">
-      <div
-        aria-hidden="true"
-        className={`absolute inset-0 bg-pcb-bg/10 transition-opacity duration-300 ease-out ${entered ? "opacity-100" : "opacity-0"}`}
-      />
-      <div
-        aria-hidden="true"
-        style={{ ...shape, "--card-tint": "var(--pcb-bg)" } as CSSProperties}
-        className="card-glass absolute inset-0 origin-top-left transition-[transform,border-radius] duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
-      />
-      <div
-        aria-hidden="true"
-        className={`absolute inset-0 overflow-hidden transition-opacity duration-500 ease-out ${entered ? "opacity-40" : "opacity-0"}`}
-      >
-        <CircuitBoard active={entered} />
-      </div>
+      <div aria-hidden="true" className={`absolute inset-0 bg-void transition-opacity duration-200 ease-out ${entered ? "opacity-100" : "opacity-0"}`} />
+      <div aria-hidden="true" className={`stars absolute inset-0 transition-opacity duration-200 ${entered ? "opacity-40" : "opacity-0"}`} />
 
       <div
         style={{ pointerEvents: entered ? "auto" : "none" }}
@@ -158,25 +130,25 @@ export function BobCaseFile({
           entered ? "opacity-100 duration-200 delay-150" : "opacity-0 duration-100"
         }`}
       >
-        <div className="mx-auto max-w-3xl">
+        <div className="px-frame mx-auto max-w-3xl bg-void p-5 sm:p-8">
           <div className="mb-8 flex items-start justify-between gap-4">
             <div>
-              <p className="font-mono text-xs tracking-wider text-pcb-green">CLIENT WORK // BOB THE TECH GUY</p>
-              <h2 className="mt-1 font-display text-2xl sm:text-3xl text-pcb-text">Case File</h2>
+              <p className="px-label text-[12px] text-lavender">Client work · Bob The Tech Guy</p>
+              <h2 className="mt-2 font-display text-[34px] font-extrabold uppercase leading-none text-starlight sm:text-[44px]">Case file</h2>
             </div>
             <button
               ref={closeRef}
               type="button"
               onClick={onClose}
-              className="shrink-0 font-mono text-xs tracking-wider text-pcb-text hover:text-pcb-green focus-visible:text-pcb-green focus-visible:underline outline-none"
+              className="px-label shrink-0 py-2 text-[12px] text-starlight hover:text-lavender"
             >
-              close &#x2715;
+              Close &#x2715;
             </button>
           </div>
 
           <section className="mb-10">
             <Label n="01">THE CLIENT</Label>
-            <div className="space-y-3 font-display text-sm sm:text-base leading-relaxed text-pcb-text/85">
+            <div className="space-y-3 text-[16px] leading-[1.6] text-mist">
               {CLIENT.map((p) => <p key={p}>{p}</p>)}
             </div>
           </section>
@@ -185,9 +157,9 @@ export function BobCaseFile({
             <Label n="02">COMMUNICATION</Label>
             <div className="grid gap-3 sm:grid-cols-2">
               {COMMUNICATION.map((c) => (
-                <div key={c.title} className="rounded-sm border border-pcb-trace bg-pcb-panel/60 px-4 py-4">
-                  <p className="font-mono text-[11px] tracking-wider text-pcb-green">{c.title.toUpperCase()}</p>
-                  <p className="mt-2 font-display text-sm leading-relaxed text-pcb-text/80">{c.detail}</p>
+                <div key={c.title} className="border border-indigo bg-deep px-4 py-4">
+                  <p className="px-label text-[12px] text-lavender">{c.title}</p>
+                  <p className="mt-2 text-[15px] leading-[1.6] text-mist">{c.detail}</p>
                 </div>
               ))}
             </div>
@@ -199,12 +171,12 @@ export function BobCaseFile({
               {PIPELINE.map((s, i) => (
                 <li
                   key={s.label}
-                  className={`rounded-sm border px-3 py-3 ${s.test ? "border-pcb-green/60 bg-pcb-green/5" : "border-pcb-trace"}`}
+                  className={`border px-3 py-3 ${s.test ? "border-lavender bg-deep" : "border-indigo"}`}
                 >
-                  <p className={`font-mono text-[11px] tracking-wider ${s.test ? "text-pcb-green" : "text-pcb-text/80"}`}>
+                  <p className={`px-label text-[12px] ${s.test ? "text-starlight" : "text-lavender"}`}>
                     {String(i + 1).padStart(2, "0")} {s.label}
                   </p>
-                  <p className="mt-1 font-display text-xs leading-snug text-pcb-text/80">{s.detail}</p>
+                  <p className="mt-1 text-[14px] leading-snug text-mist">{s.detail}</p>
                 </li>
               ))}
             </ol>
@@ -214,20 +186,20 @@ export function BobCaseFile({
             <Label n="04">TOOLING</Label>
             <div className="grid gap-3 sm:grid-cols-3">
               {TOOLING.map((t) => (
-                <div key={t.name} className="rounded-sm border border-pcb-trace px-4 py-3">
-                  <p className="font-mono text-[11px] tracking-wider text-pcb-green">{t.name}</p>
-                  <p className="mt-1 font-display text-xs leading-snug text-pcb-text/80">{t.detail}</p>
+                <div key={t.name} className="border border-indigo px-4 py-3">
+                  <p className="px-label text-[12px] text-lavender">{t.name}</p>
+                  <p className="mt-1 text-[14px] leading-snug text-mist">{t.detail}</p>
                 </div>
               ))}
             </div>
-            <p className="mt-3 font-mono text-[10px] tracking-wider text-pcb-text/80">{AI_NOTE}</p>
+            <p className="mt-3 text-[13px] text-mist">{AI_NOTE}</p>
           </section>
 
           <section className="mb-10">
             <Label n="05">THE WORK</Label>
             <div className="grid gap-6 md:grid-cols-[1fr_1px_1fr] md:gap-5">
               <Side side="before" title="BEFORE" note="The old site" />
-              <div aria-hidden="true" className="h-px bg-pcb-trace md:h-auto md:w-px" />
+              <div aria-hidden="true" className="h-px bg-indigo md:h-auto md:w-px" />
               <Side side="after" title="AFTER" note="The new site" />
             </div>
           </section>
@@ -236,9 +208,9 @@ export function BobCaseFile({
             <Label n="06">RESULTS</Label>
             <div className="grid gap-3 sm:grid-cols-3">
               {RESULTS.map((r) => (
-                <div key={r.label} className="rounded-sm border border-pcb-trace px-4 py-4">
-                  <p className="font-mono text-3xl text-pcb-green">{r.value}</p>
-                  <p className="mt-1 font-mono text-[11px] tracking-wider text-pcb-text/80">{r.label}</p>
+                <div key={r.label} className="border border-indigo px-4 py-4">
+                  <p className="font-display text-[40px] font-extrabold leading-none text-starlight">{r.value}</p>
+                  <p className="px-label mt-2 text-[12px] text-lavender">{r.label}</p>
                 </div>
               ))}
             </div>
@@ -248,12 +220,12 @@ export function BobCaseFile({
                 aria-describedby={BOB_SITE_SSL_OK ? undefined : "bob-ssl-note-casefile"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-sm border border-pcb-green px-4 py-2 font-mono text-xs tracking-wider text-pcb-green hover:bg-pcb-green/10 focus-visible:bg-pcb-green/10 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pcb-green"
+                className="px-btn"
               >
-                see it live &#8599;
+                See it live &#8599;
               </a>
               {!BOB_SITE_SSL_OK && (
-                <span id="bob-ssl-note-casefile" className="font-mono text-[10px] tracking-wider text-pcb-text/80">
+                <span id="bob-ssl-note-casefile" className="text-[13px] text-mist">
                   SSL certificate pending — the browser may warn you
                 </span>
               )}

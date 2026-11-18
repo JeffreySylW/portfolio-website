@@ -51,7 +51,7 @@ function sample(t: Texture, lon: number, lat: number, out: number[]) {
   }
 }
 
-export function paintGlobe(o: PaintOptions): Uint8ClampedArray {
+export function paintGlobe(o: PaintOptions): Uint8ClampedArray<ArrayBuffer> {
   const { texture, size, pad, lon0, lat0, block } = o;
   const R = (size - 2 * pad) / 2;
   const C = size / 2;
@@ -88,7 +88,7 @@ export function paintGlobe(o: PaintOptions): Uint8ClampedArray {
     sample(texture, h[0], h[1], col);
     const lum = (0.3 * col[0] + 0.55 * col[1] + 0.15 * col[2]) / 255;
     const land = col[2] < col[1] * 1.05 + 10; // oceans are blue-dominant
-    let lvl = (land ? 1.15 + lum * 1.9 : 0.55 + lum * 0.7) + h[2] * 0.25;
+    const lvl = (land ? 1.15 + lum * 1.9 : 0.55 + lum * 0.7) + h[2] * 0.25;
     const lo = Math.floor(lvl);
     let step = Math.max(0, Math.min(4, lvl - lo > t ? lo + 1 : lo));
     if (Math.hypot(x, y) > R - block * 1.2) step = 3; // hard outline on the limb

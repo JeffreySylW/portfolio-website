@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import Image from "next/image";
-import { BODIES } from "@/content/space";
+import { WORK } from "@/content/work";
 import { GALLERY, SECTIONS, inGroup, type GalleryGroup, type GalleryImage } from "@/content/nasaGallery";
 
-const NASA = BODIES.find((b) => b.id === "nasa")!;
+const NASA = WORK.find((w) => w.id === "nasa")!;
 // Photos shown inside a section, as on the matching slide of the presentation; the tours get their own grid at the end.
 const SECTION_PHOTOS: Record<string, GalleryGroup> = {
   "Side quest 1: wind tunnel surveillance system": "surveillance",
@@ -13,7 +13,7 @@ const SECTION_PHOTOS: Record<string, GalleryGroup> = {
 };
 
 function Heading({ children }: { children: string }) {
-  return <h3 className="mb-3 font-mono text-xs tracking-wider text-sky-300">{children}</h3>;
+  return <h3 className="px-label mb-3 text-[12px] text-lavender">{children}</h3>;
 }
 
 function PhotoGrid({ images, masonry, register, onOpen }: {
@@ -33,14 +33,14 @@ function PhotoGrid({ images, masonry, register, onOpen }: {
               ref={(el) => register(i, el)}
               onClick={() => onOpen(i)}
               aria-label={`View ${g.name} full size`}
-              className="group block w-full overflow-hidden rounded-sm border border-slate-800 text-left outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+              className="group block w-full overflow-hidden border border-indigo text-left hover:border-lavender"
             >
-              <span className={`relative block overflow-hidden bg-[#0d1117] ${masonry ? "" : "aspect-[4/3]"}`} style={masonry ? { aspectRatio: `${g.width} / ${g.height}` } : undefined}>
+              <span className={`relative block overflow-hidden bg-deep ${masonry ? "" : "aspect-[4/3]"}`} style={masonry ? { aspectRatio: `${g.width} / ${g.height}` } : undefined}>
                 <Image src={g.src} alt={g.alt} width={g.width} height={g.height} sizes="(min-width: 896px) 270px, 45vw" loading="lazy" className="h-full w-full object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-105" />
               </span>
               <span className="block px-2.5 py-2">
-                <span className="block font-mono text-[10px] tracking-wider text-sky-300">{g.name}</span>
-                <span className="mt-0.5 block text-[11px] leading-snug text-slate-300">{g.detail}</span>
+                <span className="block text-[13px] font-semibold text-starlight">{g.name}</span>
+                <span className="mt-0.5 block text-[13px] leading-snug text-mist">{g.detail}</span>
               </span>
             </button>
           </li>
@@ -113,27 +113,25 @@ export function NasaDeepDive({ onClose, returnFocusTo }: { onClose: () => void; 
         returnFocusTo?.focus();
         onClose();
       }}
-      className="deep-dialog card-glass m-auto max-h-[92dvh] w-[min(56rem,calc(100%-1rem))] overflow-y-auto rounded-md border border-sky-900 p-5 text-slate-100 sm:p-8"
+      className="deep-dialog px-frame m-auto max-h-[92dvh] w-[min(56rem,calc(100%-1rem))] overflow-y-auto bg-void p-5 text-starlight sm:p-8"
     >
       <div className="flex items-start justify-between gap-4">
-        <button type="button" onClick={() => dialog.current?.close()} className="order-2 shrink-0 rounded-sm font-mono text-xs tracking-wider text-sky-200 outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-sky-300">
-          close &#x2715;
+        <button type="button" onClick={() => dialog.current?.close()} className="px-label order-2 shrink-0 py-2 text-[12px] text-starlight hover:text-lavender">
+          Close &#x2715;
         </button>
         <div className="order-1">
-          <p className="font-mono text-xs tracking-wider text-sky-300">{NASA.subtitle}</p>
-          <h2 id="nasa-title" className="mt-1 font-display text-2xl sm:text-3xl">{NASA.name}</h2>
-          <p id="nasa-dates" className="mt-1 font-mono text-[11px] text-slate-300">{NASA.dates}</p>
+          <p className="px-label text-[12px] text-lavender">{NASA.role}</p>
+          <h2 id="nasa-title" className="mt-2 font-display text-[34px] font-extrabold uppercase leading-none sm:text-[44px]">{NASA.org}</h2>
+          <p id="nasa-dates" className="px-label mt-2 text-[12px] text-lavender">{NASA.dates}</p>
         </div>
       </div>
-      <p className="mt-4 text-sm leading-relaxed text-slate-300">{NASA.summary}</p>
-      <ul className="mt-4 flex flex-wrap gap-2 font-mono text-[11px] text-slate-300">
-        {NASA.tools.map((t) => <li key={t} className="rounded-sm border border-slate-700 px-2 py-1">{t}</li>)}
-      </ul>
+      <p className="mt-5 text-[16px] leading-[1.6] text-mist">{NASA.summary}</p>
+      <p className="mt-3 text-[14px] text-lavender">{NASA.tools.join(" · ")}</p>
 
       {SECTIONS.map((sec) => (
         <section key={sec.heading} className="mt-8">
           <Heading>{sec.heading.toUpperCase()}</Heading>
-          <div className="space-y-3 text-sm leading-relaxed text-slate-300">
+          <div className="space-y-3 text-[16px] leading-[1.6] text-mist">
             {sec.paragraphs.map((p) => <p key={p}>{p}</p>)}
           </div>
           {SECTION_PHOTOS[sec.heading] && (
@@ -150,17 +148,17 @@ export function NasaDeepDive({ onClose, returnFocusTo }: { onClose: () => void; 
       </section>
 
       {shown && view !== null && (
-        <div role="group" aria-label="Photo viewer" className="fixed inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[#03050b]/95 p-4">
-          <button ref={viewerClose} type="button" onClick={closeViewer} className="self-end rounded-sm font-mono text-xs tracking-wider text-sky-200 outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-sky-300">
-            back to photos &#x2715;
+        <div role="group" aria-label="Photo viewer" className="fixed inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-void/95 p-4">
+          <button ref={viewerClose} type="button" onClick={closeViewer} className="px-label self-end py-2 text-[12px] text-starlight hover:text-lavender">
+            Back to photos &#x2715;
           </button>
           <Image key={shown.src} src={shown.src} alt={shown.alt} width={shown.width} height={shown.height} sizes="(min-width: 900px) 800px, 100vw" className="h-auto max-h-[65dvh] w-auto max-w-full object-contain" />
-          <p className="text-center font-mono text-xs tracking-wider text-sky-300">{shown.name}</p>
-          <p className="max-w-xl text-center text-xs leading-snug text-slate-300">{shown.detail}</p>
-          <div className="flex items-center gap-6 font-mono text-xs text-sky-200">
-            <button type="button" onClick={() => setView((view - 1 + GALLERY.length) % GALLERY.length)} className="rounded-sm px-2 py-1 outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-sky-300">&larr; previous</button>
+          <p className="text-center text-[15px] font-semibold text-starlight">{shown.name}</p>
+          <p className="max-w-xl text-center text-[14px] leading-snug text-mist">{shown.detail}</p>
+          <div className="px-label flex items-center gap-6 text-[12px] text-starlight">
+            <button type="button" onClick={() => setView((view - 1 + GALLERY.length) % GALLERY.length)} className="px-2 py-3 hover:text-lavender">&larr; Previous</button>
             <span aria-live="polite">{view + 1} / {GALLERY.length}</span>
-            <button type="button" onClick={() => setView((view + 1) % GALLERY.length)} className="rounded-sm px-2 py-1 outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-sky-300">next &rarr;</button>
+            <button type="button" onClick={() => setView((view + 1) % GALLERY.length)} className="px-2 py-3 hover:text-lavender">Next &rarr;</button>
           </div>
         </div>
       )}

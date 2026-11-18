@@ -151,30 +151,9 @@ body {
   }
 }
 
-/* ---- NASA card and Bob case file (restyled in ticket 8) ---- */
-
-.deep-dialog::backdrop { background: rgb(7 6 26 / 0.8); }
-
-:root { --card-alpha: 0.74; --card-blur: 3px; }
-.card-glass {
-  background-color: rgb(7 6 26 / 0.74); /* browsers without color-mix */
-  background-color: color-mix(in srgb, var(--card-tint, #07061a) calc(var(--card-alpha) * 100%), transparent);
-  -webkit-backdrop-filter: blur(var(--card-blur));
-  backdrop-filter: blur(var(--card-blur));
-}
-.deep-dialog.card-glass {
-  /* no backdrop-filter here: it would make the dialog the containing block of its position:fixed photo viewer */
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-@media (prefers-reduced-transparency: reduce) {
-  .card-glass {
-    background-color: var(--card-tint, #07061a);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-}
+/* NASA card (a native <dialog>). No backdrop-filter on the dialog: it would trap its fixed photo viewer. */
+.deep-dialog::backdrop { background: rgb(7 6 26 / 0.86); }
 @media (prefers-reduced-motion: no-preference) {
-  .deep-dialog { transition: opacity 0.25s ease-out, display 0.25s allow-discrete; opacity: 1; }
+  .deep-dialog { transition: opacity 0.2s steps(3), display 0.2s allow-discrete; opacity: 1; }
   @starting-style { .deep-dialog[open] { opacity: 0; } }
 }

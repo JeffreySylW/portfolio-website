@@ -1,19 +1,19 @@
-import { Nav } from "@/components/Nav";
-import { Projects } from "@/components/Projects";
-import { Resume } from "@/components/Resume";
-import { Contact } from "@/components/Contact";
-import SpaceScene from "@/components/space/SpaceScene";
+import { Hero } from "@/components/site/Hero";
+import { WorkLedger, Skills } from "@/components/site/WorkLedger";
+import { ResumeSection, ContactSection } from "@/components/site/ResumeContact";
+import { DeepViews } from "@/components/site/DeepViews";
 
 export default function Home() {
   return (
     <>
-      <Nav />
-      <main className="bg-paper text-ink">
-        <SpaceScene />
-        <Projects />
-        <Resume />
-        <Contact />
+      <main>
+        <Hero />
+        <WorkLedger />
+        <Skills />
+        <ResumeSection />
+        <ContactSection />
       </main>
+      <DeepViews />
     </>
   );
 }
