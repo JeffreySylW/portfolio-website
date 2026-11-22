@@ -5,12 +5,14 @@ import vm from "node:vm";
 import {
   INTRO_MS,
   FAILSAFE_MS,
-  IMPACT_MS,
+  LAND_MS,
+  POINT_MS,
+  IMPACT1_MS,
+  IMPACT2_MS,
+  BURST_MS,
   JW_SCALE,
   introScript,
   introPhase,
-  makeStars,
-  BANG_COLORS,
 } from "../src/lib/bigBang.ts";
 
 // run the inline <script> the way the browser would, against a stub page
@@ -44,74 +46,97 @@ test("reduced motion: no intro", () => {
   assert.equal(runIntroScript({ reduced: true }).dataset.play, undefined);
 });
 
-test("the drop falls, lands at the impact and the impact frames flip black and white", () => {
-  const at = (t) => introPhase(t);
-  assert.equal(at(0).drop, 0);
-  assert.ok(at(IMPACT_MS - 1).drop > 0.99, "landed at the impact");
-  assert.ok(IMPACT_MS >= 1100 && IMPACT_MS > INTRO_MS * 0.4, `a slow drop: impact at ${IMPACT_MS}`);
-  assert.ok(at(IMPACT_MS * 0.5).drop < 0.3, "it takes its time at first");
-  assert.equal(at(IMPACT_MS - 20).invert, false, "not inverted before the impact");
-  assert.equal(at(IMPACT_MS + 10).invert, true, "first impact frame is inverted");
-  assert.equal(at(IMPACT_MS + 100).invert, false, "then flips back");
-  assert.equal(at(IMPACT_MS + 180).invert, true, "then inverts again");
-  assert.equal(at(IMPACT_MS + 400).invert, false, "and settles");
-  assert.ok(at(IMPACT_MS + 200).glitch > 0, "glitch slices during the second inversion");
-  assert.equal(at(IMPACT_MS - 20).glitch, 0);
-  assert.equal(at(IMPACT_MS + 600).glitch, 0);
+test("the ink drop falls slowly down the middle and lands at LAND_MS", () => {
+  assert.equal(introPhase(0).drop, 0);
+  assert.ok(introPhase(LAND_MS - 1).drop > 0.99, "landed");
+  assert.ok(introPhase(LAND_MS * 0.5).drop < 0.3, "slow at first, gravity");
+  assert.equal(introPhase(LAND_MS + 50).drop, 1);
+  assert.ok(LAND_MS >= 500 && LAND_MS <= 900, `${LAND_MS}`);
 });
 
-test("JW flashes with the impact frames, and only then", () => {
-  const at = (t) => introPhase(t);
-  assert.equal(at(IMPACT_MS - 1).jw, 0);
-  assert.ok(at(IMPACT_MS + 10).jw > 0.9);
-  assert.ok(at(IMPACT_MS + 200).jw > 0.9);
-  assert.equal(at(IMPACT_MS + 400).jw, 0);
-  for (let t = 0; t <= INTRO_MS; t += 10) assert.ok(at(t).jw >= 0 && at(t).jw <= 1);
+test("ink strokes sweep in from every side after the landing and are all in by POINT_MS", () => {
+  assert.equal(introPhase(LAND_MS).sweep, 0);
+  assert.ok(introPhase(LAND_MS + 150).sweep > 0, "strokes start right after the landing");
+  assert.ok(introPhase(POINT_MS - 20).sweep >= 0.99, "the last stroke is in as the point forms");
+  assert.equal(introPhase(POINT_MS).sweep, 1);
 });
 
-test("then it explodes violently and fast, and the site opens straight after", () => {
-  const at = (t) => introPhase(t);
-  let last = { drop: -1, shock: -1, stars: -1, open: -1 };
-  for (let t = 0; t <= INTRO_MS; t += 16) {
-    const p = at(t);
-    for (const k of ["drop", "shock", "glitch", "stars", "starAlpha", "open", "veil"]) assert.ok(p[k] >= 0 && p[k] <= 1, `${k} ${p[k]} at ${t}`);
-    for (const k of ["drop", "shock", "stars", "open"]) assert.ok(p[k] >= last[k], `${k} goes back at ${t}`);
+test("the ink condenses to a point in the middle, which then holds still for a beat", () => {
+  const mass = (t) => introPhase(t).mass;
+  assert.ok(mass(LAND_MS + 300) > 0.8, "a body of ink has gathered before it shrinks");
+  assert.ok(mass(POINT_MS) <= 0.05 && mass(POINT_MS) > 0, "a tiny point remains, not nothing");
+  assert.equal(introPhase(LAND_MS + 100).impact, 0);
+  assert.equal(introPhase(POINT_MS).impact, 0, "no impact until the beat has been held");
+  assert.ok(IMPACT1_MS - POINT_MS >= 40 && IMPACT1_MS - POINT_MS <= 120, "a short hold on the point");
+  for (let t = LAND_MS + 100; t <= POINT_MS; t += 8) assert.ok(mass(t + 8) <= mass(t) + 1e-9 || t < LAND_MS + 380, `mass grows again at ${t}`);
+  assert.ok(introPhase(POINT_MS - 5).converge >= 0.99 && introPhase(LAND_MS).converge === 0, "converge runs 0..1 to the point");
+});
+
+test("two hard impact frames: inverted, then normal, only between IMPACT1 and BURST", () => {
+  assert.equal(introPhase(IMPACT1_MS - 1).impact, 0);
+  assert.equal(introPhase(IMPACT1_MS).impact, 1);
+  assert.equal(introPhase(IMPACT2_MS - 1).impact, 1);
+  assert.equal(introPhase(IMPACT2_MS).impact, 2);
+  assert.equal(introPhase(BURST_MS - 1).impact, 2);
+  assert.equal(introPhase(BURST_MS).impact, 0);
+  assert.ok(BURST_MS - IMPACT1_MS >= 100 && BURST_MS - IMPACT1_MS <= 160, "hard frames, over in a blink");
+});
+
+test("JW shows in the impact frames, is carried off by the blast, and is never there otherwise", () => {
+  assert.equal(introPhase(POINT_MS).jw, 0);
+  assert.equal(introPhase(IMPACT1_MS).jw, 1);
+  assert.equal(introPhase(BURST_MS - 1).jw, 1);
+  assert.ok(introPhase(BURST_MS + 100).jw < 1 && introPhase(BURST_MS + 100).jw > 0);
+  assert.equal(introPhase(BURST_MS + 200).jw, 0);
+  assert.equal(introPhase(LAND_MS + 100).jw, 0);
+});
+
+test("the explosion itself reveals the site: nothing opens before the hit, it is mostly open within 0.35 s", () => {
+  assert.equal(introPhase(BURST_MS - 1).open, 0, "the page stays hidden until the blast");
+  assert.equal(introPhase(IMPACT1_MS + 20).open, 0);
+  assert.ok(introPhase(BURST_MS + 40).open > 0, "opens from the very first blast frames");
+  assert.ok(introPhase(BURST_MS + 350).open >= 0.9, "most of the page is open within 0.35 s of the hit");
+  assert.equal(introPhase(BURST_MS + 700).open, 1);
+  assert.equal(introPhase(INTRO_MS).veil, 0);
+  assert.ok(INTRO_MS - BURST_MS <= 900, "no separate pan or wipe after the explosion");
+});
+
+test("the blast has ink slashes, a shockwave ring and a short white flash", () => {
+  assert.equal(introPhase(BURST_MS - 1).slashes, 0);
+  assert.ok(introPhase(BURST_MS + 120).slashes > 0.5, "slashes shoot out fast");
+  assert.equal(introPhase(BURST_MS + 400).slashes, 1);
+  assert.equal(introPhase(BURST_MS - 1).flash, 0);
+  assert.ok(introPhase(BURST_MS + 30).flash > 0.9, "flash peaks as the blast starts");
+  assert.equal(introPhase(BURST_MS + 150).flash, 0, "and is gone within 0.15 s");
+  assert.equal(introPhase(BURST_MS - 1).ring, 0);
+  assert.ok(introPhase(BURST_MS + 200).ring > 0.5 && introPhase(BURST_MS + 200).ring < 1);
+  assert.equal(introPhase(BURST_MS + 500).ring, 1);
+  assert.equal(introPhase(BURST_MS + 100).ink, 1, "the ink is still there early in the blast");
+  assert.equal(introPhase(BURST_MS + 550).ink, 0, "and has faded off the site by the end");
+});
+
+test("every phase value stays in 0..1 and only moves the way it should", () => {
+  const mono = ["drop", "sweep", "open", "slashes", "ring"];
+  let last = null;
+  for (let t = 0; t <= INTRO_MS + 100; t += 4) {
+    const p = introPhase(t);
+    for (const k of ["drop", "sweep", "converge", "mass", "jw", "open", "veil", "slashes", "ring", "flash", "ink"]) assert.ok(p[k] >= 0 && p[k] <= 1, `${k} ${p[k]} at ${t}`);
+    assert.ok([0, 1, 2].includes(p.impact));
     assert.ok(Math.abs(p.veil - (1 - p.open)) < 1e-9);
+    if (last) for (const k of mono) assert.ok(p[k] >= last[k] - 1e-9, `${k} goes back at ${t}`);
     last = p;
   }
-  assert.equal(at(IMPACT_MS - 1).stars, 0);
-  assert.equal(at(IMPACT_MS).veil, 1, "the site stays hidden until the hit");
-  assert.ok(at(IMPACT_MS + 350).stars > 0.7, "the stars shoot out fast");
-  assert.ok(at(IMPACT_MS + 350).shock > 0.8, "the shockwave is out in a blink");
-  assert.ok(at(IMPACT_MS + 700).open > 0.7, "the site is mostly open within 0.7 s of the hit");
-  assert.ok(INTRO_MS - IMPACT_MS <= 1200, "no lingering after the explosion");
-  assert.equal(at(INTRO_MS).veil, 0);
-  assert.equal(at(INTRO_MS + 500).veil, 0);
 });
 
 test("the slow drop is smooth: no jump bigger than a little between two 120 Hz frames", () => {
-  for (let t = 0; t < IMPACT_MS - 9; t += 4) {
+  for (let t = 0; t < LAND_MS - 9; t += 4) {
     const a = introPhase(t), b = introPhase(t + 1000 / 120);
     assert.ok(Math.abs(b.drop - a.drop) < 0.03, `drop jumps at ${t}`);
   }
 });
 
-test("JW is small: a mark, not a headline", () => {
+test("JW is a mark, not a headline", () => {
   assert.ok(JW_SCALE > 0 && JW_SCALE <= 0.12, `JW at ${JW_SCALE} of the short side`);
-});
-
-test("the stars are the same every visit, in the site's palette, spread all round the burst", () => {
-  const a = makeStars(7), b = makeStars(7);
-  assert.deepEqual(a, b);
-  assert.ok(a.length >= 300, `${a.length} stars`);
-  const palette = new Set(BANG_COLORS);
-  for (const c of BANG_COLORS) assert.ok(["#07061a", "#15123d", "#2b2a7a", "#5b54d6", "#a9a4ff", "#f2f0ff"].includes(c), c);
-  for (const s of a) {
-    assert.ok(palette.has(s.color), s.color);
-    assert.ok(s.dist > 0 && s.dist <= 1.2 && s.size > 0, JSON.stringify(s));
-  }
-  const quadrants = new Set(a.map((s) => `${Math.cos(s.angle) > 0}${Math.sin(s.angle) > 0}`));
-  assert.equal(quadrants.size, 4);
 });
 
 test("the veil is aria-hidden, hidden unless armed, cleared by reduced motion, and never needs scripts to go away", () => {
