@@ -37,18 +37,19 @@ test("Bob row opens the case file and sits in Richmond", () => {
   assert.equal(bob.dates, "Aug 2026 – present");
 });
 
-test("Sheinkopf row: the title Jeff picked, ongoing, and only work already done (2026-11-18)", () => {
+test("Sheinkopf row: a finished one-time micro-internship, only the approved facts (2026-11-25)", () => {
   const s = W.WORK.find((w) => w.id === "sheinkopf");
   assert.equal(s.kind, "job");
   assert.equal(s.org, "Rob Sheinkopf, Author");
   assert.equal(s.role, "Web Development Micro-Intern, Parker Dewey");
-  assert.equal(s.dates, "Nov 2026 – present");
+  assert.equal(s.dates, "Nov 2026");
   assert.equal(s.start, "2026-11");
-  assert.equal(s.end, undefined);
-  assert.match(s.summary, /in progress/i, "says the work is still in progress");
-  // the deliverables are not done yet: no claim that they shipped
-  assert.doesNotMatch(s.summary, /(built|launched|shipped|redesigned|delivered|rebuilt)/i);
-  assert.doesNotMatch(JSON.stringify(s), /venmo|bluehost|password|login/i, "nothing private about Rob's site");
+  assert.equal(s.end, "2026-11");
+  assert.match(s.summary, /one-time micro-internship through VCU and Parker Dewey/);
+  assert.doesNotMatch(s.summary, /in progress|!|[•]/i);
+  assert.deepEqual(s.tools, ["WordPress", "CSS"]);
+  assert.equal(s.link.href, "https://robsheinkopf-author.com");
+  assert.doesNotMatch(JSON.stringify(s), /@|bluehost|password|login|\+?\d{3}[- .]\d{3}[- .]\d{4}|accessib|consistent/i, "nothing private or filler");
 });
 
 test("VCU row carries the TA and ASPIRE highlights with their dates", () => {

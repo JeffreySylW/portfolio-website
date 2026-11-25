@@ -92,6 +92,7 @@ export function MeCard({ onClose, returnFocusTo }: { onClose: () => void; return
 export function ExperienceCard({ id, onClose, returnFocusTo }: { id: CardId; onClose: () => void; returnFocusTo: HTMLElement | null }) {
   const c = EXPERIENCE_CARDS[id];
   const tools = "tools" in c ? c.tools : undefined;
+  const link = "link" in c ? c.link : undefined;
   return (
     <CardDialog labelId={`${id}-title`} onClose={onClose} returnFocusTo={returnFocusTo}>
       <p className="px-label text-[12px] text-lavender">{c.dates}</p>
@@ -106,6 +107,11 @@ export function ExperienceCard({ id, onClose, returnFocusTo }: { id: CardId; onC
             <li key={t} className="px-label border border-indigo px-2.5 py-1.5 text-[12px] text-starlight">{t}</li>
           ))}
         </ul>
+      )}
+      {link && (
+        <a href={link.href} target="_blank" rel="noopener noreferrer" className="mt-5 inline-block py-2 text-[16px] text-starlight underline underline-offset-4 hover:text-lavender">
+          {link.label}
+        </a>
       )}
     </CardDialog>
   );

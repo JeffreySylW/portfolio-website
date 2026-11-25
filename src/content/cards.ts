@@ -27,6 +27,7 @@ export interface ExperienceCard {
   dates: string;
   summary: string;
   tools?: string[];
+  link?: { href: string; label: string };
   /** The work row, for "See it in the work list". */
   workId: string;
 }
@@ -40,7 +41,7 @@ const fromHighlight = (name: string): ExperienceCard => {
 
 const fromRow = (id: string): ExperienceCard => {
   const w = WORK.find((r) => r.id === id)!;
-  return { title: w.org, role: w.role, dates: w.dates, summary: w.summary, tools: w.tools, workId: w.id };
+  return { title: w.org, role: w.role, dates: w.dates, summary: w.summary, tools: w.tools, link: w.link, workId: w.id };
 };
 
 export const EXPERIENCE_CARDS = {

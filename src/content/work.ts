@@ -64,11 +64,13 @@ export const WORK: WorkEntry[] = [
     kind: "job",
     org: "Rob Sheinkopf, Author",
     role: "Web Development Micro-Intern, Parker Dewey",
-    dates: "Nov 2026 – present",
+    dates: "Nov 2026",
     start: "2026-11",
+    end: "2026-11",
     summary:
-      "Micro-internship for author Rob Sheinkopf ahead of his two 2027 book releases. Reviewed his WordPress author site and wrote up a prioritized list of fixes, from the homepage and menu to the reviews pages and image alt text. In progress: a homepage welcome with his upcoming book covers, and a simpler monthly upkeep routine.",
-    tools: ["Site auditing", "Web accessibility"],
+      "A one-time micro-internship through VCU and Parker Dewey, about 10 hours. I rebuilt and cleaned up the WordPress website for author Rob Sheinkopf so it was ready for two new book releases in 2027. I redid the menu, built the Coming Soon and new-edition pages, made a Signed Copies page where readers can email Rob or pay by Venmo, and rebuilt the Giveaway page with a form for readers to upload their photo. I also reworked the Reviews and Author pages and fixed the header and menu on phones.",
+    tools: ["WordPress", "CSS"],
+    link: { href: "https://robsheinkopf-author.com", label: "Visit robsheinkopf-author.com" },
   },
   {
     id: "bob",

@@ -107,7 +107,7 @@ test("every planet's span matches the dates printed in the work list", () => {
   const spans = planetSpans();
   for (const p of PLANETS) {
     const s = spans[p.id];
-    const [a, b] = s.dates.split("–");
+    const [a, b = a] = s.dates.split("–");
     assert.equal(s.start, fromText(a), `${p.id} start`);
     if (/present/.test(b)) assert.equal(s.end, undefined, `${p.id} is ongoing`);
     else assert.equal(s.end, fromText(b), `${p.id} end`);
