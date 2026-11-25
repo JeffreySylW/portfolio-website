@@ -93,6 +93,7 @@ export function ExperienceCard({ id, onClose, returnFocusTo }: { id: CardId; onC
   const c = EXPERIENCE_CARDS[id];
   const tools = "tools" in c ? c.tools : undefined;
   const link = "link" in c ? c.link : undefined;
+  const photos = "photos" in c ? c.photos : undefined;
   return (
     <CardDialog labelId={`${id}-title`} onClose={onClose} returnFocusTo={returnFocusTo}>
       <p className="px-label text-[12px] text-lavender">{c.dates}</p>
@@ -107,6 +108,25 @@ export function ExperienceCard({ id, onClose, returnFocusTo }: { id: CardId; onC
             <li key={t} className="px-label border border-indigo px-2.5 py-1.5 text-[12px] text-starlight">{t}</li>
           ))}
         </ul>
+      )}
+      {photos && (
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {photos.map((p) => (
+            <figure key={p.src} className="m-0 overflow-hidden border border-indigo">
+              {/* eslint-disable-next-line @next/next/no-img-element -- already sized webp copies */}
+              <img
+                src={p.src}
+                width={p.width}
+                height={p.height}
+                alt={p.alt}
+                loading="lazy"
+                decoding="async"
+                className="block aspect-[4/3] h-auto w-full bg-deep object-cover object-top"
+              />
+              <figcaption className="px-label px-3 py-2 text-[12px] text-lavender">{p.caption}</figcaption>
+            </figure>
+          ))}
+        </div>
       )}
       {link && (
         <a href={link.href} target="_blank" rel="noopener noreferrer" className="mt-5 inline-block py-2 text-[16px] text-starlight underline underline-offset-4 hover:text-lavender">

@@ -28,6 +28,8 @@ export interface ExperienceCard {
   summary: string;
   tools?: string[];
   link?: { href: string; label: string };
+  /** Screenshots shown under the text, each with a short caption. */
+  photos?: (Photo & { caption: string })[];
   /** The work row, for "See it in the work list". */
   workId: string;
 }
@@ -48,7 +50,15 @@ export const EXPERIENCE_CARDS = {
   vcu: { title: vcu.org, role: vcu.role, dates: vcu.dates, summary: vcu.summary, tools: vcu.tools, workId: "vcu" },
   ta: fromHighlight("Computer Science Teaching Assistant"),
   aspire: fromHighlight("DoD ASPIRE Capstone"),
-  sheinkopf: fromRow("sheinkopf"),
+  sheinkopf: {
+    ...fromRow("sheinkopf"),
+    photos: [
+      { src: "/images/rob/home.webp", width: 1280, height: 800, alt: "The Welcome page of robsheinkopf-author.com with the new menu across the top", caption: "Welcome page and menu" },
+      { src: "/images/rob/signed-copies.webp", width: 1280, height: 800, alt: "The Signed Copies page showing the covers of both books", caption: "Signed Copies page" },
+      { src: "/images/rob/giveaway.webp", width: 1280, height: 800, alt: "The Giveaway page with a headline, a photo of a reader and a How to enter button", caption: "Giveaway page" },
+      { src: "/images/rob/phone.webp", width: 390, height: 844, alt: "The site on a phone with the header and a Menu button", caption: "Header and menu on a phone" },
+    ],
+  },
 } satisfies Record<string, ExperienceCard>;
 
 export type CardId = keyof typeof EXPERIENCE_CARDS;
